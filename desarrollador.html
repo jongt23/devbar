@@ -1261,6 +1261,10 @@
         display: flex !important;
       }
 
+      .btn-back-categories {
+        display: inline-flex !important;
+      }
+
       /* Cabecera y tabla de productos adaptada a móviles */
       .productos-header {
         flex-direction: column !important;
@@ -1292,6 +1296,73 @@
 
       .total-card-val {
         font-size: 20px;
+      }
+
+      /* Formatear tabla de Ventas a 2 líneas por ticket */
+      #pane-ventas thead {
+        display: none !important;
+      }
+      #pane-ventas table, #pane-ventas tbody, #pane-ventas tr, #pane-ventas td {
+        display: block !important;
+      }
+      #pane-ventas tr {
+        position: relative !important;
+        padding: 10px 90px 10px 0 !important;
+        border-bottom: 1px solid var(--border) !important;
+      }
+      #pane-ventas td {
+        padding: 0 !important;
+        border: none !important;
+      }
+      /* Línea 2: Fecha */
+      #pane-ventas td:nth-child(1) {
+        font-size: 11px !important;
+        color: var(--text-dim) !important;
+        margin-top: 4px !important;
+      }
+      /* Línea 1: Mesa */
+      #pane-ventas td:nth-child(2) {
+        display: inline-block !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        margin-right: 8px !important;
+        color: var(--text) !important;
+      }
+      #pane-ventas td:nth-child(2)::before {
+        content: "Mesa " !important;
+        font-weight: 400 !important;
+        color: var(--text-dim) !important;
+      }
+      /* Línea 1: Camarero */
+      #pane-ventas td:nth-child(3) {
+        display: inline-block !important;
+        font-size: 12px !important;
+        color: var(--text-dim) !important;
+        margin-right: 8px !important;
+      }
+      #pane-ventas td:nth-child(3)::before {
+        content: "· " !important;
+      }
+      /* Línea 1: Método */
+      #pane-ventas td:nth-child(4) {
+        display: inline-block !important;
+        font-size: 12px !important;
+        color: var(--text-dim) !important;
+        text-transform: capitalize !important;
+      }
+      #pane-ventas td:nth-child(4)::before {
+        content: "· " !important;
+      }
+      /* Lado Derecho: Total */
+      #pane-ventas td:nth-child(5) {
+        position: absolute !important;
+        right: 0 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: var(--accent) !important;
+        text-align: right !important;
       }
 
       /* Camareros mobile */
