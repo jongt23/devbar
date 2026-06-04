@@ -1052,6 +1052,12 @@
       gap: 12px;
     }
 
+    .printer-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 12px;
+    }
+
     /* --- AUDITORIA STYLING --- */
     .auditoria-container {
       display: flex;
@@ -1377,7 +1383,7 @@
         grid-template-columns: 1fr;
       }
 
-      .form-row {
+      .form-row, .printer-row {
         grid-template-columns: 1fr;
         gap: 8px;
       }
@@ -1697,29 +1703,41 @@
                 </div>
                 
                 <h4 style="font-size: 13px; color: var(--text-dim); margin-top: 8px;">Impresora de Tickets</h4>
-                <div class="form-row">
+                <div class="printer-row">
                   <input type="text" class="input-text" id="ps-ticket-printer" placeholder="Nombre de impresora">
                   <select class="input-text" id="ps-ticket-enabled">
                     <option value="true">Activada</option>
                     <option value="false">Desactivada</option>
                   </select>
+                  <select class="input-text" id="ps-ticket-paper">
+                    <option value="58mm">58 mm</option>
+                    <option value="80mm">80 mm</option>
+                  </select>
                 </div>
 
                 <h4 style="font-size: 13px; color: var(--text-dim);">Impresora de Barra</h4>
-                <div class="form-row">
+                <div class="printer-row">
                   <input type="text" class="input-text" id="ps-barra-printer" placeholder="Nombre de impresora">
                   <select class="input-text" id="ps-barra-enabled">
                     <option value="true">Activada</option>
                     <option value="false">Desactivada</option>
                   </select>
+                  <select class="input-text" id="ps-barra-paper">
+                    <option value="58mm">58 mm</option>
+                    <option value="80mm">80 mm</option>
+                  </select>
                 </div>
 
                 <h4 style="font-size: 13px; color: var(--text-dim);">Impresora de Cocina</h4>
-                <div class="form-row">
+                <div class="printer-row">
                   <input type="text" class="input-text" id="ps-cocina-printer" placeholder="Nombre de impresora">
                   <select class="input-text" id="ps-cocina-enabled">
                     <option value="true">Activada</option>
                     <option value="false">Desactivada</option>
+                  </select>
+                  <select class="input-text" id="ps-cocina-paper">
+                    <option value="58mm">58 mm</option>
+                    <option value="80mm">80 mm</option>
                   </select>
                 </div>
                 
