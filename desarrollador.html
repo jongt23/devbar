@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Panel de Desarrollador - Comandero Multilocal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --panel: #121824;
+      --panel-light: #1c2333;
+      --border: #242f44;
+      --text: #f3f4f6;
+      --text-dim: #9ca3af;
+      --accent: #54e7c1;
+      --accent-hover: #75ffd9;
+      --danger: #f87171;
+      --warn: #fbbf24;
+      --font-main: 'Outfit', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* --- SIDEBAR DE LOCALES --- */
+    .sidebar {
+      width: 300px;
+      background-color: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+
+    .btn-add-local {
+      background-color: var(--border);
+      color: var(--text);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add-local:hover {
+      background-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .locales-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .local-item {
+      background-color: var(--panel-light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .local-item:hover, .local-item.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(84, 231, 193, 0.1);
+    }
+
+    .local-item.active {
+      background-color: rgba(84, 231, 193, 0.05);
+    }
+
+    .local-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .local-name {
+      font-weight: 500;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .local-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #6b7280;
+    }
+
+    .local-status-dot.connected {
+      background-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .local-url {
+      font-family: var(--font-code);
+      font-size: 10px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .local-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover {
+      color: var(--text);
+      background-color: var(--border);
+    }
+
+    .btn-icon.delete:hover {
+      color: var(--danger);
+      background-color: rgba(248, 113, 113, 0.1);
+    }
+
+    /* --- CONTENEDOR PRINCIPAL --- */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+    }
+
+    .welcome-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .welcome-logo {
+      font-size: 48px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .welcome-title {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .welcome-desc {
+      color: var(--text-dim);
+      max-width: 500px;
+      line-height: 1.6;
+    }
+
+    /* --- CABECERA DE OPERACIONES --- */
+    .panel-header {
+      background-color: var(--panel);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .active-local-name {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .navbar {
+      display: flex;
+      gap: 6px;
+      background-color: var(--bg);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .nav-tab {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab:hover {
+      color: var(--text);
+    }
+
+    .nav-tab.active {
+      background-color: var(--panel-light);
+      color: var(--accent);
+    }
+
+    /* --- VISTAS DEL DASHBOARD --- */
+    .tab-viewport {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      position: relative;
+    }
+
+    .view-pane {
+      display: none;
+      height: 100%;
+    }
+
+    .view-pane.active {
+      display: block;
+    }
+
+    /* VISTA: PLANO DE MESAS */
+    .salon-container {
+      display: flex;
+      height: 100%;
+      gap: 24px;
+    }
+
+    .mesas-grid-container {
+      flex: 1;
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* Plano Gráfico */
+    .plano-canvas {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      background-color: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+    }
+
+    .plano-mesa {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 8px;
+      background-color: var(--border);
+      border: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .plano-mesa.ocupada {
+      background-color: rgba(248, 113, 113, 0.2);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .plano-mesa.libre {
+      background-color: rgba(84, 231, 193, 0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .plano-mesa:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+
+    .mesa-subtext {
+      font-size: 9px;
+      font-weight: 400;
+      margin-top: 2px;
+      color: var(--text-dim);
+    }
+
+    /* Grid Simple */
+    .mesas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 16px;
+    }
+
+    .mesa-card {
+      background-color: var(--panel-light);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      aspect-ratio: 1;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .mesa-card.libre {
+      border-color: rgba(84, 231, 193, 0.4);
+      color: var(--accent);
+    }
+
+    .mesa-card.ocupada {
+      border-color: rgba(96, 165, 250, 0.4);
+      background-color: rgba(96, 165, 250, 0.05);
+      color: #60a5fa;
+    }
+
+    .mesa-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+
+    /* Drawer de Detalle del Ticket (Mesa) */
+    .ticket-drawer {
+      width: 320px;
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .drawer-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-title {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .drawer-content {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .drawer-placeholder {
+      color: var(--text-dim);
+      text-align: center;
+      padding: 40px 10px;
+      font-size: 13px;
+    }
+
+    .ticket-line-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(36, 47, 68, 0.5);
+      padding-bottom: 8px;
+    }
+
+    .line-qty {
+      font-weight: 600;
+      color: var(--accent);
+      margin-right: 8px;
+    }
+
+    .line-details {
+      flex: 1;
+    }
+
+    .line-name {
+      font-weight: 500;
+    }
+
+    .line-note {
+      font-size: 11px;
+      color: var(--warn);
+      margin-top: 2px;
+    }
+
+    .line-price {
+      font-family: var(--font-code);
+      font-weight: 500;
+    }
+
+    .drawer-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      background-color: var(--panel-light);
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* VISTA: EDITOR DE CARTA */
+    .carta-container {
+      display: flex;
+      height: 100%;
+      gap: 24px;
+    }
+
+    .categorias-pane {
+      width: 250px;
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pane-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cat-btn {
+      width: 100%;
+      background-color: var(--panel-light);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      font-weight: 500;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cat-btn:hover, .cat-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .cat-btn.active {
+      background-color: rgba(84, 231, 193, 0.05);
+    }
+
+    .productos-pane {
+      flex: 1;
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .productos-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .productos-table-wrapper {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .app-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .app-table th {
+      color: var(--text-dim);
+      font-weight: 500;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .app-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(36, 47, 68, 0.5);
+    }
+
+    .table-price {
+      font-family: var(--font-code);
+      font-weight: 500;
+    }
+
+    /* VISTA: HISTORIAL DE VENTAS */
+    .ventas-container {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .ventas-totals-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .total-card {
+      background-color: var(--panel-light);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .total-card-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .total-card-val {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-code);
+    }
+
+    /* VISTA: CONFIGURACION / CONTROL WIFI */
+    .config-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-row-switch {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background-color: var(--panel-light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .switch-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .switch-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .switch-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* --- FORMULARIOS Y BOTONES GENERALES --- */
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    .input-text {
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .input-text:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn {
+      background-color: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--panel-light);
+    }
+
+    /* Switch toggle */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border);
+      transition: .3s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: var(--text);
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+      background-color: var(--bg);
+    }
+
+    /* --- MODALES --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 480px;
+      max-width: 90%;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      background-color: var(--panel-light);
+    }
+
+    /* --- PLANO DE MESAS EN CSS GRID --- */
+    .plano-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+    
+    .plano-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--plano-cols, 16), 1fr);
+      grid-template-rows: repeat(var(--plano-rows, 12), 1fr);
+      gap: 6px;
+      width: 100%;
+      aspect-ratio: var(--plano-cols, 16) / var(--plano-rows, 12);
+      background-color: var(--panel-light);
+      border-radius: 12px;
+      padding: 12px;
+      min-width: 400px;
+      position: relative;
+    }
+
+    .plano-mesa-grid {
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      border: 1px solid var(--border);
+      background-color: var(--panel);
+      padding: 4px;
+      overflow: hidden;
+      text-align: center;
+      position: relative;
+      user-select: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+
+    .plano-mesa-grid.circle {
+      border-radius: 50%;
+    }
+
+    .plano-mesa-grid.libre {
+      border-color: rgba(84, 231, 193, 0.3);
+      color: var(--accent);
+    }
+
+    .plano-mesa-grid.ocupada, .plano-mesa-grid.alerta-ok {
+      border-color: rgba(96, 165, 250, 0.4);
+      background-color: rgba(96, 165, 250, 0.06);
+      color: #60a5fa;
+    }
+
+    .plano-mesa-grid.alerta-warn {
+      border-color: var(--warn);
+      background-color: rgba(251, 191, 36, 0.06);
+      color: var(--warn);
+    }
+
+    .plano-mesa-grid.alerta-danger {
+      border-color: var(--danger);
+      background-color: rgba(239, 68, 68, 0.12);
+      color: var(--danger);
+      animation: pulse-border 2s infinite;
+    }
+
+    @keyframes pulse-border {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .plano-mesa-grid:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+
+    .plano-mesa-nombre {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .plano-mesa-sub {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .plano-mesa-tiempo-badge {
+      font-family: var(--font-code);
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: rgba(0,0,0,0.3);
+      color: var(--text);
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .plano-mesa-grid.alerta-warn .plano-mesa-tiempo-badge {
+      color: var(--warn);
+    }
+
+    .plano-mesa-grid.alerta-danger .plano-mesa-tiempo-badge {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .plano-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      background-color: var(--panel-light);
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+
+    .plano-tab {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      background: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .plano-tab:hover {
+      color: var(--text);
+    }
+
+    .plano-tab.active {
+      background-color: var(--panel);
+      color: var(--accent);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* --- CAMAREROS PANE --- */
+    .camareros-container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+      height: 100%;
+    }
+
+    .camareros-form-pane, .camareros-list-pane {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .camareros-list-pane {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .camarero-card {
+      background-color: var(--panel-light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .camarero-card:hover {
+      border-color: var(--accent);
+    }
+
+    .camarero-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .camarero-card-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .camarero-card-pin {
+      font-family: var(--font-code);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* --- CONFIG ADVANCED GRID --- */
+    .config-scroll-container {
+      height: 100%;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+    }
+
+    .config-card {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .config-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 4px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* --- AUDITORIA STYLING --- */
+    .auditoria-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      gap: 16px;
+    }
+
+    .audit-locked-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      height: 100%;
+      max-width: 360px;
+      margin: 40px auto 0;
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .auditoria-filter-bar {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .auditoria-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .sensible-log {
+      border-left: 3px solid var(--danger);
+      background-color: rgba(248, 113, 113, 0.02);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR DE NEGOCIOS/LOCALES -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">MIS LOCALES</div>
+      <button class="btn-add-local" onclick="abrirModalLocal()">Añadir</button>
+    </div>
+    <div class="locales-list" id="locales-container">
+      <!-- Se cargan dinámicamente -->
+    </div>
+  </div>
+
+  <!-- PANEL DE TRABAJO PRINCIPAL -->
+  <div class="main-content">
+    
+    <!-- PANTALLA DE BIENVENIDA -->
+    <div class="welcome-screen" id="welcome-screen">
+      <div class="welcome-logo">🚀</div>
+      <h1 class="welcome-title">Panel de Desarrollador Multilocal</h1>
+      <p class="welcome-desc">Añade o selecciona un negocio en el menú lateral para gestionar sus comandas, editar su carta de productos y revisar sus ventas en tiempo real sin restricción de Wi-Fi.</p>
+    </div>
+
+    <!-- PANELES DE CONTROL DEL NEGOCIO ACTIVO -->
+    <div id="active-dashboard" style="display: none; height: 100%; flex-direction: column;">
+      
+      <!-- CABECERA DEL LOCAL ACTIVO -->
+      <div class="panel-header">
+        <div class="active-local-name" id="label-nombre-local-activo">
+          <div class="local-status-dot connected" id="active-status-dot"></div>
+          <span>Cargando...</span>
+        </div>
+        <div class="navbar">
+          <button class="nav-tab active" onclick="cambiarPestana('salon')">Salón (Mesas)</button>
+          <button class="nav-tab" onclick="cambiarPestana('carta')">Carta</button>
+          <button class="nav-tab" onclick="cambiarPestana('ventas')">Ventas</button>
+          <button class="nav-tab" onclick="cambiarPestana('camareros')">Camareros</button>
+          <button class="nav-tab" onclick="cambiarPestana('config')">Ajustes</button>
+          <button class="nav-tab" onclick="cambiarPestana('auditoria')">Auditoría</button>
+        </div>
+      </div>
+
+      <!-- VISOR DE VISTAS (PESTAS) -->
+      <div class="tab-viewport">
+
+        <!-- VISTA: SALON (PLANO DE MESAS) -->
+        <div class="view-pane active" id="pane-salon">
+          <div class="salon-container">
+            <div class="mesas-grid-container" id="salon-mesas-wrapper">
+              <!-- Rejilla o plano cargado de Firebase -->
+            </div>
+            
+            <!-- DRAWER DE DETALLE TICKET -->
+            <div class="ticket-drawer">
+              <div class="drawer-header">
+                <div class="drawer-title" id="drawer-mesa-title">Mesa sin seleccionar</div>
+                <button class="btn-icon" onclick="deseleccionarMesa()">&times;</button>
+              </div>
+              <div class="drawer-content" id="drawer-ticket-lines">
+                <div class="drawer-placeholder">Haz clic en una mesa ocupada para ver su comanda en tiempo real.</div>
+              </div>
+              <div class="drawer-footer">
+                <div class="total-row">
+                  <span>TOTAL:</span>
+                  <span id="drawer-ticket-total">0,00 €</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA: EDITOR DE CARTA -->
+        <div class="view-pane" id="pane-carta">
+          <div class="carta-container">
+            <div class="categorias-pane">
+              <div class="pane-title">
+                <span>CATEGORÍAS</span>
+                <button class="btn-icon" onclick="abrirModalCategoria()" style="font-size: 18px;">+</button>
+              </div>
+              <div id="categorias-container" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex: 1;">
+                <!-- Categorías -->
+              </div>
+            </div>
+
+            <div class="productos-pane">
+              <div class="productos-header">
+                <h3 id="label-categoria-seleccionada">Selecciona una categoría</h3>
+                <button class="btn" onclick="abrirModalProducto()" id="btn-add-producto" style="display: none;">+ Añadir Plato</button>
+              </div>
+              <div class="productos-table-wrapper">
+                <table class="app-table" id="tabla-productos" style="display: none;">
+                  <thead>
+                    <tr>
+                      <th>Artículo</th>
+                      <th>Precio</th>
+                      <th>Destino</th>
+                      <th style="width: 100px; text-align: right;">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="productos-tbody">
+                    <!-- Productos -->
+                  </tbody>
+                </table>
+                <div class="drawer-placeholder" id="placeholder-productos">Selecciona una categoría a la izquierda para ver y editar sus productos.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA: HISTORIAL DE VENTAS -->
+        <div class="view-pane" id="pane-ventas">
+          <div class="ventas-container">
+            <div class="ventas-totals-bar">
+              <div class="total-card">
+                <div class="total-card-label">TOTAL RECAUDADO</div>
+                <div class="total-card-val" id="venta-total-recaudado">0,00 €</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">TICKETS COBRADOS</div>
+                <div class="total-card-val" id="venta-total-tickets">0</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">TICKET MEDIO</div>
+                <div class="total-card-val" id="venta-ticket-medio">0,00 €</div>
+              </div>
+            </div>
+            
+            <div style="flex: 1; overflow-y: auto;">
+              <table class="app-table">
+                <thead>
+                  <tr style="cursor: pointer;">
+                    <th>Fecha / Hora</th>
+                    <th>Mesa</th>
+                    <th>Camarero</th>
+                    <th>Método</th>
+                    <th style="text-align: right;">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="ventas-tbody">
+                  <!-- Tickets del historial -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA: CAMAREROS -->
+        <div class="view-pane" id="pane-camareros">
+          <div class="camareros-container">
+            <div class="camareros-form-pane">
+              <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 10px; color: var(--accent);">Nuevo Camarero</h3>
+              <div class="form-group" style="margin-top: 10px;">
+                <label for="usr-nombre">Nombre del Camarero</label>
+                <input type="text" class="input-text" id="usr-nombre" placeholder="Ej. Juan Pérez">
+              </div>
+              <div class="form-group">
+                <label for="usr-pin">PIN de Acceso (4 dígitos)</label>
+                <input type="text" class="input-text" id="usr-pin" placeholder="Ej. 1234" maxlength="4" style="font-family: var(--font-code);">
+              </div>
+              <button class="btn" onclick="addCamarero()" style="margin-top: 10px;">Añadir Camarero</button>
+            </div>
+            
+            <div class="camareros-list-pane">
+              <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 10px;">Camareros Registrados</h3>
+              <div id="usuarios-lista" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                <!-- Lista de camareros dinámica -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA: AJUSTES (DETALLADOS) -->
+        <div class="view-pane" id="pane-config">
+          <div class="config-scroll-container">
+            <div class="config-grid">
+              
+              <!-- Tarjeta 1: Seguridad y Wi-Fi -->
+              <div class="config-card">
+                <div class="config-card-title">Seguridad y Red</div>
+                <div class="form-row-switch">
+                  <div class="switch-info">
+                    <div class="switch-title">Restringir por Wi-Fi</div>
+                    <div class="switch-desc">Los camareros solo ingresan con PIN en la Wi-Fi local.</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="switch-wifi-restriction" onchange="guardarEstadoSeguridadWifi()">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="form-group">
+                  <label>IP de Wi-Fi Registrada</label>
+                  <input type="text" class="input-text" id="config-wifi-ip" disabled style="font-family: var(--font-code); color: var(--accent);">
+                </div>
+              </div>
+
+              <!-- Tarjeta 2: Datos del Local -->
+              <div class="config-card">
+                <div class="config-card-title">Datos del Negocio</div>
+                <div class="form-group">
+                  <label>Nombre Comercial</label>
+                  <input type="text" class="input-text" id="local-nombre">
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>CIF / NIF</label>
+                    <input type="text" class="input-text" id="local-cif">
+                  </div>
+                  <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="text" class="input-text" id="local-telefono">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Dirección</label>
+                  <input type="text" class="input-text" id="local-direccion">
+                </div>
+                <div class="form-group">
+                  <label>Pie del Ticket (Agradecimiento)</label>
+                  <input type="text" class="input-text" id="local-footer">
+                </div>
+                <div class="form-group">
+                  <label>Servicio Auto-Servido (Comandas automáticas)</label>
+                  <select class="input-text" id="local-comanda-auto-servir">
+                    <option value="true">Sí (Imprimir y servir al enviar)</option>
+                    <option value="false">No (Gestión manual de barra/cocina)</option>
+                  </select>
+                </div>
+                <button class="btn" onclick="guardarDatosNegocio()" style="align-self: flex-start;">Guardar Datos</button>
+              </div>
+
+              <!-- Tarjeta 3: Configuración del Ticket -->
+              <div class="config-card">
+                <div class="config-card-title">Ajustes del Ticket</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Tamaño de Papel</label>
+                    <select class="input-text" id="local-ticket-paper">
+                      <option value="58mm">58mm (Estándar barra)</option>
+                      <option value="80mm">80mm (Grande comedor)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Modo Impresión</label>
+                    <select class="input-text" id="local-ticket-print-mode">
+                      <option value="browser">Navegador (Browser)</option>
+                      <option value="service">Servicio Python (PrintBridge)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Fuente General (pt)</label>
+                    <input type="number" class="input-text" id="local-ticket-font-size" value="9">
+                  </div>
+                  <div class="form-group">
+                    <label>Fuente Título (pt)</label>
+                    <input type="number" class="input-text" id="local-ticket-header-name-size" value="12">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Texto en Mayúsculas</label>
+                    <select class="input-text" id="local-ticket-uppercase">
+                      <option value="true">Sí</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Mostrar Notas</label>
+                    <select class="input-text" id="local-ticket-show-notes">
+                      <option value="true">Sí</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Logo URL (Opcional)</label>
+                  <input type="text" class="input-text" id="local-ticket-logo" placeholder="https://...">
+                </div>
+                <button class="btn" onclick="guardarAjustesTicket()" style="align-self: flex-start;">Guardar Ajustes Ticket</button>
+              </div>
+
+              <!-- Tarjeta 4: Configuración de Impresoras -->
+              <div class="config-card">
+                <div class="config-card-title">Impresoras del Sistema (Python Bridge)</div>
+                <div class="form-row-switch" style="margin-bottom: 10px;">
+                  <div class="switch-info">
+                    <div class="switch-title">Estado de Impresión</div>
+                    <div class="switch-desc" id="ps-pausa-label">Cargando...</div>
+                  </div>
+                  <button class="btn" id="btn-toggle-pausa" onclick="togglePausaImpresion()" style="font-size: 11px;">Pausar</button>
+                </div>
+                
+                <h4 style="font-size: 13px; color: var(--text-dim); margin-top: 8px;">Impresora de Tickets</h4>
+                <div class="form-row">
+                  <input type="text" class="input-text" id="ps-ticket-printer" placeholder="Nombre de impresora">
+                  <select class="input-text" id="ps-ticket-enabled">
+                    <option value="true">Activada</option>
+                    <option value="false">Desactivada</option>
+                  </select>
+                </div>
+
+                <h4 style="font-size: 13px; color: var(--text-dim);">Impresora de Barra</h4>
+                <div class="form-row">
+                  <input type="text" class="input-text" id="ps-barra-printer" placeholder="Nombre de impresora">
+                  <select class="input-text" id="ps-barra-enabled">
+                    <option value="true">Activada</option>
+                    <option value="false">Desactivada</option>
+                  </select>
+                </div>
+
+                <h4 style="font-size: 13px; color: var(--text-dim);">Impresora de Cocina</h4>
+                <div class="form-row">
+                  <input type="text" class="input-text" id="ps-cocina-printer" placeholder="Nombre de impresora">
+                  <select class="input-text" id="ps-cocina-enabled">
+                    <option value="true">Activada</option>
+                    <option value="false">Desactivada</option>
+                  </select>
+                </div>
+                
+                <button class="btn" onclick="guardarConfigImpresoras()" style="align-self: flex-start; margin-top: 6px;">Guardar Impresoras</button>
+              </div>
+
+              <!-- Tarjeta 5: Cuota y Consumo de Firebase -->
+              <div class="config-card">
+                <div class="config-card-title">Cuota y Consumo de Firebase</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Límite de Líneas Activo</label>
+                    <input type="number" class="input-text" id="quota-limit-input" placeholder="Ej. 1000 (-1 = Sin Límite)" style="font-family: var(--font-code);">
+                  </div>
+                  <div class="form-group" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                    <button class="btn" onclick="guardarLimiteCuota()" style="width: 100%;">Guardar Límite</button>
+                  </div>
+                </div>
+                <div style="font-size: 13px; color: var(--text-dim); display: flex; justify-content: space-between; margin-top: 10px;">
+                  <span>Límite actual:</span>
+                  <strong id="quota-current-limit" style="color: var(--accent);">Cargando...</strong>
+                </div>
+                <div style="font-size: 13px; color: var(--text-dim); display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span>Uso total acumulado:</span>
+                  <strong id="quota-total-accumulated" style="color: var(--text);">Cargando...</strong>
+                </div>
+                <h4 style="font-size: 13px; color: var(--accent); margin-top: 12px; margin-bottom: 6px; border-top: 1px solid var(--border); padding-top: 10px;">Consumo Mensual:</h4>
+                <div id="quota-monthly-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 180px; overflow-y: auto;">
+                  <!-- Lista de consumo mensual -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA: AUDITORÍA -->
+        <div class="view-pane" id="pane-auditoria">
+          <div class="auditoria-container" id="audit-locked">
+            <div class="audit-locked-container">
+              <span style="font-size: 40px; margin-bottom: 10px;">🔒</span>
+              <h3>Auditoría Bloqueada</h3>
+              <p style="font-size: 13px; color: var(--text-dim);">Introduce la contraseña de seguridad para visualizar el registro de acciones.</p>
+              <input type="password" class="input-text" id="audit-pwd-input" placeholder="Contraseña de auditoría" style="text-align: center;">
+              <div id="audit-pwd-error" style="color: var(--danger); font-size: 12px; display: none; margin-top: 5px;">Contraseña incorrecta</div>
+              <button class="btn" onclick="checkAuditPassword()" style="width: 100%; margin-top: 10px;">Desbloquear</button>
+            </div>
+          </div>
+
+          <div class="auditoria-container" id="audit-unlocked" style="display: none;">
+            <!-- Filtros -->
+            <div class="auditoria-filter-bar">
+              <div class="form-group">
+                <label>Desde Fecha</label>
+                <input type="date" class="input-text" id="audit-fecha-ini">
+              </div>
+              <div class="form-group">
+                <label>Hasta Fecha</label>
+                <input type="date" class="input-text" id="audit-fecha-fin">
+              </div>
+              <div class="form-group">
+                <label>Camarero</label>
+                <select class="input-text" id="audit-camarero">
+                  <option value="">— Todos —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Acción</label>
+                <select class="input-text" id="audit-accion">
+                  <option value="">— Todas —</option>
+                  <option value="articulo_eliminado">Eliminaciones</option>
+                  <option value="descuento_aplicado">Descuentos</option>
+                  <option value="cantidad_editada">Ediciones cantidad</option>
+                  <option value="ticket_cobrado">Mesa cobrada</option>
+                  <option value="ticket_impreso">Impresiones</option>
+                  <option value="articulo_agregado">Añadidos</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Mesa</label>
+                <input type="text" class="input-text" id="audit-mesa" placeholder="Ej. 1s">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn" onclick="aplicarFiltrosAuditoria()" style="padding: 8px 12px;">Filtrar</button>
+                <button class="btn btn-secondary" onclick="resetFiltrosAuditoria()" style="padding: 8px 12px;" title="Limpiar Filtros">↺</button>
+                <button class="btn btn-secondary" onclick="exportarAuditoriaCSV()" style="padding: 8px 12px;" title="Exportar CSV">📥</button>
+              </div>
+            </div>
+
+            <!-- Resumen Estadísticas de auditoría -->
+            <div class="auditoria-stats">
+              <div class="total-card">
+                <div class="total-card-label">TOTAL ACCIONES</div>
+                <div class="total-card-val" id="audit-stat-eventos">0</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">PLATOS ELIMINADOS</div>
+                <div class="total-card-val" id="audit-stat-eliminados" style="color: var(--danger);">0</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">DESCUENTOS / MODIFICACIONES</div>
+                <div class="total-card-val" id="audit-stat-descuentos" style="color: var(--warn);">0</div>
+              </div>
+            </div>
+
+            <!-- Listado logs -->
+            <div style="flex: 1; overflow-y: auto; background-color: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
+              <div id="audit-lista" style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="font-size: 13px; color: var(--text-dim); text-align: center; padding: 30px;">Presiona Filtrar para consultar el registro.</div>
+              </div>
+            </div>
+            
+            <!-- Cambiar Contraseña Auditoría -->
+            <div class="form-row-switch" style="background-color: var(--panel); margin-top: auto; padding: 12px 20px;">
+              <div class="switch-info">
+                <div class="switch-title" style="font-size: 13px;">Seguridad del Registro</div>
+                <div class="switch-desc">Cambiar la contraseña de auditoría de este local.</div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="password" class="input-text" id="new-audit-pwd" placeholder="Nueva Contraseña" style="width: 160px; height: 32px;">
+                <button class="btn" onclick="changeAuditPwd()" style="height: 32px; font-size: 11px;">Actualizar</button>
+                <button class="btn btn-secondary" onclick="bloquearAuditoria()" style="height: 32px; font-size: 11px;">Bloquear Panel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AÑADIR/EDITAR NEGOCIO -->
+  <div class="modal-overlay" id="modal-local">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-local-title">Añadir Local de Firebase</div>
+        <button class="btn-icon" onclick="cerrarModalLocal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="form-local-id">
+        <div class="form-group">
+          <label for="form-local-nombre">Nombre del Local</label>
+          <input type="text" class="input-text" id="form-local-nombre" placeholder="Ej. Bar Central">
+        </div>
+        <div class="form-group">
+          <label for="form-local-dburl">Database URL</label>
+          <input type="text" class="input-text" id="form-local-dburl" placeholder="https://mi-proyecto-rtdb.firebaseio.com">
+        </div>
+        <div class="form-group">
+          <label for="form-local-apikey">API Key de Firebase</label>
+          <input type="text" class="input-text" id="form-local-apikey" placeholder="AIzaSy...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModalLocal()">Cancelar</button>
+        <button class="btn" onclick="guardarLocal()">Guardar Local</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AÑADIR/EDITAR CATEGORIA -->
+  <div class="modal-overlay" id="modal-categoria">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-cat-title">Añadir Categoría</div>
+        <button class="btn-icon" onclick="cerrarModalCategoria()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="form-cat-id">
+        <div class="form-group">
+          <label for="form-cat-nombre">Nombre de Categoría</label>
+          <input type="text" class="input-text" id="form-cat-nombre" placeholder="Ej. Bebidas, Tapas, Carnes">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModalCategoria()">Cancelar</button>
+        <button class="btn" onclick="guardarCategoria()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AÑADIR/EDITAR PRODUCTO -->
+  <div class="modal-overlay" id="modal-producto">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-prod-title">Añadir Artículo</div>
+        <button class="btn-icon" onclick="cerrarModalProducto()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="form-prod-id">
+        <div class="form-group">
+          <label for="form-prod-nombre">Nombre del Artículo</label>
+          <input type="text" class="input-text" id="form-prod-nombre" placeholder="Ej. Coca Cola, Patatas Bravas">
+        </div>
+        <div class="form-group">
+          <label for="form-prod-precio">Precio (€)</label>
+          <input type="number" step="0.01" class="input-text" id="form-prod-precio" placeholder="1.50">
+        </div>
+        <div class="form-group">
+          <label for="form-prod-destino">Destino de Comanda</label>
+          <select class="input-text" id="form-prod-destino">
+            <option value="barra">Barra</option>
+            <option value="cocina">Cocina</option>
+            <option value="ambos">Ambos</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModalProducto()">Cancelar</button>
+        <button class="btn" onclick="guardarProducto()">Guardar Artículo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALLE DE TICKET HISTORICO -->
+  <div class="modal-overlay" id="modal-ticket-detalle">
+    <div class="modal" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title">Detalle de Venta</div>
+        <button class="btn-icon" onclick="cerrarModalTicketDetalle()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-ticket-detalle-body" style="max-height: 480px; overflow-y: auto;">
+        <!-- Detalle dinámico del ticket -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModalTicketDetalle()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./desarrollador.js"></script>
+</body>
+</html>
