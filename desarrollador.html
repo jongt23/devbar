@@ -1096,6 +1096,172 @@
       border-left: 3px solid var(--danger);
       background-color: rgba(248, 113, 113, 0.02);
     }
+
+    /* --- RESPONSIVE / MOBILE MEDIA QUERIES --- */
+    .btn-sidebar-toggle {
+      display: none;
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 999;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-backdrop.show {
+      display: block;
+    }
+    .btn-sidebar-toggle-welcome {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 290px;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.6);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .btn-sidebar-toggle {
+        display: inline-flex;
+        align-items: center;
+        background-color: var(--panel-light);
+        border: 1px solid var(--border);
+        color: var(--accent);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-family: var(--font-main);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .btn-sidebar-toggle-welcome {
+        display: inline-flex !important;
+      }
+
+      .panel-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+
+      .navbar {
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        display: flex;
+        gap: 6px;
+        padding: 4px;
+      }
+
+      .navbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .nav-tab {
+        flex-shrink: 0;
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .tab-viewport {
+        padding: 12px;
+      }
+
+      /* Salón mobile */
+      .salon-container {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .ticket-drawer {
+        width: 100%;
+      }
+
+      /* Carta mobile */
+      .carta-container {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .categorias-pane {
+        width: 100% !important;
+        max-height: 250px;
+      }
+
+      .productos-pane {
+        width: 100% !important;
+      }
+
+      .carta-container.has-active-cat .categorias-pane {
+        display: none !important;
+      }
+
+      .carta-container.has-active-cat .productos-pane {
+        display: flex !important;
+      }
+
+      /* Ventas mobile */
+      .ventas-totals-bar {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .total-card {
+        padding: 12px;
+      }
+
+      .total-card-val {
+        font-size: 20px;
+      }
+
+      /* Camareros mobile */
+      .camareros-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      /* Ajustes mobile */
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      /* Auditoría mobile */
+      .auditoria-filter-bar {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .auditoria-stats {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1110,6 +1276,7 @@
       <!-- Se cargan dinámicamente -->
     </div>
   </div>
+  <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
   <!-- PANEL DE TRABAJO PRINCIPAL -->
   <div class="main-content">
@@ -1119,6 +1286,7 @@
       <div class="welcome-logo">🚀</div>
       <h1 class="welcome-title">Panel de Desarrollador Multilocal</h1>
       <p class="welcome-desc">Añade o selecciona un negocio en el menú lateral para gestionar sus comandas, editar su carta de productos y revisar sus ventas en tiempo real sin restricción de Wi-Fi.</p>
+      <button class="btn btn-sidebar-toggle-welcome" onclick="toggleSidebar()" style="margin-top: 16px; display: none;">Ver mis locales</button>
     </div>
 
     <!-- PANELES DE CONTROL DEL NEGOCIO ACTIVO -->
@@ -1126,9 +1294,12 @@
       
       <!-- CABECERA DEL LOCAL ACTIVO -->
       <div class="panel-header">
-        <div class="active-local-name" id="label-nombre-local-activo">
-          <div class="local-status-dot connected" id="active-status-dot"></div>
-          <span>Cargando...</span>
+        <div style="display: flex; align-items: center; width: 100%; justify-content: space-between;">
+          <div class="active-local-name" id="label-nombre-local-activo">
+            <div class="local-status-dot connected" id="active-status-dot"></div>
+            <span>Cargando...</span>
+          </div>
+          <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰ Locales</button>
         </div>
         <div class="navbar">
           <button class="nav-tab active" onclick="cambiarPestana('salon')">Salón (Mesas)</button>
@@ -1184,7 +1355,10 @@
 
             <div class="productos-pane">
               <div class="productos-header">
-                <h3 id="label-categoria-seleccionada">Selecciona una categoría</h3>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <button class="btn btn-secondary btn-back-categories" onclick="volverACategorias()" style="display: none;">← Volver</button>
+                  <h3 id="label-categoria-seleccionada">Selecciona una categoría</h3>
+                </div>
                 <button class="btn" onclick="abrirModalProducto()" id="btn-add-producto" style="display: none;">+ Añadir Plato</button>
               </div>
               <div class="productos-table-wrapper">
