@@ -126,11 +126,13 @@ function renderLocales() {
       seleccionarLocal(loc.id);
     };
     
+    const initials = loc.nombre ? loc.nombre.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '??';
     item.innerHTML = `
       <div class="local-info">
         <div class="local-name">
           <div class="local-status-dot${isActivo ? ' connected' : ''}" id="dot-${loc.id}"></div>
-          <span>${loc.nombre}</span>
+          <span class="full-name">${loc.nombre}</span>
+          <span class="short-name">${initials}</span>
         </div>
         <div class="local-url">${loc.databaseURL}</div>
       </div>

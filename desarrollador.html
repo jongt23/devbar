@@ -1098,6 +1098,9 @@
     }
 
     /* --- RESPONSIVE / MOBILE MEDIA QUERIES --- */
+    .short-name {
+      display: none;
+    }
     .btn-sidebar-toggle {
       display: none;
     }
@@ -1119,23 +1122,176 @@
 
     @media (max-width: 768px) {
       body {
-        flex-direction: column;
+        flex-direction: row; /* Mantener diseño lado a lado */
       }
 
       .sidebar {
+        width: 65px !important;
+        flex-shrink: 0;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+      }
+
+      /* Cabecera del sidebar colapsado */
+      .sidebar:not(.expanded) .sidebar-header {
+        padding: 12px 5px;
+        justify-content: center;
+      }
+      .sidebar:not(.expanded) .sidebar-title {
+        display: none;
+      }
+      .sidebar:not(.expanded) .btn-add-local {
+        padding: 0;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        background-color: var(--panel-light);
+        border: 1px solid var(--border);
+      }
+      .sidebar:not(.expanded) .btn-add-local span {
+        display: none;
+      }
+      .sidebar:not(.expanded) .btn-add-local::before {
+        content: "+";
+        color: var(--accent);
+      }
+
+      /* Lista de locales en el sidebar colapsado */
+      .sidebar:not(.expanded) .locales-list {
+        padding: 10px 5px;
+        gap: 12px;
+        align-items: center;
+      }
+      .sidebar:not(.expanded) .local-item {
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+        border: 2px solid var(--border);
+      }
+      .sidebar:not(.expanded) .local-item.active {
+        border-color: var(--accent);
+      }
+      .sidebar:not(.expanded) .local-info {
+        align-items: center;
+        justify-content: center;
+      }
+      .sidebar:not(.expanded) .local-name {
+        gap: 0;
+        justify-content: center;
+        position: relative;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+      }
+      .sidebar:not(.expanded) .local-status-dot {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        border: 2px solid var(--panel-light);
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin: 0;
+        z-index: 5;
+      }
+      .sidebar:not(.expanded) .full-name,
+      .sidebar:not(.expanded) .local-url,
+      .sidebar:not(.expanded) .local-actions {
+        display: none !important;
+      }
+      .sidebar:not(.expanded) .short-name {
+        display: block !important;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+        text-align: center;
+      }
+
+      /* Sidebar flotante expandido */
+      .sidebar.expanded {
         position: fixed;
         top: 0;
         bottom: 0;
         left: 0;
+        width: 260px !important;
         z-index: 1000;
-        transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 290px;
         box-shadow: 10px 0 30px rgba(0,0,0,0.6);
       }
+      .sidebar.expanded .sidebar-header {
+        padding: 20px;
+        justify-content: space-between !important;
+      }
+      .sidebar.expanded .sidebar-title {
+        display: block !important;
+      }
+      .sidebar.expanded .btn-add-local {
+        border-radius: 6px !important;
+        width: auto !important;
+        height: auto !important;
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+        background-color: var(--border);
+      }
+      .sidebar.expanded .btn-add-local::before {
+        content: "" !important;
+      }
+      .sidebar.expanded .btn-add-local span {
+        display: inline !important;
+      }
+      .sidebar.expanded .locales-list {
+        padding: 12px !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+      }
+      .sidebar.expanded .local-item {
+        border-radius: 8px !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 12px !important;
+        margin: 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        border: 1px solid var(--border);
+      }
+      .sidebar.expanded .local-info {
+        align-items: flex-start !important;
+      }
+      .sidebar.expanded .local-name {
+        gap: 8px !important;
+        position: static !important;
+      }
+      .sidebar.expanded .local-status-dot {
+        position: static !important;
+        width: 8px !important;
+        height: 8px !important;
+        border: none !important;
+      }
+      .sidebar.expanded .full-name {
+        display: inline-block !important;
+      }
+      .sidebar.expanded .short-name {
+        display: none !important;
+      }
+      .sidebar.expanded .local-url {
+        display: block !important;
+      }
+      .sidebar.expanded .local-actions {
+        display: flex !important;
+      }
 
-      .sidebar.open {
-        transform: translateX(0);
+      /* Ajuste de ancho de contenedor de trabajo */
+      .main-content {
+        width: calc(100% - 65px) !important;
+        flex: 1;
       }
 
       .btn-sidebar-toggle {
@@ -1185,13 +1341,44 @@
       }
 
       .tab-viewport {
-        padding: 12px;
+        padding: 10px;
       }
 
-      /* Salón mobile */
+      /* Salón mobile plano */
       .salon-container {
         flex-direction: column;
         gap: 16px;
+      }
+
+      .plano-grid {
+        min-width: 280px !important;
+        gap: 2px !important;
+        padding: 4px !important;
+      }
+      .plano-mesa-nombre {
+        font-size: 10px !important;
+      }
+      .plano-mesa-sub {
+        font-size: 7px !important;
+      }
+      .plano-mesa-tiempo-badge {
+        font-size: 7px !important;
+        padding: 1px 2px !important;
+      }
+
+      /* Salón mobile grid */
+      .mesas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)) !important;
+        gap: 8px !important;
+      }
+      .mesa-card {
+        padding: 8px !important;
+      }
+      .mesa-card div {
+        font-size: 14px !important;
+      }
+      .mesa-subtext {
+        font-size: 8px !important;
       }
 
       .ticket-drawer {
@@ -1219,6 +1406,25 @@
 
       .carta-container.has-active-cat .productos-pane {
         display: flex !important;
+      }
+
+      /* Cabecera y tabla de productos adaptada a móviles */
+      .productos-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+      }
+      .productos-header > div {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      #btn-add-producto {
+        width: 100% !important;
+        justify-content: center;
+      }
+      .productos-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
       }
 
       /* Ventas mobile */
