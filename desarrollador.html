@@ -1964,6 +1964,12 @@
 
           <div class="auditoria-container" id="audit-unlocked" style="display: none;">
             <!-- Filtros -->
+            <div class="audit-filters-toggle-bar" onclick="toggleAuditFilters()" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background-color: var(--panel); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-bottom: 8px; user-select: none;">
+              <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px;">
+                <span>🔍</span> Filtros de Auditoría
+              </div>
+              <span id="audit-filters-toggle-icon" style="font-size: 12px; transition: transform 0.2s;">▲</span>
+            </div>
             <div class="auditoria-filter-bar">
               <div class="form-group">
                 <label>Desde Fecha</label>

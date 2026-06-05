@@ -98,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Paginación de Auditoría
   window.cambiarPaginaAuditoria = cambiarPaginaAuditoria;
+  window.toggleAuditFilters = toggleAuditFilters;
 
   // Mobile helper bindings
   window.toggleSidebar = toggleSidebar;
@@ -1493,6 +1494,20 @@ function bloquearAuditoria() {
   document.getElementById("audit-unlocked").style.display = "none";
 }
 
+function toggleAuditFilters() {
+  const bar = document.querySelector("#audit-unlocked .auditoria-filter-bar");
+  const icon = document.getElementById("audit-filters-toggle-icon");
+  if (!bar || !icon) return;
+
+  if (bar.style.display === "none") {
+    bar.style.display = ""; // defaults back to CSS (grid)
+    icon.textContent = "▲";
+  } else {
+    bar.style.display = "none";
+    icon.textContent = "▼";
+  }
+}
+
 function desbloquearAuditoria() {
   auditUnlocked = true;
   sessionStorage.setItem("audit_unlocked", "1");
@@ -1506,6 +1521,24 @@ function desbloquearAuditoria() {
 
   poblarCamarerosAuditoria(usuariosData);
   aplicarFiltrosAuditoria();
+
+  // Colapsar filtros por defecto en móvil para ahorrar espacio
+  if (window.innerWidth <= 768) {
+    const bar = document.querySelector("#audit-unlocked .auditoria-filter-bar");
+    const icon = document.getElementById("audit-filters-toggle-icon");
+    if (bar && icon) {
+      bar.style.display = "none";
+      icon.textContent = "▼";
+    }
+  } else {
+    // Asegurar que comience expandido en desktop
+    const bar = document.querySelector("#audit-unlocked .auditoria-filter-bar");
+    const icon = document.getElementById("audit-filters-toggle-icon");
+    if (bar && icon) {
+      bar.style.display = "";
+      icon.textContent = "▲";
+    }
+  }
 }
 
 function poblarCamarerosAuditoria(usuarios) {
