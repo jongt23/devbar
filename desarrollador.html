@@ -1066,6 +1066,58 @@
       gap: 16px;
     }
 
+    .audit-list-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .audit-header {
+      display: grid;
+      grid-template-columns: 120px 100px 80px 140px 1fr;
+      gap: 10px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .audit-item {
+      display: grid;
+      grid-template-columns: 120px 100px 80px 140px 1fr;
+      gap: 10px;
+      padding: 10px 4px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      align-items: start;
+    }
+
+    .audit-col-time {
+      font-family: var(--font-code);
+      color: var(--text-dim);
+    }
+
+    .audit-col-user {
+      font-weight: 500;
+    }
+
+    .audit-col-table {
+      color: var(--text);
+    }
+
+    .audit-col-action {
+      font-weight: 600;
+    }
+
+    .audit-col-detail {
+      line-height: 1.4;
+    }
+
     .audit-locked-container {
       display: flex;
       flex-direction: column;
@@ -1293,16 +1345,20 @@
 
       /* Ventas mobile */
       .ventas-totals-bar {
-        grid-template-columns: 1fr;
-        gap: 10px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
       }
 
-      .total-card {
-        padding: 12px;
+      .ventas-totals-bar .total-card {
+        padding: 6px 4px !important;
       }
 
-      .total-card-val {
-        font-size: 20px;
+      .ventas-totals-bar .total-card-label {
+        font-size: 8px !important;
+      }
+
+      .ventas-totals-bar .total-card-val {
+        font-size: 14px !important;
       }
 
       /* Formatear tabla de Ventas a 2 líneas por ticket */
@@ -1389,14 +1445,108 @@
       }
 
       /* Auditoría mobile */
+      .auditoria-container {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+      }
+
+      .audit-list-wrapper {
+        flex: 1 !important;
+        min-height: 150px !important;
+        overflow-y: auto !important;
+      }
+
+      .audit-header {
+        display: none !important;
+      }
+
+      .audit-item {
+        display: block !important;
+        padding: 10px 8px !important;
+      }
+
+      .audit-col-time {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: var(--text-dim) !important;
+        margin-bottom: 4px !important;
+        display: block !important;
+      }
+
+      .audit-col-user, .audit-col-table, .audit-col-action {
+        display: inline-block !important;
+        font-size: 12px !important;
+        margin-right: 6px !important;
+      }
+
+      .audit-col-user::after {
+        content: " ·";
+      }
+
+      .audit-col-table::after {
+        content: " ·";
+      }
+
+      .audit-col-detail {
+        display: block !important;
+        font-size: 12px !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        padding: 6px 8px !important;
+        border-radius: 6px !important;
+        border-left: 2px solid var(--border) !important;
+        width: 100% !important;
+        margin-top: 6px !important;
+      }
+
       .auditoria-filter-bar {
-        grid-template-columns: 1fr;
-        gap: 10px;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        padding: 10px !important;
       }
 
       .auditoria-stats {
-        grid-template-columns: 1fr;
-        gap: 10px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+      }
+
+      .auditoria-stats .total-card {
+        padding: 6px 4px !important;
+      }
+
+      .auditoria-stats .total-card-label {
+        font-size: 8px !important;
+      }
+
+      .auditoria-stats .total-card-val {
+        font-size: 14px !important;
+      }
+
+      .auditoria-container .form-row-switch {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 10px !important;
+        margin-top: 8px !important;
+      }
+
+      .auditoria-container .form-row-switch > div:last-child {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        width: 100% !important;
+      }
+
+      .auditoria-container .form-row-switch #new-audit-pwd {
+        grid-column: span 2 !important;
+        width: 100% !important;
+        height: 36px !important;
+      }
+
+      .auditoria-container .form-row-switch button {
+        height: 36px !important;
+        font-size: 11px !important;
+        padding: 0 4px !important;
       }
     }
   </style>
@@ -1871,7 +2021,7 @@
             </div>
 
             <!-- Listado logs -->
-            <div style="flex: 1; overflow-y: auto; background-color: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
+            <div class="audit-list-wrapper">
               <div id="audit-lista" style="display: flex; flex-direction: column; gap: 8px;">
                 <div style="font-size: 13px; color: var(--text-dim); text-align: center; padding: 30px;">Presiona Filtrar para consultar el registro.</div>
               </div>
