@@ -1521,6 +1521,22 @@
         <!-- VISTA: HISTORIAL DE VENTAS -->
         <div class="view-pane" id="pane-ventas">
           <div class="ventas-container">
+            <!-- Filtros Ventas -->
+            <div class="auditoria-filter-bar" style="margin-bottom: 20px;">
+              <div class="form-group">
+                <label>Desde Fecha</label>
+                <input type="date" class="input-text" id="ventas-fecha-ini">
+              </div>
+              <div class="form-group">
+                <label>Hasta Fecha</label>
+                <input type="date" class="input-text" id="ventas-fecha-fin">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn" onclick="aplicarFiltrosVentas()" style="padding: 8px 12px;">Filtrar</button>
+                <button class="btn btn-secondary" onclick="resetFiltrosVentas()" style="padding: 8px 12px;" title="Limpiar Filtros">↺</button>
+              </div>
+            </div>
+
             <div class="ventas-totals-bar">
               <div class="total-card">
                 <div class="total-card-label">TOTAL RECAUDADO</div>
@@ -1548,9 +1564,20 @@
                   </tr>
                 </thead>
                 <tbody id="ventas-tbody">
-                  <!-- Tickets del historial -->
+                  <tr>
+                    <td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">
+                      Presiona Filtrar para consultar el historial de ventas.
+                    </td>
+                  </tr>
                 </tbody>
               </table>
+            </div>
+
+            <!-- Paginación Ventas -->
+            <div class="paginacion-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
+              <button class="btn btn-secondary" id="btn-ventas-prev" onclick="cambiarPaginaVentas(-1)" disabled>Anterior</button>
+              <span id="ventas-paginacion-info" style="font-size: 13px; color: var(--text-dim);">Página 1 de 1</span>
+              <button class="btn btn-secondary" id="btn-ventas-next" onclick="cambiarPaginaVentas(1)" disabled>Siguiente</button>
             </div>
           </div>
         </div>
@@ -1848,6 +1875,13 @@
               <div id="audit-lista" style="display: flex; flex-direction: column; gap: 8px;">
                 <div style="font-size: 13px; color: var(--text-dim); text-align: center; padding: 30px;">Presiona Filtrar para consultar el registro.</div>
               </div>
+            </div>
+
+            <!-- Paginación Auditoría -->
+            <div class="paginacion-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background-color: var(--panel);">
+              <button class="btn btn-secondary" id="btn-audit-prev" onclick="cambiarPaginaAuditoria(-1)" disabled>Anterior</button>
+              <span id="audit-paginacion-info" style="font-size: 13px; color: var(--text-dim);">Página 1 de 1</span>
+              <button class="btn btn-secondary" id="btn-audit-next" onclick="cambiarPaginaAuditoria(1)" disabled>Siguiente</button>
             </div>
             
             <!-- Cambiar Contraseña Auditoría -->
