@@ -880,6 +880,18 @@
       animation: pulse-border 2s infinite;
     }
 
+    .plano-mesa-grid.decorador {
+      border-style: dashed !important;
+      background-color: rgba(65, 84, 122, 0.08) !important;
+      color: var(--text-dim) !important;
+      cursor: default !important;
+      pointer-events: none !important;
+      box-shadow: none !important;
+    }
+    .plano-mesa-grid.decorador:hover {
+      transform: none !important;
+    }
+
     @keyframes pulse-border {
       0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
       70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
