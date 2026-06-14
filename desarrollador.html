@@ -371,10 +371,23 @@
       color: var(--accent);
     }
 
-    .mesa-card.ocupada {
+    .mesa-card.ocupada, .mesa-card.alerta-ok {
       border-color: rgba(96, 165, 250, 0.4);
       background-color: rgba(96, 165, 250, 0.05);
       color: #60a5fa;
+    }
+
+    .mesa-card.alerta-warn {
+      border-color: var(--warn);
+      background-color: rgba(251, 191, 36, 0.06);
+      color: var(--warn);
+    }
+
+    .mesa-card.alerta-danger {
+      border-color: var(--danger);
+      background-color: rgba(239, 68, 68, 0.12);
+      color: var(--danger);
+      animation: pulse-border 2s infinite;
     }
 
     .mesa-card:hover {
@@ -1605,6 +1618,7 @@
           <button class="nav-tab" onclick="cambiarPestana('camareros')">Camareros</button>
           <button class="nav-tab" onclick="cambiarPestana('config')">Ajustes</button>
           <button class="nav-tab" onclick="cambiarPestana('auditoria')">Auditoría</button>
+          <button class="nav-tab" onclick="cambiarPestana('novedades')">Novedades</button>
         </div>
       </div>
 
@@ -2061,6 +2075,63 @@
                 <button class="btn" onclick="changeAuditPwd()" style="height: 32px; font-size: 11px;">Actualizar</button>
                 <button class="btn btn-secondary" onclick="bloquearAuditoria()" style="height: 32px; font-size: 11px;">Bloquear Panel</button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA: CONFIGURACIÓN DE NOVEDADES -->
+        <div class="view-pane" id="pane-novedades">
+          <div class="config-scroll-container">
+            <div class="config-grid" style="max-width: 1000px; margin: 20px auto 0;">
+              
+              <!-- Formulario de Configuración -->
+              <div class="config-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div class="config-card-title">Configurar Novedad</div>
+                  <button class="btn btn-secondary" onclick="window.limpiarNovedadForm()" style="height: auto; padding: 4px 10px; font-size: 11px;">Nuevo / Limpiar</button>
+                </div>
+                <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 5px;">
+                  Este mensaje se mostrará a los camareros en un modal al ingresar. Al pulsar "Entendido" se guardará que ya lo vio.
+                </p>
+                <div class="form-group">
+                  <label>ID del Mensaje (ej: nov_2.5_mejoras)</label>
+                  <input type="text" class="input-text" id="nov-input-id" placeholder="ID único para identificar esta novedad">
+                </div>
+                <div class="form-group">
+                  <label>Título del Mensaje</label>
+                  <input type="text" class="input-text" id="nov-input-titulo" placeholder="ej: Nuevas Funciones Disponibles">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label>Mensaje Informativo (Soporta HTML)</label>
+                  <textarea class="input-text" id="nov-input-mensaje" rows="6" style="height: auto; resize: vertical; font-family: inherit; line-height: 1.55;" placeholder="Escribe el mensaje aquí..."></textarea>
+                </div>
+                <div class="form-row-switch" style="margin-top: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                  <div class="switch-info">
+                    <div class="switch-title" style="font-size: 13px; font-weight: 500;">Mensaje Activo</div>
+                    <div class="switch-desc" style="font-size: 11px; color: var(--text-dim);">Si está desactivado, no se mostrará a ningún camarero.</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="nov-input-activo">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                  <button class="btn" onclick="window.guardarNovedadConfig()" style="flex: 1;">Guardar Novedad</button>
+                  <button class="btn" onclick="window.resetearVistosNovedad()" style="background: none; border: 1px solid var(--danger); color: var(--danger); flex: 1;">Reiniciar Vistos</button>
+                </div>
+              </div>
+
+              <!-- Listado de Mensajes Registrados -->
+              <div class="config-card">
+                <div class="config-card-title">Mensajes Registrados</div>
+                <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 5px;">
+                  Lista de novedades. Haz clic en "Editar" para cargarla en el formulario o "Eliminar" para borrarla de Firebase.
+                </p>
+                <div id="novedades-lista" style="display: flex; flex-direction: column; gap: 12px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+                  <div style="font-size: 13px; color: var(--text-dim); text-align: center; padding: 20px;">Cargando novedades…</div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

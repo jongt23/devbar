@@ -20,6 +20,7 @@ let seguridadData = {};
 let localConfig = {};
 let usuariosData = {};
 let printServiceData = {};
+let novedadesData = {};
 
 // Ventas (Historial) - Variables de Consulta y Paginación
 let ventasDataList = [];
@@ -90,6 +91,11 @@ document.addEventListener("DOMContentLoaded", () => {
   window.cerrarModalTicketDetalle = cerrarModalTicketDetalle;
   window.mostrarDetalleTicketHistorico = mostrarDetalleTicketHistorico;
   window.guardarLimiteCuota = guardarLimiteCuota;
+  window.guardarNovedadConfig = guardarNovedadConfig;
+  window.resetearVistosNovedad = resetearVistosNovedad;
+  window.limpiarNovedadForm = limpiarNovedadForm;
+  window.cargarNovedadForm = cargarNovedadForm;
+  window.eliminarNovedad = eliminarNovedad;
 
   // Filtros y Paginación de Ventas
   window.aplicarFiltrosVentas = aplicarFiltrosVentas;
@@ -356,6 +362,12 @@ function suscribirseAFirebase() {
     const val = snap.val() || {};
     renderEstadisticasConsumo(val);
   });
+
+  // 12. Escuchar Novedades
+  onValue(ref(db, "novedades"), snap => {
+    novedadesData = snap.val() || {};
+    renderNovedadesConfig();
+  });
 }
 
 // --- AUXILIAR: TIEMPO DESDE PRIMERA COMANDA ACTIVA ---
@@ -385,162 +397,257 @@ function renderPlanoMesas() {
   wrapper.innerHTML = "";
   
   const entries = Object.entries(mesasData)
+    .filter(([id]) => !id.startsWith("temp_"))
     .sort(([,a],[,b]) => (a.orden ?? 999) - (b.orden ?? 999) || a.nombre.localeCompare(b.nombre, 'es', { numeric: true }));
 
-  if (entries.length === 0) {
-    wrapper.innerHTML = `<div class="drawer-placeholder">No hay mesas configuradas en este local.</div>`;
+  const temporales = Object.entries(mesasData)
+    .filter(([id]) => id.startsWith("temp_"))
+    .sort(([,a],[,b]) => (a.creadoTs || 0) - (b.creadoTs || 0));
+
+  if (entries.length === 0 && temporales.length === 0) {
+    wrapper.innerHTML = `<div class="drawer-placeholder">No hay mesas configuradas ni pedidos temporales en este local.</div>`;
     return;
   }
 
-  // 1. Zonas
-  const hayZonas = entries.some(([,m]) => m.zona && m.zona.trim());
-  let zonas = [];
-  if (hayZonas) {
-    zonas = [...new Set(entries.map(([,m]) => (m.zona || "").trim()).filter(Boolean))];
-    if (!planoZonaActiva || !zonas.includes(planoZonaActiva)) {
-      planoZonaActiva = zonas[0];
-    }
-  }
-
-  const mesasFiltradas = hayZonas
-    ? entries.filter(([,m]) => (m.zona || "").trim() === planoZonaActiva)
-    : entries;
-
-  // Renderizar pestañas de zonas
-  if (hayZonas) {
-    const tabs = document.createElement("div");
-    tabs.className = "plano-tabs";
-    zonas.forEach(z => {
-      const btn = document.createElement("button");
-      btn.className = `plano-tab${z === planoZonaActiva ? ' active' : ''}`;
-      btn.textContent = z;
-      btn.onclick = () => seleccionarZonaPlano(z);
-      tabs.appendChild(btn);
-    });
-    wrapper.appendChild(tabs);
-  }
-
-  // 2. Determinar si hay mesas ubicadas en plano
-  const ubicadas = mesasFiltradas.filter(([,m]) => m.plano);
-  const sinUbicar = mesasFiltradas.filter(([,m]) => !m.plano && !m.nombre.startsWith('#'));
-
-  if (ubicadas.length > 0) {
-    // Renderizar Plano Gráfico en CSS Grid
-    const planoContainer = document.createElement("div");
-    planoContainer.className = "plano-wrap";
-    
-    const cols = planoCfg.cols || 16;
-    const rows = planoCfg.rows || 12;
-    
-    const grid = document.createElement("div");
-    grid.className = "plano-grid";
-    grid.style.setProperty("--plano-cols", cols);
-    grid.style.setProperty("--plano-rows", rows);
-    
-    mesasFiltradas.forEach(([mid, m]) => {
-      const p = m.plano;
-      if (!p) return; // Si no está ubicada en esta zona/plano
-      
-      const card = document.createElement("div");
-      const isCircle = p.shape === "circle" ? " circle" : "";
-      const isDeco = m.nombre.startsWith('#');
-
-      if (isDeco) {
-        card.className = `plano-mesa-grid decorador${isCircle}`;
-        card.style.gridColumn = `${p.x} / span ${p.w}`;
-        card.style.gridRow = `${p.y} / span ${p.h}`;
-        card.innerHTML = `<span class="plano-mesa-nombre">${m.nombre.slice(1)}</span>`;
-        grid.appendChild(card);
-        return;
+  if (entries.length > 0) {
+    // 1. Zonas
+    const hayZonas = entries.some(([,m]) => m.zona && m.zona.trim());
+    let zonas = [];
+    if (hayZonas) {
+      zonas = [...new Set(entries.map(([,m]) => (m.zona || "").trim()).filter(Boolean))];
+      if (!planoZonaActiva || !zonas.includes(planoZonaActiva)) {
+        planoZonaActiva = zonas[0];
       }
+    }
 
-      const tienePedido = pedidosData[mid] && Object.keys(pedidosData[mid]).length > 0;
-      let claseAlerta = tienePedido ? "ocupada" : "libre";
-      let tiempoOcupada = null;
-      if (tienePedido) {
-        tiempoOcupada = calcularTiempoOcupada(mid);
-        let minTsPendiente = Infinity;
-        let tienePendiente = false;
+    const mesasFiltradas = hayZonas
+      ? entries.filter(([,m]) => (m.zona || "").trim() === planoZonaActiva)
+      : entries;
+
+    // Renderizar pestañas de zonas
+    if (hayZonas) {
+      const tabs = document.createElement("div");
+      tabs.className = "plano-tabs";
+      zonas.forEach(z => {
+        const btn = document.createElement("button");
+        btn.className = `plano-tab${z === planoZonaActiva ? ' active' : ''}`;
+        btn.textContent = z;
+        btn.onclick = () => seleccionarZonaPlano(z);
+        tabs.appendChild(btn);
+      });
+      wrapper.appendChild(tabs);
+    }
+
+    // 2. Determinar si hay mesas ubicadas en plano
+    const ubicadas = mesasFiltradas.filter(([,m]) => m.plano);
+    const sinUbicar = mesasFiltradas.filter(([,m]) => !m.plano && !m.nombre.startsWith('#'));
+
+    if (ubicadas.length > 0) {
+      // Renderizar Plano Gráfico en CSS Grid
+      const planoContainer = document.createElement("div");
+      planoContainer.className = "plano-wrap";
+      
+      const cols = planoCfg.cols || 16;
+      const rows = planoCfg.rows || 12;
+      
+      const grid = document.createElement("div");
+      grid.className = "plano-grid";
+      grid.style.setProperty("--plano-cols", cols);
+      grid.style.setProperty("--plano-rows", rows);
+      
+      mesasFiltradas.forEach(([mid, m]) => {
+        const p = m.plano;
+        if (!p) return; // Si no está ubicada en esta zona/plano
         
-        Object.values(pedidosData[mid]).forEach(envio => {
-          const envioTs = Number(envio.ts) || 0;
-          const ls = envio.lineas || { _: envio };
-          Object.values(ls).forEach(l => {
-            if (l && l.estado === "pendiente") {
-              tienePendiente = true;
-              const lts = Number(l.ts) || envioTs || 0;
-              if (lts > 0 && lts < minTsPendiente) minTsPendiente = lts;
-            }
+        const card = document.createElement("div");
+        const isCircle = p.shape === "circle" ? " circle" : "";
+        const isDeco = m.nombre.startsWith('#');
+
+        if (isDeco) {
+          card.className = `plano-mesa-grid decorador${isCircle}`;
+          card.style.gridColumn = `${p.x} / span ${p.w}`;
+          card.style.gridRow = `${p.y} / span ${p.h}`;
+          card.innerHTML = `<span class="plano-mesa-nombre">${m.nombre.slice(1)}</span>`;
+          grid.appendChild(card);
+          return;
+        }
+
+        const tienePedido = pedidosData[mid] && Object.keys(pedidosData[mid]).length > 0;
+        let claseAlerta = tienePedido ? "ocupada" : "libre";
+        let tiempoOcupada = null;
+        if (tienePedido) {
+          tiempoOcupada = calcularTiempoOcupada(mid);
+          let minTsPendiente = Infinity;
+          let tienePendiente = false;
+          
+          Object.values(pedidosData[mid]).forEach(envio => {
+            const envioTs = Number(envio.ts) || 0;
+            const ls = envio.lineas || { _: envio };
+            Object.values(ls).forEach(l => {
+              if (l && l.estado === "pendiente") {
+                tienePendiente = true;
+                const lts = Number(l.ts) || envioTs || 0;
+                if (lts > 0 && lts < minTsPendiente) minTsPendiente = lts;
+              }
+            });
           });
-        });
-        
-        if (tienePendiente && minTsPendiente < Infinity) {
-          const minsPend = Math.max(0, Math.floor((Date.now() - minTsPendiente) / 60000));
-          if (minsPend >= 20) {
-            claseAlerta = "alerta-danger";
-          } else if (minsPend >= 10) {
-            claseAlerta = "alerta-warn";
-          } else {
-            claseAlerta = "alerta-ok";
+          
+          if (tienePendiente && minTsPendiente < Infinity) {
+            const minsPend = Math.max(0, Math.floor((Date.now() - minTsPendiente) / 60000));
+            if (minsPend >= 20) {
+              claseAlerta = "alerta-danger";
+            } else if (minsPend >= 10) {
+              claseAlerta = "alerta-warn";
+            } else {
+              claseAlerta = "alerta-ok";
+            }
           }
         }
-      }
-      
-      card.className = `plano-mesa-grid ${claseAlerta}${isCircle}`;
-      card.style.gridColumn = `${p.x} / span ${p.w}`;
-      card.style.gridRow = `${p.y} / span ${p.h}`;
-      
-      // Calcular total e ítems usando cantidades y precios de comanda (precioTicket / qtyTicket si existen)
-      let totalQty = 0;
-      let subtotal = 0;
-      if (tienePedido) {
-        Object.values(pedidosData[mid]).forEach(env => {
-          const ls = env.lineas || { _: env };
-          Object.values(ls).forEach(l => {
-            if (l && l.nombre && l.estado !== 'cancelado') {
-              const qty = l.qtyTicket !== undefined && l.qtyTicket !== null
-                ? Number(l.qtyTicket)
-                : (l.estado === 'servido' ? Number(l.qty || 0) : (l.qtyServida !== undefined && l.qtyServida !== null ? Number(l.qtyServida) : Number(l.qty || 0)));
-              const price = l.precioTicket !== undefined && l.precioTicket !== null
-                ? Number(l.precioTicket)
-                : (l.precio !== undefined && l.precio !== null ? Number(l.precio) : Number(cartaData[l.artId]?.precio || 0));
-              if (qty > 0) {
-                totalQty += qty;
-                subtotal += (price * qty);
+        
+        card.className = `plano-mesa-grid ${claseAlerta}${isCircle}`;
+        card.style.gridColumn = `${p.x} / span ${p.w}`;
+        card.style.gridRow = `${p.y} / span ${p.h}`;
+        
+        // Calcular total e ítems usando cantidades y precios de comanda (precioTicket / qtyTicket si existen)
+        let totalQty = 0;
+        let subtotal = 0;
+        if (tienePedido) {
+          Object.values(pedidosData[mid]).forEach(env => {
+            const ls = env.lineas || { _: env };
+            Object.values(ls).forEach(l => {
+              if (l && l.nombre && l.estado !== 'cancelado') {
+                const qty = l.qtyTicket !== undefined && l.qtyTicket !== null
+                  ? Number(l.qtyTicket)
+                  : (l.estado === 'servido' ? Number(l.qty || 0) : (l.qtyServida !== undefined && l.qtyServida !== null ? Number(l.qtyServida) : Number(l.qty || 0)));
+                const price = l.precioTicket !== undefined && l.precioTicket !== null
+                  ? Number(l.precioTicket)
+                  : (l.precio !== undefined && l.precio !== null ? Number(l.precio) : Number(cartaData[l.artId]?.precio || 0));
+                if (qty > 0) {
+                  totalQty += qty;
+                  subtotal += (price * qty);
+                }
               }
-            }
+            });
           });
-        });
-      }
+        }
 
-      card.innerHTML = `
-        <span class="plano-mesa-nombre">${m.nombre}</span>
-        ${tienePedido ? `<span class="plano-mesa-sub">${totalQty} art. | ${subtotal.toFixed(2)}€</span>` : '<span class="plano-mesa-sub">Libre</span>'}
-        ${tiempoOcupada ? `<span class="plano-mesa-tiempo-badge">⏳ ${tiempoOcupada}</span>` : ""}
-      `;
-      card.onclick = () => seleccionarMesa(mid);
-      grid.appendChild(card);
-    });
-    
-    planoContainer.appendChild(grid);
-    wrapper.appendChild(planoContainer);
-    
-    // Si hay mesas sin ubicar en esta zona, mostrarlas al final
-    if (sinUbicar.length > 0) {
-      const sinUbicarDiv = document.createElement("div");
-      sinUbicarDiv.className = "plano-sinubicar";
-      sinUbicarDiv.style.marginTop = "12px";
-      sinUbicarDiv.style.fontSize = "12px";
-      sinUbicarDiv.style.color = "var(--text-dim)";
-      sinUbicarDiv.innerHTML = `<strong>Mesas sin ubicar:</strong> ${sinUbicar.map(([,m]) => m.nombre).join(", ")}`;
-      wrapper.appendChild(sinUbicarDiv);
+        card.innerHTML = `
+          <span class="plano-mesa-nombre">${m.nombre}</span>
+          ${tienePedido ? `<span class="plano-mesa-sub">${totalQty} art. | ${subtotal.toFixed(2)}€</span>` : '<span class="plano-mesa-sub">Libre</span>'}
+          ${tiempoOcupada ? `<span class="plano-mesa-tiempo-badge">⏳ ${tiempoOcupada}</span>` : ""}
+        `;
+        card.onclick = () => seleccionarMesa(mid);
+        grid.appendChild(card);
+      });
+      
+      planoContainer.appendChild(grid);
+      wrapper.appendChild(planoContainer);
+      
+      // Si hay mesas sin ubicar en esta zona, mostrarlas al final
+      if (sinUbicar.length > 0) {
+        const sinUbicarDiv = document.createElement("div");
+        sinUbicarDiv.className = "plano-sinubicar";
+        sinUbicarDiv.style.marginTop = "12px";
+        sinUbicarDiv.style.fontSize = "12px";
+        sinUbicarDiv.style.color = "var(--text-dim)";
+        sinUbicarDiv.innerHTML = `<strong>Mesas sin ubicar:</strong> ${sinUbicar.map(([,m]) => m.nombre).join(", ")}`;
+        wrapper.appendChild(sinUbicarDiv);
+      }
+    } else {
+      // Dibujar Grid Simple
+      const grid = document.createElement("div");
+      grid.className = "mesas-grid";
+      
+      mesasFiltradas.filter(([,m]) => !m.nombre.startsWith('#')).forEach(([mid, m]) => {
+        const tienePedido = pedidosData[mid] && Object.keys(pedidosData[mid]).length > 0;
+        const card = document.createElement("div");
+        
+        let claseAlerta = tienePedido ? "ocupada" : "libre";
+        let tiempoOcupada = null;
+        if (tienePedido) {
+          tiempoOcupada = calcularTiempoOcupada(mid);
+          let minTsPendiente = Infinity;
+          let tienePendiente = false;
+          
+          Object.values(pedidosData[mid]).forEach(envio => {
+            const envioTs = Number(envio.ts) || 0;
+            const ls = envio.lineas || { _: envio };
+            Object.values(ls).forEach(l => {
+              if (l && l.estado === "pendiente") {
+                tienePendiente = true;
+                const lts = Number(l.ts) || envioTs || 0;
+                if (lts > 0 && lts < minTsPendiente) minTsPendiente = lts;
+              }
+            });
+          });
+          
+          if (tienePendiente && minTsPendiente < Infinity) {
+            const minsPend = Math.max(0, Math.floor((Date.now() - minTsPendiente) / 60000));
+            if (minsPend >= 20) {
+              claseAlerta = "alerta-danger";
+            } else if (minsPend >= 10) {
+              claseAlerta = "alerta-warn";
+            } else {
+              claseAlerta = "alerta-ok";
+            }
+          }
+        }
+        
+        card.className = `mesa-card ${claseAlerta}`;
+        
+        let totalQty = 0;
+        let subtotal = 0;
+        if (tienePedido) {
+          Object.values(pedidosData[mid]).forEach(env => {
+            const ls = env.lineas || { _: env };
+            Object.values(ls).forEach(l => {
+              if (l && l.nombre && l.estado !== 'cancelado') {
+                const qty = l.qtyTicket !== undefined && l.qtyTicket !== null
+                  ? Number(l.qtyTicket)
+                  : (l.estado === 'servido' ? Number(l.qty || 0) : (l.qtyServida !== undefined && l.qtyServida !== null ? Number(l.qtyServida) : Number(l.qty || 0)));
+                const price = l.precioTicket !== undefined && l.precioTicket !== null
+                  ? Number(l.precioTicket)
+                  : (l.precio !== undefined && l.precio !== null ? Number(l.precio) : Number(cartaData[l.artId]?.precio || 0));
+                if (qty > 0) {
+                  totalQty += qty;
+                  subtotal += (price * qty);
+                }
+              }
+            });
+          });
+        }
+        
+        card.innerHTML = `
+          <div style="font-size:18px;margin-bottom:4px;">${m.nombre}</div>
+          ${tienePedido ? `<div class="mesa-subtext">${totalQty} art. (${subtotal.toFixed(2)}€)</div>` : '<div class="mesa-subtext" style="color:var(--accent);">Libre</div>'}
+          ${tiempoOcupada ? `<div class="plano-mesa-tiempo-badge">⏳ ${tiempoOcupada}</div>` : ""}
+        `;
+        card.onclick = () => seleccionarMesa(mid);
+        grid.appendChild(card);
+      });
+      wrapper.appendChild(grid);
     }
-  } else {
-    // Dibujar Grid Simple
-    const grid = document.createElement("div");
-    grid.className = "mesas-grid";
+  }
+
+  // 3. Pedidos Temporales
+  if (temporales.length > 0) {
+    const tempSection = document.createElement("div");
+    tempSection.className = "temp-pedidos-section";
+    tempSection.style.marginTop = "24px";
+    tempSection.style.paddingTop = "16px";
+    tempSection.style.borderTop = "1px solid var(--border)";
+    tempSection.style.width = "100%";
     
-    mesasFiltradas.filter(([,m]) => !m.nombre.startsWith('#')).forEach(([mid, m]) => {
+    tempSection.innerHTML = `
+      <div style="font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 12px; letter-spacing: 0.05em;">
+        🛒 PEDIDOS TEMPORALES ACTIVOS
+      </div>
+    `;
+    
+    const tempGrid = document.createElement("div");
+    tempGrid.className = "mesas-grid";
+    
+    temporales.forEach(([mid, m]) => {
       const tienePedido = pedidosData[mid] && Object.keys(pedidosData[mid]).length > 0;
       const card = document.createElement("div");
       
@@ -600,14 +707,16 @@ function renderPlanoMesas() {
       }
       
       card.innerHTML = `
-        <div style="font-size:18px;margin-bottom:4px;">${m.nombre}</div>
+        <div style="font-size:16px;margin-bottom:4px;font-weight:600;">${m.nombre}</div>
         ${tienePedido ? `<div class="mesa-subtext">${totalQty} art. (${subtotal.toFixed(2)}€)</div>` : '<div class="mesa-subtext" style="color:var(--accent);">Libre</div>'}
         ${tiempoOcupada ? `<div class="plano-mesa-tiempo-badge">⏳ ${tiempoOcupada}</div>` : ""}
       `;
       card.onclick = () => seleccionarMesa(mid);
-      grid.appendChild(card);
+      tempGrid.appendChild(card);
     });
-    wrapper.appendChild(grid);
+    
+    tempSection.appendChild(tempGrid);
+    wrapper.appendChild(tempSection);
   }
 }
 
@@ -1864,4 +1973,138 @@ function volverACategorias() {
   categoriaSeleccionadaId = null;
   document.querySelector(".carta-container")?.classList.remove("has-active-cat");
   renderCategorias();
+}
+
+// --- GESTIÓN DE NOVEDADES (ANUNCIOS) ---
+function renderNovedadesConfig() {
+  const listaEl = document.getElementById("novedades-lista");
+  if (!listaEl) return;
+
+  const entries = Object.entries(novedadesData || {}).filter(([k, v]) => v && typeof v === "object");
+
+  if (entries.length === 0) {
+    listaEl.innerHTML = `<div style="font-size: 13px; color: var(--text-dim); text-align: center; padding: 20px;">Sin mensajes registrados. Crea uno a la izquierda.</div>`;
+    return;
+  }
+
+  // Ordenar por ID o nombre
+  entries.sort((a, b) => a[0].localeCompare(b[0]));
+
+  listaEl.innerHTML = "";
+  entries.forEach(([id, n]) => {
+    const item = document.createElement("div");
+    item.style.padding = "10px 14px";
+    item.style.border = "1px solid var(--border)";
+    item.style.borderRadius = "8px";
+    item.style.background = "rgba(255, 255, 255, 0.02)";
+    item.style.display = "flex";
+    item.style.justifyContent = "space-between";
+    item.style.alignItems = "center";
+    item.style.gap = "10px";
+
+    const badgeColor = n.activo ? "var(--success)" : "var(--danger)";
+    const badgeText = n.activo ? "Activo" : "Inactivo";
+
+    item.innerHTML = `
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 13px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          ${n.titulo} <span style="font-size: 10px; color: var(--text-dim)">(${id})</span>
+        </div>
+        <div style="font-size: 10px; color: ${badgeColor}; font-weight: 500; margin-top: 2px;">
+          ● ${badgeText}
+        </div>
+      </div>
+      <div style="display: flex; gap: 6px; flex-shrink: 0;">
+        <button class="btn btn-secondary" onclick="window.cargarNovedadForm('${id}')" style="height: auto; padding: 4px 8px; font-size: 11px;">Editar</button>
+        <button class="btn" onclick="window.eliminarNovedad('${id}')" style="height: auto; padding: 4px 8px; font-size: 11px; background: none; border: 1px solid var(--danger); color: var(--danger);">Eliminar</button>
+      </div>
+    `;
+    listaEl.appendChild(item);
+  });
+}
+
+function cargarNovedadForm(id) {
+  const n = novedadesData[id];
+  if (!n) return;
+
+  const nid = document.getElementById("nov-input-id");
+  const ntitle = document.getElementById("nov-input-titulo");
+  const nmsg = document.getElementById("nov-input-mensaje");
+  const nactive = document.getElementById("nov-input-activo");
+
+  if (nid) {
+    nid.value = n.id || id;
+    nid.disabled = true; // Desactivar edición de ID para evitar duplicaciones
+  }
+  if (ntitle) ntitle.value = n.titulo || "";
+  if (nmsg) nmsg.value = n.mensaje || "";
+  if (nactive) nactive.checked = n.activo !== false;
+}
+
+function limpiarNovedadForm() {
+  const nid = document.getElementById("nov-input-id");
+  const ntitle = document.getElementById("nov-input-titulo");
+  const nmsg = document.getElementById("nov-input-mensaje");
+  const nactive = document.getElementById("nov-input-activo");
+
+  if (nid) {
+    nid.value = "";
+    nid.disabled = false;
+  }
+  if (ntitle) ntitle.value = "";
+  if (nmsg) nmsg.value = "";
+  if (nactive) nactive.checked = true;
+}
+
+async function guardarNovedadConfig() {
+  if (!db) return;
+  const nid = document.getElementById("nov-input-id").value.trim().replace(/[\.\#\$\[\]\/]/g, '_');
+  const ntitle = document.getElementById("nov-input-titulo").value.trim();
+  const nmsg = document.getElementById("nov-input-mensaje").value.trim();
+  const nactive = document.getElementById("nov-input-activo").checked;
+
+  if (!nid || !ntitle || !nmsg) {
+    alert("Todos los campos (ID, Título y Mensaje) son obligatorios.");
+    return;
+  }
+
+  const originalNovedad = novedadesData[nid] || {};
+  const createdAt = originalNovedad.createdAt || Date.now();
+
+  try {
+    await set(ref(db, `novedades/${nid}`), {
+      id: nid,
+      titulo: ntitle,
+      mensaje: nmsg,
+      activo: nactive,
+      createdAt: createdAt
+    });
+    alert("Novedad guardada correctamente.");
+    limpiarNovedadForm();
+  } catch (error) {
+    alert("Error al guardar la novedad: " + error.message);
+  }
+}
+
+async function eliminarNovedad(id) {
+  if (!db) return;
+  if (!confirm(`¿Seguro que deseas eliminar la novedad "${id}"?`)) return;
+  try {
+    await remove(ref(db, `novedades/${id}`));
+    alert("Novedad eliminada.");
+    limpiarNovedadForm();
+  } catch (error) {
+    alert("Error al eliminar la novedad: " + error.message);
+  }
+}
+
+async function resetearVistosNovedad() {
+  if (!db) return;
+  if (!confirm("¿Seguro que deseas reiniciar los vistos? Esto hará que todos los camareros vuelvan a ver todos los mensajes activos de nuevo.")) return;
+  try {
+    await remove(ref(db, "novedades_vistas"));
+    alert("Se han reiniciado los vistos de todos los camareros.");
+  } catch (error) {
+    alert("Error al reiniciar los vistos: " + error.message);
+  }
 }
