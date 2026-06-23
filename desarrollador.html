@@ -1803,6 +1803,90 @@
                   <label>IP de Wi-Fi Registrada</label>
                   <input type="text" class="input-text" id="config-wifi-ip" disabled style="font-family: var(--font-code); color: var(--accent);">
                 </div>
+                
+                <div class="form-row-switch" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                  <div class="switch-info">
+                    <div class="switch-title">Bloqueo Total Camareros</div>
+                    <div class="switch-desc">Evita que los camareros accedan (Cierre del local).</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="switch-bloqueo-camareros-dev" onchange="guardarEstadoBloqueoCamarerosDev()">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="form-group">
+                  <label>Camarero Exceptuado de Cierre</label>
+                  <select class="input-text" id="select-camarero-excepcion-dev" onchange="guardarExcepcionCamareroDev()" style="background: var(--panel-light); border: 1px solid var(--border); color: var(--text); width: 100%; height: 38px; border-radius: 6px; padding: 0 10px; margin-top: 6px;">
+                    <option value="">(Ninguno)</option>
+                  </select>
+                </div>
+                
+                <div class="form-row-switch" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                  <div class="switch-info">
+                    <div class="switch-title">Verificación por Emojis</div>
+                    <div class="switch-desc">Exigir combinación de emojis tras el PIN.</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="switch-emojis-activo" onchange="guardarEstadoEmojis()">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                  <label>Combinación de Emojis de Seguridad Global</label>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                    <div id="dev-emojis-preview" style="font-size: 20px; letter-spacing: 4px; background: var(--panel-light); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); min-width: 110px; text-align: center; font-family: var(--font-code);">❓ ❓ ❓</div>
+                    <button type="button" class="btn btn-secondary" onclick="window.limpiarEmojisDev()" style="padding: 0 12px; height: 38px; font-size: 13px;">Limpiar</button>
+                    <button type="button" class="btn" onclick="window.guardarEmojisDev()" style="padding: 0 12px; height: 38px; font-size: 13px; background: var(--accent); color: var(--panel);">Guardar</button>
+                  </div>
+                  <div class="dev-emoji-picker" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px;">
+                    <!-- Los botones de emoji se renderizarán dinámicamente -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tarjeta 1.5: Geolocalización GPS -->
+              <div class="config-card">
+                <div class="config-card-title">Geolocalización GPS</div>
+                <div class="form-row-switch">
+                  <div class="switch-info">
+                    <div class="switch-title">Restricción por Ubicación GPS</div>
+                    <div class="switch-desc">Los camareros solo acceden dentro del radio del local.</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="switch-geo-activo" onchange="guardarEstadoGeo()">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="form-row" style="margin-top: 12px;">
+                  <div class="form-group">
+                    <label>Latitud</label>
+                    <input type="text" class="input-text" id="config-geo-lat" disabled style="font-family: var(--font-code); color: var(--accent);">
+                  </div>
+                  <div class="form-group">
+                    <label>Longitud</label>
+                    <input type="text" class="input-text" id="config-geo-lng" disabled style="font-family: var(--font-code); color: var(--accent);">
+                  </div>
+                </div>
+                <button type="button" class="btn" onclick="window.usarUbicacionActualDev()" style="width:100%; margin-top:8px; padding:10px; font-size:13px; background:var(--accent); color:var(--panel); border:none; border-radius:8px; cursor:pointer;">📍 Usar esta ubicación</button>
+                <div class="form-row" style="margin-top: 12px;">
+                  <div class="form-group">
+                    <label>Radio permitido (metros)</label>
+                    <input type="number" class="input-text" id="config-geo-radio" min="1" placeholder="100" style="font-family: var(--font-code);">
+                  </div>
+                  <div class="form-group">
+                    <label>Revalidar cada</label>
+                    <select class="input-text" id="config-geo-intervalo" style="height:38px;">
+                      <option value="1">1 hora</option>
+                      <option value="2">2 horas</option>
+                      <option value="3" selected>3 horas</option>
+                      <option value="6">6 horas</option>
+                      <option value="12">12 horas</option>
+                      <option value="24">24 horas</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="window.calcularRadioDesdeLimiteDev()" style="width:100%; margin-top:6px; padding:10px; font-size:13px; border-radius:8px; cursor:pointer;">📏 Calcular radio desde aquí (ir al límite)</button>
+                <button type="button" class="btn" onclick="window.guardarUbicacionDev()" style="width:100%; margin-top:8px; padding:10px; font-size:13px; background:var(--accent); color:var(--panel); border:none; border-radius:8px; cursor:pointer;">💾 Guardar Ubicación</button>
               </div>
 
               <!-- Tarjeta 2: Datos del Local -->
@@ -2182,6 +2266,20 @@
           <label for="form-cat-nombre">Nombre de Categoría</label>
           <input type="text" class="input-text" id="form-cat-nombre" placeholder="Ej. Bebidas, Tapas, Carnes">
         </div>
+        <div class="form-group">
+          <label for="form-cat-notas">Notas Predefinidas (separadas por comas)</label>
+          <input type="text" class="input-text" id="form-cat-notas" placeholder="Ej. Sin cebolla, Poco hecho, Para llevar">
+        </div>
+        <!-- VARIANTES COMPARTIDAS DE LA CATEGORÍA -->
+        <div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+          <label style="font-weight: bold; font-size: 12px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Variantes de la Categoría</label>
+          <div id="form-cat-variantes-lista" style="display: flex; flex-direction: column; gap: 6px; margin: 8px 0;"></div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="new-form-cat-var-nombre" class="input-text" placeholder="Nombre (ej: Doble)" style="flex: 2; height: 36px;">
+            <input type="number" step="0.01" id="new-form-cat-var-precio" class="input-text" placeholder="+0.00" style="flex: 1; height: 36px;">
+            <button type="button" class="btn" onclick="agregarVarianteCategoriaDev()" style="padding: 0 12px; height: 36px; font-size: 12px;">+ Añadir</button>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="cerrarModalCategoria()">Cancelar</button>
@@ -2197,7 +2295,7 @@
         <div class="modal-title" id="modal-prod-title">Añadir Artículo</div>
         <button class="btn-icon" onclick="cerrarModalProducto()">&times;</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
         <input type="hidden" id="form-prod-id">
         <div class="form-group">
           <label for="form-prod-nombre">Nombre del Artículo</label>
@@ -2214,6 +2312,32 @@
             <option value="cocina">Cocina</option>
             <option value="ambos">Ambos</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label for="form-prod-notas">Notas Predefinidas (separadas por comas)</label>
+          <input type="text" class="input-text" id="form-prod-notas" placeholder="Ej. Poco hecho, Sin cebolla, Salsa aparte">
+        </div>
+        <!-- VARIANTES DEL PRODUCTO -->
+        <div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+          <label style="font-weight: bold; font-size: 12px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Variantes del Producto</label>
+          <div id="form-prod-variantes-lista" style="display: flex; flex-direction: column; gap: 6px; margin: 8px 0;"></div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="new-form-prod-var-nombre" class="input-text" placeholder="Nombre (ej: Doble)" style="flex: 2; height: 36px;">
+            <input type="number" step="0.01" id="new-form-prod-var-precio" class="input-text" placeholder="+0.00" style="flex: 1; height: 36px;">
+            <button type="button" class="btn" onclick="agregarVarianteProductoDev()" style="padding: 0 12px; height: 36px; font-size: 12px;">+ Añadir</button>
+          </div>
+        </div>
+
+        <!-- SECCIÓN COMBOS (MENÚ / DESAYUNOS) -->
+        <div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label style="font-weight: bold; font-size: 12px; text-transform: uppercase; color: var(--muted); margin: 0;">Es un Combo (Menú / Desayuno)</label>
+            <input type="checkbox" id="form-prod-escombo" onchange="toggleComboPanelDev()" style="width: 16px; height: 16px;">
+          </div>
+          <div id="form-prod-combo-panel" style="display: none; flex-direction: column; gap: 8px;">
+            <div id="form-prod-combo-groups-lista" style="display: flex; flex-direction: column; gap: 6px;"></div>
+            <button type="button" class="btn" style="background: var(--success); border-color: var(--success); color: white; font-size: 11px; padding: 6px 12px; width: 100%; height: 36px;" onclick="agregarGrupoComboDev()">+ Añadir Grupo</button>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -2236,6 +2360,18 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="cerrarModalTicketDetalle()">Cerrar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL GENÉRICO TIPO ALERT/CONFIRM/PROMPT -->
+  <div class="modal-overlay" id="overlay-custom-modal" style="z-index: 10000; display: none;" onclick="window.cerrarCustomModal()"></div>
+  <div class="modal" id="custom-modal" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px; width: 90%; max-width: 320px; display: none; flex-direction: column; gap: 14px; z-index: 10100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); transition: all 0.2s ease; margin: 0;">
+    <div id="custom-modal-title" style="font-weight: 700; font-size: 15px; color: var(--accent); font-family: var(--font-code); text-transform: uppercase; letter-spacing: 0.05em;">Título</div>
+    <div id="custom-modal-message" style="font-size: 13px; color: var(--text); line-height: 1.5; white-space: pre-wrap;">Mensaje de prueba.</div>
+    <input type="text" id="custom-modal-input" class="input-text" style="display: none; background-color: var(--panel-light); border: 1px solid var(--border); color: var(--text);" placeholder="Escribe aquí...">
+    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px;">
+      <button type="button" class="btn btn-secondary" id="custom-modal-btn-cancel" style="padding: 8px 16px; font-size: 12px; height: 36px;">Cancelar</button>
+      <button type="button" class="btn" id="custom-modal-btn-ok" style="padding: 8px 16px; font-size: 12px; height: 36px; background: var(--accent); color: var(--panel);">Aceptar</button>
     </div>
   </div>
 
