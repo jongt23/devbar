@@ -630,6 +630,129 @@
       font-family: var(--font-code);
     }
 
+    /* VISTA: GESTORÍA Y AJUSTE INTELIGENTE */
+    .gestoria-container {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      gap: 16px;
+    }
+
+    .gestoria-quick-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .gestoria-quick-scroll::-webkit-scrollbar { display: none; }
+
+    .btn-gestoria-quick {
+      background-color: var(--panel-light);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .btn-gestoria-quick:hover, .btn-gestoria-quick.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background-color: rgba(84, 231, 193, 0.08);
+    }
+
+    .gestoria-subtabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-top: 4px;
+    }
+
+    .gestoria-subtab-btn {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .gestoria-subtab-btn:hover {
+      color: var(--text);
+      background-color: var(--panel-light);
+    }
+    .gestoria-subtab-btn.active {
+      background-color: var(--panel-light);
+      border-color: var(--border);
+      color: var(--accent);
+    }
+
+    .gestoria-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .gestoria-adjust-card {
+      background: linear-gradient(145deg, rgba(84, 231, 193, 0.03), rgba(28, 35, 51, 0.9));
+      border: 1px solid rgba(84, 231, 193, 0.25);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .proposal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .proposal-card {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .proposal-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+    .proposal-badge {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(84, 231, 193, 0.12);
+      color: var(--accent);
+      width: fit-content;
+    }
+
     /* VISTA: CONFIGURACION / CONTROL WIFI */
     .config-container {
       max-width: 600px;
@@ -1621,6 +1744,7 @@
           <button class="nav-tab active" onclick="cambiarPestana('salon')">Salón (Mesas)</button>
           <button class="nav-tab" onclick="cambiarPestana('carta')">Carta</button>
           <button class="nav-tab" onclick="cambiarPestana('ventas')">Ventas</button>
+          <button class="nav-tab" onclick="cambiarPestana('gestoria')">Gestoría / Trimestres</button>
           <button class="nav-tab" onclick="cambiarPestana('camareros')">Camareros</button>
           <button class="nav-tab" onclick="cambiarPestana('config')">Ajustes</button>
           <button class="nav-tab" onclick="cambiarPestana('auditoria')">Auditoría</button>
@@ -2268,6 +2392,190 @@
           </div>
         </div>
 
+        <!-- VISTA: GESTORÍA Y AJUSTE INTELIGENTE DE FACTURACIÓN -->
+        <div class="view-pane" id="pane-gestoria">
+          <div class="gestoria-container">
+            
+            <!-- Barra Superior de Filtros Rápidos -->
+            <div class="gestoria-filter-card">
+              <div class="gestoria-quick-scroll">
+                <button type="button" class="btn-gestoria-quick active" onclick="window.setQuickFiltroGestoria('hoy', this)">Hoy</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('ayer', this)">Ayer</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('mes_actual', this)">Este Mes</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('mes_anterior', this)">Mes Ant.</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('trimestre_actual', this)">Trimestre Actual</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('trimestre_anterior', this)">Último Trimestre</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('t1', this)">1T (Ene-Mar)</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('t2', this)">2T (Abr-Jun)</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('t3', this)">3T (Jul-Sep)</button>
+                <button type="button" class="btn-gestoria-quick" onclick="window.setQuickFiltroGestoria('t4', this)">4T (Oct-Dic)</button>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+                <div class="form-group" style="flex: 1; min-width: 140px;">
+                  <label>Desde</label>
+                  <input type="date" class="input-text" id="gestoria-desde">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 140px;">
+                  <label>Hasta</label>
+                  <input type="date" class="input-text" id="gestoria-hasta">
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn" onclick="window.cargarGestoriaBajoDemanda()" style="padding: 8px 16px;">🔍 Consultar</button>
+                  <button type="button" class="btn btn-secondary" onclick="window.exportarPDFGestoria()" style="padding: 8px 14px; border-color: rgba(96,165,250,0.5); color: #60a5fa;" title="Exportar PDF para Gestoría">📄 PDF Gestor</button>
+                  <button type="button" class="btn btn-secondary" onclick="window.exportarCSVGestoria()" style="padding: 8px 14px;" title="Exportar a CSV">📊 CSV</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumen KPIs de Facturación -->
+            <div class="gestoria-kpi-grid">
+              <div class="total-card">
+                <div class="total-card-label">FACTURACIÓN TOTAL</div>
+                <div class="total-card-val" id="gestoria-kpi-total">0,00 €</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">TOTAL EFECTIVO</div>
+                <div class="total-card-val" id="gestoria-kpi-efectivo" style="color: #10b981;">0,00 €</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">TOTAL TARJETA / BANCO</div>
+                <div class="total-card-val" id="gestoria-kpi-tarjeta" style="color: #60a5fa;">0,00 €</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">Nº TICKETS</div>
+                <div class="total-card-val" id="gestoria-kpi-tickets" style="color: var(--text);">0</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">TICKET MEDIO</div>
+                <div class="total-card-val" id="gestoria-kpi-medio">0,00 €</div>
+              </div>
+            </div>
+
+            <!-- MÓDULO DE AJUSTE INTELIGENTE DE FACTURACIÓN (SIMULADOR) -->
+            <div class="gestoria-adjust-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">⚡</span>
+                  <div>
+                    <div style="font-weight: 700; font-size: 14px; color: var(--accent);">Simulador de Ajuste Inteligente de Facturación</div>
+                    <div style="font-size: 11px; color: var(--text-dim);">Calcula 3 propuestas con distribución no correlativa y homogénea a lo largo de todo el período.</div>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="window.toggleAjustePanel()" id="btn-toggle-ajuste" style="font-size: 11px; padding: 4px 10px;">Ocultar Panel</button>
+              </div>
+
+              <div id="gestoria-ajuste-body" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; background: var(--panel); border: 1px solid var(--border); padding: 12px; border-radius: 8px;">
+                  <div class="form-group" style="flex: 1; min-width: 180px;">
+                    <label>Facturación Objetivo Deseada (€)</label>
+                    <input type="number" step="0.01" class="input-text" id="gestoria-target-total" placeholder="Ej: 35000.00" style="font-size: 14px; font-weight: 600; color: var(--accent);">
+                  </div>
+                  <div class="form-group" style="flex: 1; min-width: 180px;">
+                    <label>Estrategia de Selección</label>
+                    <select class="input-text" id="gestoria-target-mode">
+                      <option value="efectivo_preferente">Efectivo Preferente (Recomendado)</option>
+                      <option value="efectivo_puro">Solo Tickets en Efectivo</option>
+                      <option value="mixto">Mixto (Efectivo y Tarjeta)</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn" onclick="window.calcularPropuestasAjuste()" style="padding: 9px 18px; font-size: 13px;">⚡ Calcular 3 Propuestas</button>
+                </div>
+
+                <div id="gestoria-propuestas-container" style="display: none;">
+                  <div style="font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px;">Propuestas Calculadas:</div>
+                  <div class="proposal-grid" id="gestoria-propuestas-grid">
+                    <!-- Tarjetas de Propuesta A, B, C -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subpestañas de Datos -->
+            <div class="gestoria-subtabs">
+              <button type="button" class="gestoria-subtab-btn active" id="gest-subtab-dias" onclick="window.cambiarSubtabGestoria('dias')">📅 Resumen por Días</button>
+              <button type="button" class="gestoria-subtab-btn" id="gest-subtab-tickets" onclick="window.cambiarSubtabGestoria('tickets')">🧾 Tickets & Selección Manual</button>
+              <button type="button" class="gestoria-subtab-btn" id="gest-subtab-articulos" onclick="window.cambiarSubtabGestoria('articulos')">📦 Por Artículo</button>
+            </div>
+
+            <!-- CONTENIDO SUBPESTAÑA 1: POR DÍAS -->
+            <div id="gestoria-view-dias" style="flex: 1; display: flex; flex-direction: column;">
+              <div style="overflow-x: auto;">
+                <table class="app-table" id="tabla-gestoria-dias">
+                  <thead>
+                    <tr>
+                      <th>Fecha / Día</th>
+                      <th style="text-align: right;">Tickets</th>
+                      <th style="text-align: right;">Efectivo (€)</th>
+                      <th style="text-align: right;">Tarjeta (€)</th>
+                      <th style="text-align: right;">Total Día (€)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="gestoria-tbody-dias">
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">Consulta un período para ver el resumen día a día.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- CONTENIDO SUBPESTAÑA 2: POR TICKETS & BORRADO MANUAL -->
+            <div id="gestoria-view-tickets" style="flex: 1; display: none; flex-direction: column; gap: 12px;">
+              <!-- Barra de herramientas de tickets y modo selección -->
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: var(--panel-light); border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-secondary" id="btn-toggle-modo-seleccion" onclick="window.toggleModoBorradoManual()" style="font-size: 12px; padding: 6px 12px;">☑️ Activar Modo Borrado Manual</button>
+                  <div id="gestoria-selection-actions" style="display: none; align-items: center; gap: 8px;">
+                    <button type="button" class="btn btn-secondary" onclick="window.seleccionarTodosTickets(true)" style="font-size: 11px; padding: 5px 10px;">Marcar Todos</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.seleccionarTodosTickets(false)" style="font-size: 11px; padding: 5px 10px;">Desmarcar</button>
+                    <span id="gestoria-selected-count-badge" style="font-size: 12px; font-weight: 600; color: var(--accent); font-family: var(--font-code);">0 sel. (0,00 €)</span>
+                    <button type="button" class="btn" onclick="window.borrarTicketsSeleccionados()" id="btn-borrar-seleccionados" style="background: var(--danger); border-color: var(--danger); font-size: 11px; padding: 5px 12px; color: #fff;">🗑️ Eliminar Seleccionados</button>
+                  </div>
+                </div>
+                <input type="text" class="input-text" id="gestoria-search-ticket" oninput="window.filtrarTicketsGestoria(this.value)" placeholder="Buscar por mesa o camarero..." style="width: 220px; height: 32px; font-size: 12px;">
+              </div>
+
+              <div style="flex: 1; overflow-y: auto; max-height: 520px;">
+                <table class="app-table" id="tabla-gestoria-tickets">
+                  <thead>
+                    <tr>
+                      <th class="th-chk-gestoria" style="display: none; width: 36px; text-align: center;"></th>
+                      <th>Fecha / Hora</th>
+                      <th>Mesa</th>
+                      <th>Camarero</th>
+                      <th>Método</th>
+                      <th style="text-align: right;">Total</th>
+                      <th style="text-align: right; width: 100px;">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="gestoria-tbody-tickets">
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:30px;">Consulta un período para listar tickets.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- CONTENIDO SUBPESTAÑA 3: POR ARTÍCULO -->
+            <div id="gestoria-view-articulos" style="flex: 1; display: none; flex-direction: column;">
+              <div style="overflow-x: auto;">
+                <table class="app-table" id="tabla-gestoria-articulos">
+                  <thead>
+                    <tr>
+                      <th>Artículo</th>
+                      <th style="text-align: right;">Unidades Vendidas</th>
+                      <th style="text-align: right;">Total Facturado (€)</th>
+                      <th style="text-align: right;">% Facturación</th>
+                    </tr>
+                  </thead>
+                  <tbody id="gestoria-tbody-articulos">
+                    <tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:30px;">Consulta un período para ver el ranking de artículos.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -2408,6 +2716,65 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="cerrarModalTicketDetalle()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALLE DE PROPUESTA DE AJUSTE -->
+  <div class="modal-overlay" id="modal-propuesta-detalle">
+    <div class="modal" style="max-width: 560px;">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-propuesta-title">Tickets Seleccionados en la Propuesta</div>
+        <button class="btn-icon" onclick="window.cerrarModalPropuestaDetalle()">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height: 480px; overflow-y: auto;">
+        <div id="modal-propuesta-resumen" style="font-size: 13px; color: var(--text); background: var(--panel-light); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px;"></div>
+        <table class="app-table" id="tabla-propuesta-detalle">
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Mesa</th>
+              <th>Camarero</th>
+              <th>Método</th>
+              <th style="text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody id="modal-propuesta-tbody"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.cerrarModalPropuestaDetalle()">Cerrar</button>
+        <button class="btn" id="btn-aplicar-desde-modal" style="background: var(--danger); border-color: var(--danger); color: #fff;">✓ Aplicar esta Propuesta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: INFORME DE CIERRES DE CAJA AFECTADOS -->
+  <div class="modal-overlay" id="modal-cierres-afectados">
+    <div class="modal" style="max-width: 560px;">
+      <div class="modal-header">
+        <div class="modal-title" style="color: var(--accent);">📋 Informe de Cierres de Caja Afectados</div>
+        <button class="btn-icon" onclick="window.cerrarModalCierresAfectados()">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height: 480px; overflow-y: auto; gap: 12px;">
+        <div style="background: rgba(84, 231, 193, 0.08); border: 1px solid var(--accent); border-radius: 8px; padding: 12px; font-size: 12.5px; line-height: 1.5; color: var(--text);">
+          ℹ️ <b>Aviso Importante:</b> Se han eliminado los tickets seleccionados con éxito. A continuación tienes el desglose de los días que han cambiado para que puedas rehacer o actualizar los cierres de caja correspondientes:
+        </div>
+        <table class="app-table" id="tabla-cierres-afectados">
+          <thead>
+            <tr>
+              <th>Día / Fecha</th>
+              <th style="text-align: right;">Tickets Eliminados</th>
+              <th style="text-align: right;">Importe Reducido</th>
+              <th style="text-align: right;">Nuevo Total Día</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-cierres-afectados"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="window.copiarInformeCierres()">📋 Copiar Resumen</button>
+        <button class="btn" onclick="window.cerrarModalCierresAfectados()">Entendido</button>
       </div>
     </div>
   </div>
