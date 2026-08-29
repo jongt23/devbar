@@ -2,6 +2,7 @@ import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.
 import { getDatabase, ref, onValue, get, query, orderByChild, startAt, endAt,
   set as fbSet, push as fbPush, remove as fbRemove, update as fbUpdate } 
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import qrcode from "./qrcode.mjs";
 
 const checkAndTouchMenu = (refVal) => {
   if (!refVal) return;
@@ -1252,7 +1253,11 @@ function actualizarAjustesSeguridad() {
       const dir = lastSlash >= 0 ? basePath.substring(0, lastSlash + 1) : '/';
       const camareroUrl = window.location.origin + dir + 'camarero.html';
       const pairUrl = `${camareroUrl}?pair=${encodeURIComponent(tokenVal)}`;
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pairUrl)}`;
+      // Se genera en el propio navegador: no depende de un servicio QR externo.
+      const qr = qrcode(0, 'M');
+      qr.addData(pairUrl);
+      qr.make();
+      qrImg.src = qr.createDataURL(4, 2);
       qrImg.style.display = "block";
     } else {
       qrImg.style.display = "none";
