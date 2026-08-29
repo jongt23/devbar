@@ -1896,8 +1896,8 @@
                 <input type="text" class="input-text" id="usr-nombre" placeholder="Ej. Juan Pérez">
               </div>
               <div class="form-group">
-                <label for="usr-pin">PIN de Acceso (6 dígitos)</label>
-                <input type="text" class="input-text" id="usr-pin" placeholder="Ej. 123456" maxlength="6" style="font-family: var(--font-code);">
+                <label for="usr-pin">PIN de Acceso (4 dígitos)</label>
+                <input type="text" class="input-text" id="usr-pin" placeholder="Ej. 1234" maxlength="4" style="font-family: var(--font-code);">
               </div>
               <button class="btn" onclick="addCamarero()" style="margin-top: 10px;">Añadir Camarero</button>
             </div>
@@ -1976,6 +1976,27 @@
                   </div>
                 </div>
                 
+                <div class="form-row-switch" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                  <div class="switch-info">
+                    <div class="switch-title">🔐 Emparejamiento QR de Dispositivos</div>
+                    <div class="switch-desc">Exige que el móvil haya escaneado el QR de la barra para usar su PIN.</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="switch-device-token-dev" onchange="toggleDeviceTokenActivoDev()">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div id="box-device-token-dev" style="margin-top: 10px; background: var(--panel-light); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 12px; color: var(--text-dim);">Clave del Local: <strong id="lbl-device-token-dev" style="color: var(--accent); font-family: var(--font-code);">---</strong></span>
+                    <button type="button" class="btn" onclick="rotarDeviceTokenDev()" style="padding: 4px 10px; font-size: 11px; background: #e24d4d; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔄 Rotar Clave</button>
+                  </div>
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px;">
+                    <img id="qr-device-token-img" style="width: 140px; height: 140px; border-radius: 8px; border: 1px solid var(--border); background: #fff; padding: 4px; display: none;" alt="QR Camareros">
+                    <span id="qr-device-token-text" style="font-size: 11px; color: var(--text-dim); text-align: center;">Muestra este QR a los camareros para vincular su móvil.</span>
+                  </div>
+                </div>
+
                 <div class="form-row-switch" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
                   <div class="switch-info">
                     <div class="switch-title">Verificación por Emojis</div>
