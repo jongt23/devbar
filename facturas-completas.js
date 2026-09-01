@@ -142,7 +142,7 @@ function plantillaInformeGestoria({ ventas, facturasPorClave, local, desdeTexto,
     const documento = factura
       ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')} · ${escapeHtml(factura.destinatario?.nombre || factura.tipo || '')}`
       : `Ticket · ${escapeHtml(venta.mesa || venta.mesaNombre || '—')}`;
-    return `<tr><td>${escapeHtml(venta.fecha || new Date(fechaVentaTs(venta)).toLocaleDateString('es-ES'))}</td><td>${documento}</td><td>${escapeHtml(venta.camarero || '—')}</td><td>${fmtEu(venta.total)}</td></tr>`;
+    return `<tr><td>${escapeHtml(venta.fecha || new Date(fechaVentaTs(venta)).toLocaleDateString('es-ES'))}</td><td>${documento}</td><td>${fmtEu(venta.total)}</td></tr>`;
   }).join('');
   const total = ventas.reduce((suma, venta) => suma + Number(venta.total || 0), 0);
   const facturadas = ventas.filter(venta => resolverFacturaVenta(venta, facturasPorClave));
@@ -152,7 +152,7 @@ function plantillaInformeGestoria({ ventas, facturasPorClave, local, desdeTexto,
     <main class="invoice"><header><div><div class="title">INFORME PARA GESTORÍA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>Período: ${escapeHtml(desdeTexto || 'Inicio')} — ${escapeHtml(hastaTexto || 'Fin')}</div></div>
     <div style="text-align:right"><strong>${ventas.length} operaciones</strong><br><span class="muted">${facturadas.length} facturadas · ${ventas.length - facturadas.length} tickets</span></div></header>
     <section class="block"><div class="label">Relación única de operaciones</div><div class="muted" style="margin-top:6px">Las ventas con factura se muestran por su número de factura; no se duplican como ticket.</div>
-    <table><thead><tr><th>Fecha</th><th>Documento</th><th>Camarero</th><th>Total</th></tr></thead><tbody>${filas || '<tr><td colspan="4">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>
+    <table><thead><tr><th>Fecha</th><th>Documento</th><th>Total</th></tr></thead><tbody>${filas || '<tr><td colspan="3">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>
     ${completas.map(factura => plantillaFactura(factura, local)).join('')}`;
 }
 

@@ -3827,6 +3827,10 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false) {
   const totalEf = gestoriaTicketsList.filter(t => (t.pagoMetodo || '').toLowerCase() !== 'tarjeta').reduce((s, t) => s + Number(t.total || 0), 0);
   const totalTj = gestoriaTicketsList.filter(t => (t.pagoMetodo || '').toLowerCase() === 'tarjeta').reduce((s, t) => s + Number(t.total || 0), 0);
   const totalArts = gestoriaTicketsList.reduce((s, t) => s + (t.lineas || []).reduce((acc, l) => acc + Number(l.qty || 0), 0), 0);
+  const fmtUnidadesPDF = valor => {
+    const redondeado = Math.round(Number(valor || 0) * 1000) / 1000;
+    return Number.isInteger(redondeado) ? String(redondeado) : redondeado.toLocaleString('es-ES', { maximumFractionDigits: 3 });
+  };
 
   const dias = agruparVentasPorDiaLocal(gestoriaTicketsList);
 
@@ -3888,7 +3892,7 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false) {
           ${rankingArts.slice(0, 45).map(a => `
             <tr>
               <td>${escapeHtml(a.nombre)}</td>
-              <td class="text-right mono">${a.qty}</td>
+              <td class="text-right mono">${fmtUnidadesPDF(a.qty)}</td>
               <td class="text-right mono">${a.total.toFixed(2)} €</td>
             </tr>
           `).join('')}
@@ -3896,7 +3900,7 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false) {
         <tfoot>
           <tr class="t-foot">
             <td>TOTAL ARTÍCULOS (${rankingArts.length})</td>
-            <td class="text-right mono">${totalArts}</td>
+            <td class="text-right mono">${fmtUnidadesPDF(totalArts)}</td>
             <td class="text-right mono">${totalGen.toFixed(2)} €</td>
           </tr>
         </tfoot>
@@ -4006,7 +4010,7 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false) {
           <tr>
             <td>${fTxt}</td>
             <td class="text-right mono">${d.tickets}</td>
-            <td class="text-right mono">${d.articulos}</td>
+            <td class="text-right mono">${fmtUnidadesPDF(d.articulos)}</td>
             <td class="text-right mono">${d.efectivo.toFixed(2)} €</td>
             <td class="text-right mono">${d.tarjeta.toFixed(2)} €</td>
             <td class="text-right mono" style="font-weight:700;">${d.total.toFixed(2)} €</td>
@@ -4018,7 +4022,7 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false) {
       <tr class="t-foot">
         <td>TOTAL PERÍODO</td>
         <td class="text-right mono">${totalTickets}</td>
-        <td class="text-right mono">${totalArts}</td>
+        <td class="text-right mono">${fmtUnidadesPDF(totalArts)}</td>
         <td class="text-right mono">${totalEf.toFixed(2)} €</td>
         <td class="text-right mono">${totalTj.toFixed(2)} €</td>
         <td class="text-right mono">${totalGen.toFixed(2)} €</td>
@@ -4029,8 +4033,6 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false) {
   ${seccionArticulosHTML}
 
   ${relacionDocumentosHTML}
-
-  ${anexosFacturasHTML}
 
   <div class="footer-doc">
     Documento generado para fines contables y de gestoría · Sistema Comandero TPVSync · ${new Date().toLocaleString('es-ES')}
