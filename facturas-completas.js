@@ -116,6 +116,26 @@ export function resolverFacturaVenta(venta, facturasPorClave = {}) {
   return porImporte.length === 1 ? porImporte[0] : null;
 }
 
+// Fuente única para cualquier informe: vuelve a leer el historial y las
+// facturas del período en el momento de exportar, evitando resúmenes en memoria
+// desactualizados o con campos transformados por otra pantalla.
+export async function cargarOperacionesFiscales(db, desde, hasta) {
+  const ventasQuery = query(ref(db, 'historial'), orderByChild('ts'), startAt(desde), endAt(hasta));
+  const [ventasSnap, facturasSnap] = await Promise.all([
+    get(ventasQuery), get(ref(db, 'verifactu/facturas'))
+  ]);
+  const facturasPorClave = facturasSnap.val() || {};
+  const ventas = Object.values(ventasSnap.val() || {})
+    .filter(venta => {
+      const ts = fechaVentaTs(venta);
+      return ts >= desde && ts <= hasta;
+    });
+  return {
+    facturasPorClave,
+    operaciones: ventas.map(ticket => ({ ticket, factura: resolverFacturaVenta(ticket, facturasPorClave) }))
+  };
+}
+
 function plantillaInformeGestoria({ ventas, facturasPorClave, local, desdeTexto, hastaTexto }) {
   const filas = ventas.map(venta => {
     const factura = resolverFacturaVenta(venta, facturasPorClave);
@@ -145,16 +165,11 @@ async function generarPdfGestoria({ getDb, resultado }) {
   const hasta = hastaInput?.value ? new Date(`${hastaInput.value}T23:59:59.999`).getTime() : Date.now();
   resultado.textContent = 'Preparando PDF consolidado…';
   try {
-    const ventasQuery = query(ref(db, 'historial'), orderByChild('ts'), startAt(desde), endAt(hasta));
-    const [ventasSnap, facturasSnap, localSnap] = await Promise.all([
-      get(ventasQuery), get(ref(db, 'verifactu/facturas')), get(ref(db, 'config/local'))
+    const [{ operaciones, facturasPorClave }, localSnap] = await Promise.all([
+      cargarOperacionesFiscales(db, desde, hasta), get(ref(db, 'config/local'))
     ]);
-    const ventas = Object.values(ventasSnap.val() || {}).filter(venta => {
-      const ts = fechaVentaTs(venta);
-      return ts >= desde && ts <= hasta;
-    }).sort((a, b) => fechaVentaTs(a) - fechaVentaTs(b));
+    const ventas = operaciones.map(item => item.ticket).sort((a, b) => fechaVentaTs(a) - fechaVentaTs(b));
     if (!ventas.length) { resultado.textContent = 'No hay ventas en el período seleccionado.'; return; }
-    const facturasPorClave = facturasSnap.val() || {};
     const contenido = plantillaInformeGestoria({ ventas, facturasPorClave, local: localSnap.val() || {}, desdeTexto: desdeInput?.value, hastaTexto: hastaInput?.value });
     abrirDocumento(`Gestoría ${desdeInput?.value || ''} ${hastaInput?.value || ''}`, contenido);
     resultado.textContent = 'PDF consolidado abierto en una nueva pestaña.';

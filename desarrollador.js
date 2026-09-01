@@ -3,7 +3,7 @@ import { getDatabase, ref, onValue, get, query, orderByChild, startAt, endAt,
   set as fbSet, push as fbPush, remove as fbRemove, update as fbUpdate } 
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import qrcode from "./qrcode.mjs";
-import { montarConsultaFacturas } from './facturas-completas.js';
+import { montarConsultaFacturas, cargarOperacionesFiscales } from './facturas-completas.js';
 
 const checkAndTouchMenu = (refVal) => {
   if (!refVal) return;
@@ -3832,17 +3832,14 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false) {
 
   // Una venta sigue contando una sola vez en los totales. Si tiene una factura
   // vinculada, el anexo la muestra como factura y no como un segundo ticket.
-  let facturasPorClave = {};
+  let operacionesConDocumento = [];
   try {
-    const facturasSnap = await get(ref(db, 'verifactu/facturas'));
-    facturasPorClave = facturasSnap.val() || {};
+    const desdeTs = new Date(`${desdeStr}T00:00:00`).getTime();
+    const hastaTs = new Date(`${hastaStr}T23:59:59.999`).getTime();
+    ({ operaciones: operacionesConDocumento } = await cargarOperacionesFiscales(db, desdeTs, hastaTs));
   } catch (error) {
     console.warn('No se pudieron cargar las facturas vinculadas:', error);
   }
-  const operacionesConDocumento = gestoriaTicketsList.map(ticket => ({
-    ticket,
-    factura: ticket.verifactu?.fbKey ? facturasPorClave[ticket.verifactu.fbKey] : null
-  }));
   const facturasVinculadas = operacionesConDocumento.map(item => item.factura).filter(Boolean);
   const facturasCompletas = facturasVinculadas.filter(f => ['F1', 'F3'].includes(f.tipo) || f.destinatario?.nif);
   const relacionDocumentosHTML = `
