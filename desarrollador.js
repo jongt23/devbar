@@ -2877,9 +2877,16 @@ async function resetearVistosNovedad() {
 
 // --- MODAL GENÉRICO PERSONALIZADO (ALERT/CONFIRM/PROMPT) ---
 let currentModalResolve = null;
+let customModalHideTimer = null;
 
 function mostrarCustomModal(titulo, mensaje, tipo, defaultValue = "") {
   return new Promise((resolve) => {
+    // Si un modal abre otro inmediatamente, el cierre animado del anterior
+    // no debe ocultar el nuevo.
+    if (customModalHideTimer) {
+      clearTimeout(customModalHideTimer);
+      customModalHideTimer = null;
+    }
     if (currentModalResolve) {
       currentModalResolve(null);
     }
@@ -2959,7 +2966,8 @@ function ocultarCustomModal() {
     modal.style.opacity = "0";
     modal.style.transform = "translate(-50%, -50%) scale(0.9)";
   }
-  setTimeout(() => {
+  if (customModalHideTimer) clearTimeout(customModalHideTimer);
+  customModalHideTimer = setTimeout(() => {
     if (overlay) {
       overlay.style.display = "none";
       overlay.classList.remove("open");
@@ -2967,6 +2975,7 @@ function ocultarCustomModal() {
     if (modal) {
       modal.style.display = "none";
     }
+    customModalHideTimer = null;
   }, 150);
 }
 
