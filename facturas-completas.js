@@ -1,1 +1,196 @@
-function b(c,d){c=c-0xc4;const e=a();let f=e[c];if(b['ZutWMQ']===undefined){var g=function(j){const l='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let m='',n='';for(let o=0x0,p,q,r=0x0;q=j['charAt'](r++);~q&&(p=o%0x4?p*0x40+q:q,o++%0x4)?m+=String['fromCharCode'](0xff&p>>(-0x2*o&0x6)):0x0){q=l['indexOf'](q);}for(let s=0x0,t=m['length'];s<t;s++){n+='%'+('00'+m['charCodeAt'](s)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(n);};b['QbPIWV']=g,b['AKzcxq']={},b['ZutWMQ']=!![];}const h=e[0x0];b['qUaDZl']!==h&&(b['AKzcxq']={},b['qUaDZl']=h);const i=b['AKzcxq'][c];return i===undefined?(f=b['QbPIWV'](f),b['AKzcxq'][c]=f):f=i,f;}function a(){const x=['zg9JDw1LBNq','BgvUz3rO','pc90zd4kicaGicaGphrKpG','y2XPy2S','pc90yM9KEt48l3rHyMXLpJXKAxyGy2XHC3m9iNrVDgfSiJ48C3bHBJ5uB3rHBdWVC3bHBJ48C3bHBJ4','y3vVDgfFCMvWzxjJDxrPzge','zgLYzwnJAw9U','jImZotS','CMvWBgfJzq','pc9ZCgfUpJWVzgL2pJWVC2vJDgLVBJ4kicaGidXZzwn0Aw9UignSyxnZpsj2zxjPzMLJyxrPB24IpG','u2vSzwnJAw9UysbWCMLTzxjVihvUigXVy2fSlG','yMfZzv9PBxbVBMLIBgu','DMvUDgfZlwzLy2HHlwzPBG','C29YDa','ode5n3jlww9fCW','BNvTzxjV','x2jSyw5R','pgjYpJXZCgfUihn0EwXLpsjMB250lxnPEMu6mtfWEdTJB2XVCJP2yxiOls10zxH0lwrPBsX2yxiOls1TDxrLzcKPiJ4','zM9YrwfJAa','DxvPza','jMfTCdS','nfLKthzLBG','pc9ZCgfUpJWVzgL2pGOGicaGicaGicaGpgj1DhrVBIb0ExbLpsjIDxr0B24IignSyxnZpsjIDg4Tywn0Aw9UiIbKyxrHlwzHy3r1CMeTAw5KzxG9iG','pc9ZCgfUpJWVzgL2pJWVAgvHzgvYpGOGicaGphnLy3rPB24Gy2XHC3m9iMjSB2nRiJ48zgL2ignSyxnZpsjSywjLBci+rgvZDgLUyxrHCMLVpc9KAxy+pgrPDIbJBgfZCZ0ICMvJAxbPzw50iJ48C3rYB25NpG','zxjYB3i','AxnbCNjHEq','zMLSDgvY','B3bLBG','pc9ZDhjVBMC+imk3ia','pc9ZDhjVBMC+pgjYpJXZCgfUignSyxnZpsjTDxrLzci+rMvJAge6ia','vdiZoJu5oJu5lJK5oq','zgvZDgLUyxrHCMLV','DMvUDgfZlwzLy2HHlwLUAq','BM9TyNjL','pgjYpLrPCg86ia','pgjYpG','CxvLCNLtzwXLy3rVCKfSBa','pgjYpKrVy3vTzw50BYbYzwn1CgvYywrVigrLBcbOAxn0B3jPywWGzguGzMfJDhvYyxmGzw1PDgLKyxmUpc9KAxy+pc9Zzwn0Aw9UpGOGicaGpc9TywLUpJWVyM9KEt48l2H0BwW+','y2LM','CxvLCNLtzwXLy3rVCG','DMfSDwu','mtq4mLHRDK5jAq','tM8GC2uGChvKAwvYB24Gy2fYz2fYigXHCYbMywn0DxjHCY4Gq29TChj1zwjHigXHignVBMv4ACoZBI4','BwfW','zgf0B3nozwDVy2LV','iIbHBhq9iKpdS2rPz28GuviGzguGDMvYAwzPy2fJACoZBIi+','BMLM','imk3ia','y29UzMLNl2XVy2fS','ywXS','mtjXz0rbBK0','pc90AxrSzt4kicaGidXZDhLSzt4kicaGicaGkNTIB3GTC2L6Aw5NoMjVCMrLCI1IB3H9igjVzhL7zM9UDc1Myw1PBhK6qxjPywWSC2fUCY1ZzxjPzJTJB2XVCJOJmtGYmdmZo21HCMDPBJOWo2jHy2TNCM91BMq6i2yZzJvMoh0kicaGicaGlMjHCNTWywrKAw5NoJe0ChG7Dgv4Dc1HBgLNBJPJzw50zxi7yMfJA2DYB3vUzdOJmtGYmdmZFs5IyxiGyNv0Dg9UE3bHzgrPBMC6oxb4ide2ChG7yM9YzgvYoJa7yM9YzgvYlxjHzgL1CZO3ChG7yMfJA2DYB3vUzdOJzdHMzJyXo2nVBg9YoImXodiWmZm7zM9UDc13zwLNAhq6nZaWo2n1CNnVCJPWB2LUDgvYFqOGicaGicaUAw52B2LJzxT3Awr0AdPTAw4OmJeWBw0SmtaWjsK7BwLUlwHLAwDODdOYotDTBtTTyxjNAw46mJbWEcbHDxrVo2jHy2TNCM91BMq6i2zMzJTWywrKAw5NoJe4Bw07yM94lxnOywrVDZOWidjWEcaXohb4icmWmdaYFqOGicaGicbOzwfKzxj7zgLZCgXHEtPMBgv4o2P1C3rPzNKTy29UDgvUDdPZCgfJzs1Izxr3zwvUo2DHCdOYmhb4o2jVCMrLCI1IB3r0B206mNb4ihnVBgLKicmXodiWmZm7CgfKzgLUzY1IB3r0B206mtrWEh0UDgL0Bgv7zM9UDc1ZAxPLoJi1ChG7zM9UDc13zwLNAhq6odaWFs5TDxrLzhTJB2XVCJOJnwu2odDIo2zVBNqTC2L6ztOXmNb4o2XPBMuTAgvPz2H0oJeUnx0kicaGicaGlMjSB2nRE21HCMDPBI10B3a6mJbWEh0UCMvJAxbPzw50E2jVCMrLCJOXChGGC29SAwqGi2q4zgrLnZTWywrKAw5NoJeYChG7yM9YzgvYlxjHzgL1CZO4ChG7Bwf4lxDPzhrOoJmXmhb4Fs5SywjLBhTMB250lxnPEMu6mtfWEdT0zxH0lxrYyw5ZzM9YBtP1ChbLCMnHC2u7y29SB3i6iZvLnJG3yJTMB250lxDLAwDODdO3mda7Bgv0DgvYlxnWywnPBMC6lJa0zw19cIaGicaGihrHyMXLE3DPzhrOoJeWmcu7yM9YzgvYlwnVBgXHChnLoMnVBgXHChnLo21HCMDPBI10B3a6mtbWEh10AcX0zhTWywrKAw5NoJeWChG7yM9YzgvYlwjVDhrVBtOXChGGC29SAwqGi2q4zgrLnZT0zxH0lwfSAwDUoMXLzNr9DgH7yMfJA2DYB3vUzdOJzJnMnwy4o2zVBNqTC2L6ztOXmNb4FxrKoM50Ac1JAgLSzcHUkZiPlhrOoM50Ac1JAgLSzcHUkZiPE3rLEhqTywXPz246CMLNAhr9cIaGicaGic50B3rHBhTTyxjNAw4TDg9WoJe4ChG7BwfYz2LUlwXLzNq6yxv0BZT3Awr0AdOYnJbWEdTKAxnWBgf5oMzSzxG7ANvZDgLMEs1JB250zw50oNnWywnLlwjLDhDLzw47yM9YzgvYlxrVCdOYChGGC29SAwqGiZe4mJaZmZTWywrKAw5NoJeYChGGmdTMB250lxnPEMu6mJbWEdTMB250lxDLAwDODdO4mdb9lNfYE3DPzhrOoJeXmhb4o2HLAwDODdOXmtbWEh0UDMvYAwzPy2f0Aw9UE21HCMDPBI10B3a6mJzWEdTKAxnWBgf5oMzSzxG7ywXPz24TAxrLBxm6y2vUDgvYo2DHCdOXnNb4o2jVCMrLCI10B3a6mxb4ihnVBgLKicnKogrKztC7CgfKzgLUzY10B3a6mtzWEh0kicaGicaGqg1LzgLHihbYAw50E2jVzhL7yMfJA2DYB3vUzdOJzMzMFs5Iyxj7zgLZCgXHEtPUB25LFs5PBNzVAwnLE2jVEc1ZAgfKB3C6BM9UztTTyxjNAw46mdT3Awr0AdPHDxrVo21PBI1OzwLNAhq6mdTWywrKAw5NoJb9FqOGicaGpc9ZDhLSzt48l2HLywq+pgjVzhK+pgrPDIbJBgfZCZ0IyMfYiJ48yNv0Dg9Uig9Uy2XPy2S9iNDPBMrVDY5WCMLUDcGPiJ5jBxbYAw1PCIaVieD1yxjKyxiGy29TBYbqrey8l2j1DhrVBJ48l2rPDJ4kicaGidXTywLUignSyxnZpsjPBNzVAwnLiJ48AgvHzgvYpJXKAxy+pgrPDIbJBgfZCZ0IDgL0BguIpKzbq1rvuKeGq09nueXfvee8l2rPDJ48zgL2ignSyxnZpsjTDxrLzci+','ugvYBwL0zsbSyxmGDMvUDgfUyxmGzw1LCMDLBNrLCYbWyxjHigfICMLYigXHigzHy3r1CMeU','y2XVC2u','zgf0yxnLDa','cIaGica8zgL2ihn0EwXLpsjTyxjNAw4TDg9WoJe4ChG7CgfKzgLUzZOXnhb4o2jVCMrLCJOXChGGC29SAwqGDMfYkc0TyM9YzgvYktTIB3jKzxiTCMfKAxvZoJeYChG7yMfJA2DYB3vUzdP2yxiOls1Wyw5LBc1SAwDODcX2yxiOls1ZDxjMywnLmIKPiJ4kicaGicaGpgrPDIbZDhLSzt0IzgLZCgXHEtPMBgv4o2fSAwDUlwL0zw1ZoMnLBNrLCJTQDxn0Awz5lwnVBNrLBNq6C3bHy2uTyMv0D2vLBJTNyxa6mtbWEdTMBgv4lxDYyxa6D3jHCci+cIaGicaGicaGpgrPDJ48C3rYB25NpKzHy3r1CMfZignVBxbSzxrHCYbLBwL0AwrHCZWVC3rYB25NpJXKAxyGC3r5Bgu9iMzVBNqTC2L6ztOXmNb4o2nVBg9YoNzHCIGTlxrLEhqTzgLTlhzHCIGTlw11DgvKksK7BwfYz2LUlxrVCdOZChGIpKnVBNn1BhrHlcbHyNjLiguGAw1WCMLTzsbSyxmGzMfJDhvYyxmGy29UigrLC3rPBMf0yxjPBY48l2rPDJ48l2rPDJ4kicaGicaGica8yNv0Dg9Uihr5Cgu9iMj1DhrVBIiGy2XHC3m9iMj0BI1Hy3rPB24GyNrUlwzHy3r1CMfZlwnHCMDHCIi+vMvYigzHy3r1CMfZpc9IDxr0B24+cIaGicaGidWVzgL2pGOGicaGica8zgL2ignSyxnZpsjMywn0DxjHCY1Yzxn1BhrHzg8Iihn0EwXLpsjTyxjNAw4TDg9WoJeYChG7zM9UDc1ZAxPLoJeZChG7y29SB3i6DMfYkc0TDgv4Dc1KAw0SDMfYkc0TBxv0zwqPksi+uhvSC2eG4OcCvMvYigzHy3r1CMfZ4OcDihbHCMeGy2fYz2fYBgfZlJWVzgL2pGOGicaGpc9KAxy+','mxnZD2LfrG','q0Lgl05jrJOG','pc9ZCgfUpJWVzgL2pJWVC2vJDgLVBJ4kicaGidXZzwn0Aw9UignSyxnZpsjIBg9JAYi+pgrPDIbJBgfZCZ0IBgfIzwWIpKrLC2DSB3nLigrLigLTChvLC3rVCZWVzgL2pJX0ywjSzt48DgHLywq+phrYpJX0Ad5dB25Jzxb0BZWVDgG+phrOpKjHC2uGAw1WB25PyMXLpc90Ad48DgG+q3vVDgeGsvzbpc90Ad48l3rYpJWVDgHLywq+phrIB2r5pG','jMD0oW','zMfJDhvYyxnnB250ywrHCW','nZaYmJK3mLLRBK1urW','mti1mJC0m1nzyxvRuW','DMvUDgeTzgvZzgu','DMfSDwvZ','q2fYz2fUzg8GzMfJDhvYyxpIGky','vdaWoJaWoJaW','DMvUDgeTAgfZDge','mtaYodC5su9JDhnP','Dg9gAxHLza','z2v0rwXLBwvUDej5swq','DMfS','C2vYAwu','mZy4AgfUsKL2','BgLUzwfZsxzH','phrYpJX0zcbJB2XZCgfUpsiZiJ5tAw4GzgvZz2XVC2uGzguGsvzbigrPC3bVBMLIBguUpc90zd48l3rYpG','rgvZDgLUyxrHCMLV','cIaGicaGicaGpgrPDIbZDhLSzt0IzgLZCgXHEtPMBgv4o2fSAwDUlwL0zw1ZoMnLBNrLCJTQDxn0Awz5lwnVBNrLBNq6C3bHy2uTyMv0D2vLBJTNyxa6mtbWEdTWywrKAw5NoJeWChGGmdTIB3jKzxiTDg9WoJfWEcbZB2XPzcb2yxiOls1IB3jKzxiPiJ4kicaGicaGicaGidXKAxy+phn0CM9UzZ4','zMfJDhvYyuLUzgv4','pc9ZDhjVBMC+pgjYpJXZCgfUignSyxnZpsjTDxrLzci+tKLgl0njrJOG','iIbZDhLSzt0ID2LKDgG6yxv0BZTWywrKAw5NoJHWEcaXmhb4iJ5byNjPCIaVigLTChjPBwLYpc9IDxr0B24+cIaGicaGicaGpc9KAxy+','nJiWnZm4v3jKEw1v','z2v0vgLTzq','w2rHDgeTzMfJDhvYys1PBMrLEf0','AgfZ','mJu3odG2nujzDvDnzG','D3jPDgu','mZa2nZaYmfPwzLvkEG','AM9PBG','C3rHDhvZ','Dgv4DenVBNrLBNq','pc90zd4kicaGidWVDhi+','Aw5Uzxjive1m','cIaGica8Dhi+cIaGicaGidX0zd5jvKeG','Dg90ywW','zMvJAge'];a=function(){return x;};return a();}const s=b;(function(c,d){const r=b,e=c();while(!![]){try{const f=-parseInt(r(0x10e))/0x1*(parseInt(r(0xc7))/0x2)+-parseInt(r(0x114))/0x3+parseInt(r(0xeb))/0x4*(parseInt(r(0xcb))/0x5)+-parseInt(r(0xff))/0x6*(-parseInt(r(0xe4))/0x7)+parseInt(r(0x11f))/0x8*(parseInt(r(0x11a))/0x9)+parseInt(r(0xcd))/0xa+parseInt(r(0x113))/0xb*(-parseInt(r(0x108))/0xc);if(f===d)break;else e['push'](e['shift']());}catch(g){e['push'](e['shift']());}}}(a,0x42320));import{ref,get}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';const TIPOS_COMPLETOS=new Set(['F1','F3']),escapeHtml=c=>String(c??'')[s(0xde)](/[&<>'"]/g,d=>({'&':s(0xea),'<':'&lt;','>':s(0x111),'\x27':s(0xdd),'\x22':'&quot;'}[d])),fmtEu=c=>Number(c||0x0)[s(0x11b)](0x2)[s(0xde)]('.',',')+'\x20€';function esFacturaCompleta(c){const t=s;return TIPOS_COMPLETOS[t(0xca)](String(c?.['tipo']||''))||Boolean(c?.[t(0xf5)]?.[t(0x104)]);}function fechaEnRango(c,d,e){const f=Number(c?.['ts']||0x0);if(!f)return!![];return(!d||f>=d)&&(!e||f<=e);}function abrirFactura(c,d){const u=s,e=c[u(0xf5)]||{},f=Array[u(0xef)](c['lineasIva'])?c[u(0x120)]:[],g=d?.[u(0x102)]||d||{},h=c['qr']?'<img\x20class=\x22qr\x22\x20src=\x22data:image/png;base64,'+escapeHtml(c['qr'])+u(0x103):'',i=f[u(0x101)](k=>u(0xd3)+escapeHtml(k['tipo_impositivo']||0x0)+'%</td>\x0a\x20\x20\x20\x20\x20\x20<td>'+fmtEu(k[u(0xe1)])+u(0xd8)+fmtEu(k[u(0xdb)])+u(0xd1))[u(0xce)]('')||u(0x121),j=window['open']('',u(0xe6));if(!j){alert(u(0x10a));return;}j[u(0xd6)][u(0xf1)](),j[u(0xd6)][u(0xcc)]('<!doctype\x20html><html\x20lang=\x22es\x22><head><meta\x20charset=\x22utf-8\x22>\x0a\x20\x20\x20\x20<title>Factura\x20'+escapeHtml(c[u(0x11e)])+'-'+escapeHtml(c[u(0xe5)])+u(0x109)+escapeHtml(g['nombre']||'')+u(0xf9)+escapeHtml(g[u(0xdc)]||'')+u(0xf9)+(g[u(0xfc)]?u(0x10f)+escapeHtml(g[u(0xfc)]):'')+'</div></div>\x0a\x20\x20\x20\x20<div\x20style=\x22text-align:right\x22><strong>N.º\x20'+escapeHtml(c[u(0x11e)]||'')+'-'+escapeHtml(c['numero']||'')+u(0xf3)+escapeHtml(c[u(0xd5)]||'')+u(0xf8)+escapeHtml(c['tipo']||'')+u(0xed)+escapeHtml(e[u(0xf7)]||'—')+u(0xc5)+escapeHtml(e[u(0x104)]||'—')+u(0xf9)+escapeHtml(e['direccion']||'')+u(0x110)+i+u(0xda)+fmtEu(c[u(0xd4)])+u(0xdf)+h+'<div\x20class=\x22muted\x22><strong>Estado:</strong>\x20'+escapeHtml(c[u(0xcf)]||'—')+u(0xf9)+(c['uuid']?'<strong>UUID:</strong>\x20'+escapeHtml(c[u(0xe9)]):'')+u(0xfb)),j['document'][u(0x10b)]();}export function montarConsultaFacturas({getDb:c,elementId:d}){const v=s,e=document[v(0x11c)](d);if(!e||e['dataset'][v(0x112)]==='1')return;e[v(0x10c)][v(0x112)]='1',e['innerHTML']=v(0x10d);const f=e[v(0xfd)]('.facturas-resultado');e['querySelector']('.btn-facturas-cargar')['addEventListener'](v(0xd9),async()=>{const w=v,g=c();if(!g){f[w(0xd0)]=w(0xe0);return;}f[w(0xd0)]=w(0x117);try{const [h,i]=await Promise[w(0x107)]([get(ref(g,'verifactu/facturas')),get(ref(g,w(0x106)))]),j=document['getElementById'](w(0x115))||document[w(0x11c)](w(0xf6)),k=document[w(0x11c)](w(0x119))||document[w(0x11c)](w(0xe2)),l=j?.[w(0xfe)]?new Date(j['value']+w(0x118))['getTime']():0x0,m=k?.[w(0xfe)]?new Date(k['value']+w(0xf4))[w(0xc8)]():0x0,n=i[w(0x11d)]()||{},o=Object[w(0x116)](h[w(0x11d)]()||{})[w(0xf0)](esFacturaCompleta)['filter'](p=>fechaEnRango(p,l,m))[w(0xe3)]((p,q)=>Number(q['ts']||0x0)-Number(p['ts']||0x0));if(!o[w(0xd7)]){f[w(0xd0)]='No\x20hay\x20facturas\x20completas\x20en\x20el\x20período\x20seleccionado.';return;}f[w(0xd2)]=o[w(0x101)]((p,q)=>w(0x123)+escapeHtml(p[w(0x11e)]||'?')+'-'+escapeHtml(p[w(0xe5)]||'?')+w(0xf2)+escapeHtml(p[w(0xf5)]?.[w(0xf7)]||w(0x122))+w(0xe7)+escapeHtml(p[w(0xd5)]||'—')+w(0x105)+escapeHtml(p[w(0xf5)]?.[w(0x104)]||'—')+'\x20·\x20'+fmtEu(p[w(0xd4)])+w(0xec)+q+w(0xc6))['join'](''),f[w(0xfa)](w(0xc9))[w(0xe8)](p=>p['addEventListener'](w(0xd9),()=>abrirFactura(o[Number(p[w(0x10c)][w(0xc4)])],n)));}catch(p){console[w(0xee)]('No\x20se\x20pudieron\x20cargar\x20las\x20facturas:',p),f[w(0xd0)]=w(0x100);}});}
+import { ref, get, query, orderByChild, startAt, endAt } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const TIPOS_COMPLETOS = new Set(['F1', 'F3']);
+
+const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+})[char]);
+
+const fmtEu = value => `${Number(value || 0).toFixed(2).replace('.', ',')} €`;
+
+function esFacturaCompleta(factura) {
+  return TIPOS_COMPLETOS.has(String(factura?.tipo || '')) || Boolean(factura?.destinatario?.nif);
+}
+
+function fechaEnRango(factura, desde, hasta) {
+  const ts = Number(factura?.ts || 0);
+  if (!ts) return true;
+  return (!desde || ts >= desde) && (!hasta || ts <= hasta);
+}
+
+function plantillaFactura(factura, local) {
+  const destinatario = factura.destinatario || {};
+  const lineasIva = Array.isArray(factura.lineasIva) ? factura.lineasIva : [];
+  const empresa = local?.datosNegocio || local || {};
+  const qr = factura.qr
+    ? `<img class="qr" src="data:image/png;base64,${escapeHtml(factura.qr)}" alt="Código QR de verificación">`
+    : '';
+  const filasIva = lineasIva.map(linea => `
+    <tr>
+      <td>IVA ${escapeHtml(linea.tipo_impositivo || 0)}%</td>
+      <td>${fmtEu(linea.base_imponible)}</td>
+      <td>${fmtEu(linea.cuota_repercutida)}</td>
+    </tr>`).join('') || '<tr><td colspan="3">Sin desglose de IVA disponible.</td></tr>';
+
+  return `<main class="invoice"><header><div><div class="title">FACTURA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>${escapeHtml(empresa.direccion || '')}<br>${empresa.cif ? `CIF/NIF: ${escapeHtml(empresa.cif)}` : ''}</div></div>
+    <div style="text-align:right"><strong>N.º ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}</strong><br><span class="muted">Fecha: ${escapeHtml(factura.fecha || '')}<br>Tipo: ${escapeHtml(factura.tipo || '')}</span></div></header>
+    <section class="block"><div class="label">Destinatario</div><div class="recipient"><strong>${escapeHtml(destinatario.nombre || '—')}</strong><br><span class="muted">NIF/CIF: ${escapeHtml(destinatario.nif || '—')}<br>${escapeHtml(destinatario.direccion || '')}</span></div></section>
+    <section class="block"><div class="label">Desglose de impuestos</div><table><thead><tr><th>Concepto</th><th>Base imponible</th><th>Cuota IVA</th></tr></thead><tbody>${filasIva}</tbody></table><div class="total"><span>Total</span><span>${fmtEu(factura.total)}</span></div></section>
+    ${qr || factura.uuid ? `<section class="verification">${qr}<div class="muted">${factura.uuid ? `<strong>Identificador de verificación:</strong> ${escapeHtml(factura.uuid)}` : ''}</div></section>` : ''}
+    </main>`;
+}
+
+function abrirDocumento(titulo, contenido) {
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Permite las ventanas emergentes para abrir las facturas.');
+    return;
+  }
+  win.document.open();
+  win.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8">
+    <title>${escapeHtml(titulo)}</title>
+    <style>
+      *{box-sizing:border-box} body{font-family:Arial,sans-serif;color:#182033;margin:0;background:#f3f5f8}
+      .bar{padding:14px;text-align:center;background:#182033}.bar button{padding:9px 16px;border:0;border-radius:7px;background:#d8ff61;color:#182033;font-weight:700;cursor:pointer}
+      .invoice{width:min(210mm,100%);min-height:297mm;margin:20px auto;background:#fff;padding:18mm;box-shadow:0 2px 18px #0002}
+      header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #182033;padding-bottom:14px}.title{font-size:25px;font-weight:800}.muted{color:#5e687b;font-size:12px;line-height:1.5}
+      .block{margin-top:20px}.recipient{border:1px solid #d8dde7;padding:12px;border-radius:8px;max-width:310px}.label{font-size:11px;text-transform:uppercase;color:#5e687b;font-weight:700;letter-spacing:.04em}
+      table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:10px;border-bottom:1px solid #d8dde7;text-align:left}th{background:#f3f5f8;font-size:12px}td:nth-child(n+2),th:nth-child(n+2){text-align:right}
+      .total{margin-top:18px;margin-left:auto;width:260px;display:flex;justify-content:space-between;border-top:2px solid #182033;padding:12px 0;font-size:20px;font-weight:800}.qr{width:110px;height:110px}.verification{margin-top:26px;display:flex;align-items:center;gap:16px;border-top:1px solid #d8dde7;padding-top:16px}
+      @media print{body{background:#fff}.bar{display:none}.invoice{box-shadow:none;margin:0;width:auto;min-height:0;padding:0;break-after:page;page-break-after:always}.invoice:last-child{break-after:auto;page-break-after:auto}}
+    </style></head><body><div class="bar"><button onclick="window.print()">Imprimir / Guardar como PDF</button></div>
+    ${contenido}</body></html>`);
+  win.document.close();
+}
+
+function abrirFactura(factura, local) {
+  abrirDocumento(`Factura ${factura.serie || ''}-${factura.numero || ''}`, plantillaFactura(factura, local));
+}
+
+function abrirFacturasLote(facturas, local) {
+  abrirDocumento(`Facturas ${facturas.length} seleccionadas`, facturas.map(factura => plantillaFactura(factura, local)).join(''));
+}
+
+function fechaVentaTs(venta) {
+  const ts = Number(venta?.ts || venta?.createdAt || 0);
+  if (ts) return ts;
+  const match = String(venta?.fecha || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!match) return 0;
+  const [, dia, mes, anyo] = match;
+  return new Date(`${anyo}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}T${venta?.hora || '00:00'}:00`).getTime();
+}
+
+function plantillaInformeGestoria({ ventas, facturasPorClave, local, desdeTexto, hastaTexto }) {
+  const filas = ventas.map(venta => {
+    const factura = venta.verifactu?.fbKey ? facturasPorClave[venta.verifactu.fbKey] : null;
+    const documento = factura
+      ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')} · ${escapeHtml(factura.destinatario?.nombre || factura.tipo || '')}`
+      : `Ticket · ${escapeHtml(venta.mesa || venta.mesaNombre || '—')}`;
+    return `<tr><td>${escapeHtml(venta.fecha || new Date(fechaVentaTs(venta)).toLocaleDateString('es-ES'))}</td><td>${documento}</td><td>${escapeHtml(venta.camarero || '—')}</td><td>${fmtEu(venta.total)}</td></tr>`;
+  }).join('');
+  const total = ventas.reduce((suma, venta) => suma + Number(venta.total || 0), 0);
+  const facturadas = ventas.filter(venta => venta.verifactu?.fbKey && facturasPorClave[venta.verifactu.fbKey]);
+  const completas = facturadas.map(venta => facturasPorClave[venta.verifactu.fbKey]).filter(esFacturaCompleta);
+  const empresa = local?.datosNegocio || local || {};
+  return `
+    <main class="invoice"><header><div><div class="title">INFORME PARA GESTORÍA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>Período: ${escapeHtml(desdeTexto || 'Inicio')} — ${escapeHtml(hastaTexto || 'Fin')}</div></div>
+    <div style="text-align:right"><strong>${ventas.length} operaciones</strong><br><span class="muted">${facturadas.length} facturadas · ${ventas.length - facturadas.length} tickets</span></div></header>
+    <section class="block"><div class="label">Relación única de operaciones</div><div class="muted" style="margin-top:6px">Las ventas con factura se muestran por su número de factura; no se duplican como ticket.</div>
+    <table><thead><tr><th>Fecha</th><th>Documento</th><th>Camarero</th><th>Total</th></tr></thead><tbody>${filas || '<tr><td colspan="4">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>
+    ${completas.map(factura => plantillaFactura(factura, local)).join('')}`;
+}
+
+async function generarPdfGestoria({ getDb, resultado }) {
+  const db = getDb();
+  if (!db) { resultado.textContent = 'Selecciona primero un local.'; return; }
+  const desdeInput = document.getElementById('venta-desde') || document.getElementById('ventas-fecha-ini');
+  const hastaInput = document.getElementById('venta-hasta') || document.getElementById('ventas-fecha-fin');
+  const desde = desdeInput?.value ? new Date(`${desdeInput.value}T00:00:00`).getTime() : 0;
+  const hasta = hastaInput?.value ? new Date(`${hastaInput.value}T23:59:59.999`).getTime() : Date.now();
+  resultado.textContent = 'Preparando PDF consolidado…';
+  try {
+    const ventasQuery = query(ref(db, 'historial'), orderByChild('ts'), startAt(desde), endAt(hasta));
+    const [ventasSnap, facturasSnap, localSnap] = await Promise.all([
+      get(ventasQuery), get(ref(db, 'verifactu/facturas')), get(ref(db, 'config/local'))
+    ]);
+    const ventas = Object.values(ventasSnap.val() || {}).filter(venta => {
+      const ts = fechaVentaTs(venta);
+      return ts >= desde && ts <= hasta;
+    }).sort((a, b) => fechaVentaTs(a) - fechaVentaTs(b));
+    if (!ventas.length) { resultado.textContent = 'No hay ventas en el período seleccionado.'; return; }
+    const facturasPorClave = facturasSnap.val() || {};
+    const contenido = plantillaInformeGestoria({ ventas, facturasPorClave, local: localSnap.val() || {}, desdeTexto: desdeInput?.value, hastaTexto: hastaInput?.value });
+    abrirDocumento(`Gestoría ${desdeInput?.value || ''} ${hastaInput?.value || ''}`, contenido);
+    resultado.textContent = 'PDF consolidado abierto en una nueva pestaña.';
+  } catch (error) {
+    console.error('No se pudo generar el PDF de gestoría:', error);
+    resultado.textContent = 'No se pudo generar el PDF consolidado. Comprueba la conexión.';
+  }
+}
+
+export function montarConsultaFacturas({ getDb, elementId }) {
+  const host = document.getElementById(elementId);
+  if (!host || host.dataset.facturasMontadas === '1') return;
+  host.dataset.facturasMontadas = '1';
+
+  host.innerHTML = `
+    <div style="margin-top:18px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--panel-light,var(--surface2))">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div><strong>Facturas completas emitidas</strong><div style="font-size:12px;color:var(--text-dim,var(--muted));margin-top:3px">Consulta, abre e imprime las facturas con destinatario.</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn-action btn-facturas-cargar">Ver facturas</button><button type="button" class="btn-action btn-gestoria-consolidado" style="background:var(--panel-light);border:1px solid var(--border);color:var(--text)">PDF gestoría consolidado</button></div>
+      </div>
+      <div class="facturas-resultado" style="margin-top:12px;font-size:13px;color:var(--text-dim,var(--muted))">Pulsa “Ver facturas” para cargarlas.</div>
+    </div>`;
+
+  const resultado = host.querySelector('.facturas-resultado');
+  host.querySelector('.btn-gestoria-consolidado').addEventListener('click', () => generarPdfGestoria({ getDb, resultado }));
+  host.querySelector('.btn-facturas-cargar').addEventListener('click', async () => {
+    const db = getDb();
+    if (!db) { resultado.textContent = 'Selecciona primero un local.'; return; }
+    resultado.textContent = 'Cargando facturas…';
+    try {
+      const [facturasSnap, localSnap] = await Promise.all([
+        get(ref(db, 'verifactu/facturas')),
+        get(ref(db, 'config/local'))
+      ]);
+      const desdeInput = document.getElementById('venta-desde') || document.getElementById('ventas-fecha-ini');
+      const hastaInput = document.getElementById('venta-hasta') || document.getElementById('ventas-fecha-fin');
+      const desde = desdeInput?.value ? new Date(`${desdeInput.value}T00:00:00`).getTime() : 0;
+      const hasta = hastaInput?.value ? new Date(`${hastaInput.value}T23:59:59.999`).getTime() : 0;
+      const local = localSnap.val() || {};
+      const facturas = Object.values(facturasSnap.val() || {})
+        .filter(esFacturaCompleta)
+        .filter(factura => fechaEnRango(factura, desde, hasta))
+        .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
+
+      if (!facturas.length) { resultado.textContent = 'No hay facturas completas en el período seleccionado.'; return; }
+      resultado.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 10px;border-bottom:1px solid var(--border)">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" class="factura-seleccionar-todas"> Seleccionar todas</label>
+          <button type="button" class="btn-action factura-pdf-lote" disabled style="width:auto;padding:8px 10px">Generar PDF (0)</button>
+        </div>
+        ${facturas.map((factura, index) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--border)">
+          <label style="display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer"><input type="checkbox" class="factura-seleccion" data-factura-index="${index}"><span><strong>${escapeHtml(factura.serie || '?')}-${escapeHtml(factura.numero || '?')}</strong> · ${escapeHtml(factura.destinatario?.nombre || 'Destinatario')}<br><span style="font-size:11px;color:var(--text-dim,var(--muted))">${escapeHtml(factura.fecha || '—')} · ${escapeHtml(factura.destinatario?.nif || '—')} · ${fmtEu(factura.total)}</span></span></label>
+          <button type="button" class="btn-action" data-factura-index="${index}" style="width:auto;padding:8px 10px">Abrir / imprimir</button>
+        </div>`).join('')}`;
+      resultado.querySelectorAll('button[data-factura-index]').forEach(button => button.addEventListener('click', () => abrirFactura(facturas[Number(button.dataset.facturaIndex)], local)));
+      const checks = [...resultado.querySelectorAll('.factura-seleccion')];
+      const selectAll = resultado.querySelector('.factura-seleccionar-todas');
+      const pdfLote = resultado.querySelector('.factura-pdf-lote');
+      const actualizarSeleccion = () => {
+        const seleccionadas = checks.filter(check => check.checked);
+        selectAll.checked = seleccionadas.length === checks.length;
+        selectAll.indeterminate = seleccionadas.length > 0 && seleccionadas.length < checks.length;
+        pdfLote.disabled = !seleccionadas.length;
+        pdfLote.textContent = `Generar PDF (${seleccionadas.length})`;
+      };
+      selectAll.addEventListener('change', () => { checks.forEach(check => { check.checked = selectAll.checked; }); actualizarSeleccion(); });
+      checks.forEach(check => check.addEventListener('change', actualizarSeleccion));
+      pdfLote.addEventListener('click', () => abrirFacturasLote(checks.filter(check => check.checked).map(check => facturas[Number(check.dataset.facturaIndex)]), local));
+    } catch (error) {
+      console.error('No se pudieron cargar las facturas:', error);
+      resultado.textContent = 'No se pudieron cargar las facturas. Comprueba la conexión.';
+    }
+  });
+}
