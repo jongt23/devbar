@@ -146,14 +146,12 @@ function plantillaInformeGestoria({ ventas, facturasPorClave, local, desdeTexto,
   }).join('');
   const total = ventas.reduce((suma, venta) => suma + Number(venta.total || 0), 0);
   const facturadas = ventas.filter(venta => resolverFacturaVenta(venta, facturasPorClave));
-  const completas = facturadas.map(venta => resolverFacturaVenta(venta, facturasPorClave)).filter(esFacturaCompleta);
   const empresa = local?.datosNegocio || local || {};
   return `
     <main class="invoice"><header><div><div class="title">INFORME PARA GESTORÍA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>Período: ${escapeHtml(desdeTexto || 'Inicio')} — ${escapeHtml(hastaTexto || 'Fin')}</div></div>
     <div style="text-align:right"><strong>${ventas.length} operaciones</strong><br><span class="muted">${facturadas.length} facturadas · ${ventas.length - facturadas.length} tickets</span></div></header>
     <section class="block"><div class="label">Relación única de operaciones</div><div class="muted" style="margin-top:6px">Las ventas con factura se muestran por su número de factura; no se duplican como ticket.</div>
-    <table><thead><tr><th>Fecha</th><th>Documento</th><th>Total</th></tr></thead><tbody>${filas || '<tr><td colspan="3">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>
-    ${completas.map(factura => plantillaFactura(factura, local)).join('')}`;
+    <table><thead><tr><th>Fecha</th><th>Documento</th><th>Total</th></tr></thead><tbody>${filas || '<tr><td colspan="3">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>`;
 }
 
 async function generarPdfGestoria({ getDb, resultado }) {

@@ -3808,10 +3808,15 @@ async function exportarPDFGestoria() {
     "¿Deseas incluir el desglose de Artículos vendidos en el PDF?\n\n• Aceptar: Informe Completo (+ Desglose de Artículos)\n• Cancelar: Solo Resumen de Días y Totales (Recomendado para el gestor)"
   );
 
-  generarDocumentoPDFGestoria(incluirArticulos === true);
+  const incluirDocumentos = await showCustomConfirm(
+    "Detalle fiscal",
+    "¿Deseas incluir la relación de documentos fiscales?\n\n• Aceptar: añade el listado de tickets y facturas vinculadas\n• Cancelar: informe resumido (recomendado)"
+  );
+
+  await generarDocumentoPDFGestoria(incluirArticulos === true, incluirDocumentos === true);
 }
 
-async function generarDocumentoPDFGestoria(incluirArticulos = false) {
+async function generarDocumentoPDFGestoria(incluirArticulos = false, incluirDocumentos = false) {
   const desdeStr = document.getElementById("gestoria-desde").value;
   const hastaStr = document.getElementById("gestoria-hasta").value;
   const desdeFmt = formatFechaEsp(desdeStr);
@@ -3834,36 +3839,29 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false) {
 
   const dias = agruparVentasPorDiaLocal(gestoriaTicketsList);
 
-  // Una venta sigue contando una sola vez en los totales. Si tiene una factura
-  // vinculada, el anexo la muestra como factura y no como un segundo ticket.
-  let operacionesConDocumento = [];
-  try {
-    const desdeTs = new Date(`${desdeStr}T00:00:00`).getTime();
-    const hastaTs = new Date(`${hastaStr}T23:59:59.999`).getTime();
-    ({ operaciones: operacionesConDocumento } = await cargarOperacionesFiscales(db, desdeTs, hastaTs));
-  } catch (error) {
-    console.warn('No se pudieron cargar las facturas vinculadas:', error);
+  let relacionDocumentosHTML = '';
+  if (incluirDocumentos) {
+    let operacionesConDocumento = [];
+    try {
+      const desdeTs = new Date(`${desdeStr}T00:00:00`).getTime();
+      const hastaTs = new Date(`${hastaStr}T23:59:59.999`).getTime();
+      ({ operaciones: operacionesConDocumento } = await cargarOperacionesFiscales(db, desdeTs, hastaTs));
+    } catch (error) {
+      console.warn('No se pudieron cargar las facturas vinculadas:', error);
+    }
+    relacionDocumentosHTML = `
+      <h3 style="margin-top:20px;">${incluirArticulos ? '3. ' : '2. '}Relación de documentos fiscales</h3>
+      <div style="font-size:11px;color:#4b5563;margin:-4px 0 10px">Las operaciones facturadas se muestran por su factura vinculada; no se duplican como ticket.</div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Documento</th><th>Destinatario / Mesa</th><th class="text-right">Importe</th></tr></thead>
+        <tbody>${operacionesConDocumento.map(({ ticket, factura }) => {
+          const fecha = ticket.fecha || (ticket.ts ? new Date(ticket.ts).toLocaleDateString('es-ES') : '—');
+          const documento = factura ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}` : 'Ticket';
+          const referencia = factura ? escapeHtml(factura.destinatario?.nombre || factura.tipo || '—') : escapeHtml(ticket.mesa || ticket.mesaNombre || '—');
+          return `<tr><td>${escapeHtml(fecha)}</td><td>${documento}</td><td>${referencia}</td><td class="text-right mono">${Number(ticket.total || 0).toFixed(2)} €</td></tr>`;
+        }).join('')}</tbody>
+      </table>`;
   }
-  const facturasVinculadas = operacionesConDocumento.map(item => item.factura).filter(Boolean);
-  const facturasCompletas = facturasVinculadas.filter(f => ['F1', 'F3'].includes(f.tipo) || f.destinatario?.nif);
-  const relacionDocumentosHTML = `
-    <h3 style="margin-top:20px;">${incluirArticulos ? '3. ' : '2. '}Relación de documentos fiscales</h3>
-    <div style="font-size:11px;color:#4b5563;margin:-4px 0 10px">Las operaciones facturadas se muestran por su factura vinculada; no se duplican como ticket.</div>
-    <table>
-      <thead><tr><th>Fecha</th><th>Documento</th><th>Destinatario / Mesa</th><th class="text-right">Importe</th></tr></thead>
-      <tbody>${operacionesConDocumento.map(({ ticket, factura }) => {
-        const fecha = ticket.fecha || (ticket.ts ? new Date(ticket.ts).toLocaleDateString('es-ES') : '—');
-        const documento = factura ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}` : 'Ticket';
-        const referencia = factura ? escapeHtml(factura.destinatario?.nombre || factura.tipo || '—') : escapeHtml(ticket.mesa || ticket.mesaNombre || '—');
-        return `<tr><td>${escapeHtml(fecha)}</td><td>${documento}</td><td>${referencia}</td><td class="text-right mono">${Number(ticket.total || 0).toFixed(2)} €</td></tr>`;
-      }).join('')}</tbody>
-    </table>`;
-  const anexosFacturasHTML = facturasCompletas.map(factura => {
-    const destinatario = factura.destinatario || {};
-    const desglose = (factura.lineasIva || []).map(linea => `
-      <tr><td>IVA ${escapeHtml(linea.tipo_impositivo || 0)}%</td><td class="text-right mono">${Number(linea.base_imponible || 0).toFixed(2)} €</td><td class="text-right mono">${Number(linea.cuota_repercutida || 0).toFixed(2)} €</td></tr>`).join('');
-    return `<section class="factura-anexo"><div class="factura-titulo">FACTURA ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}</div><div class="factura-fecha">Fecha: ${escapeHtml(factura.fecha || '—')}</div><div class="factura-dest"><strong>Destinatario:</strong> ${escapeHtml(destinatario.nombre || '—')}<br><strong>NIF/CIF:</strong> ${escapeHtml(destinatario.nif || '—')}${destinatario.direccion ? `<br>${escapeHtml(destinatario.direccion)}` : ''}</div><table><thead><tr><th>Impuesto</th><th class="text-right">Base imponible</th><th class="text-right">Cuota IVA</th></tr></thead><tbody>${desglose || '<tr><td colspan="3">Sin desglose de IVA disponible.</td></tr>'}</tbody></table><div class="factura-total">TOTAL: ${Number(factura.total || 0).toFixed(2)} €</div></section>`;
-  }).join('');
 
   let seccionArticulosHTML = '';
   if (incluirArticulos) {
