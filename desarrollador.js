@@ -3811,7 +3811,7 @@ async function exportarPDFGestoria() {
   generarDocumentoPDFGestoria(incluirArticulos === true);
 }
 
-function generarDocumentoPDFGestoria(incluirArticulos = false) {
+async function generarDocumentoPDFGestoria(incluirArticulos = false) {
   const desdeStr = document.getElementById("gestoria-desde").value;
   const hastaStr = document.getElementById("gestoria-hasta").value;
   const desdeFmt = formatFechaEsp(desdeStr);
@@ -3829,6 +3829,40 @@ function generarDocumentoPDFGestoria(incluirArticulos = false) {
   const totalArts = gestoriaTicketsList.reduce((s, t) => s + (t.lineas || []).reduce((acc, l) => acc + Number(l.qty || 0), 0), 0);
 
   const dias = agruparVentasPorDiaLocal(gestoriaTicketsList);
+
+  // Una venta sigue contando una sola vez en los totales. Si tiene una factura
+  // vinculada, el anexo la muestra como factura y no como un segundo ticket.
+  let facturasPorClave = {};
+  try {
+    const facturasSnap = await get(ref(db, 'verifactu/facturas'));
+    facturasPorClave = facturasSnap.val() || {};
+  } catch (error) {
+    console.warn('No se pudieron cargar las facturas vinculadas:', error);
+  }
+  const operacionesConDocumento = gestoriaTicketsList.map(ticket => ({
+    ticket,
+    factura: ticket.verifactu?.fbKey ? facturasPorClave[ticket.verifactu.fbKey] : null
+  }));
+  const facturasVinculadas = operacionesConDocumento.map(item => item.factura).filter(Boolean);
+  const facturasCompletas = facturasVinculadas.filter(f => ['F1', 'F3'].includes(f.tipo) || f.destinatario?.nif);
+  const relacionDocumentosHTML = `
+    <h3 style="margin-top:20px;">${incluirArticulos ? '3. ' : '2. '}Relación de documentos fiscales</h3>
+    <div style="font-size:11px;color:#4b5563;margin:-4px 0 10px">Las operaciones facturadas se muestran por su factura vinculada; no se duplican como ticket.</div>
+    <table>
+      <thead><tr><th>Fecha</th><th>Documento</th><th>Destinatario / Mesa</th><th class="text-right">Importe</th></tr></thead>
+      <tbody>${operacionesConDocumento.map(({ ticket, factura }) => {
+        const fecha = ticket.fecha || (ticket.ts ? new Date(ticket.ts).toLocaleDateString('es-ES') : '—');
+        const documento = factura ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}` : 'Ticket';
+        const referencia = factura ? escapeHtml(factura.destinatario?.nombre || factura.tipo || '—') : escapeHtml(ticket.mesa || ticket.mesaNombre || '—');
+        return `<tr><td>${escapeHtml(fecha)}</td><td>${documento}</td><td>${referencia}</td><td class="text-right mono">${Number(ticket.total || 0).toFixed(2)} €</td></tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  const anexosFacturasHTML = facturasCompletas.map(factura => {
+    const destinatario = factura.destinatario || {};
+    const desglose = (factura.lineasIva || []).map(linea => `
+      <tr><td>IVA ${escapeHtml(linea.tipo_impositivo || 0)}%</td><td class="text-right mono">${Number(linea.base_imponible || 0).toFixed(2)} €</td><td class="text-right mono">${Number(linea.cuota_repercutida || 0).toFixed(2)} €</td></tr>`).join('');
+    return `<section class="factura-anexo"><div class="factura-titulo">FACTURA ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}</div><div class="factura-fecha">Fecha: ${escapeHtml(factura.fecha || '—')}</div><div class="factura-dest"><strong>Destinatario:</strong> ${escapeHtml(destinatario.nombre || '—')}<br><strong>NIF/CIF:</strong> ${escapeHtml(destinatario.nif || '—')}${destinatario.direccion ? `<br>${escapeHtml(destinatario.direccion)}` : ''}</div><table><thead><tr><th>Impuesto</th><th class="text-right">Base imponible</th><th class="text-right">Cuota IVA</th></tr></thead><tbody>${desglose || '<tr><td colspan="3">Sin desglose de IVA disponible.</td></tr>'}</tbody></table><div class="factura-total">TOTAL: ${Number(factura.total || 0).toFixed(2)} €</div></section>`;
+  }).join('');
 
   let seccionArticulosHTML = '';
   if (incluirArticulos) {
@@ -3903,6 +3937,8 @@ function generarDocumentoPDFGestoria(incluirArticulos = false) {
     .mono { font-family: monospace; font-size: 12px; }
     .t-foot td { background: #f9fafb; font-weight: 800; font-size: 13px; border-top: 2px solid #111827; border-bottom: 2px solid #111827; }
     .footer-doc { margin-top: 30px; font-size: 10px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 12px; }
+    .factura-anexo { page-break-before: always; break-before: page; border: 1px solid #d1d5db; padding: 18px; margin-top: 24px; }
+    .factura-titulo { font-size: 21px; font-weight: 800; }.factura-fecha { color:#4b5563; margin-top:4px; }.factura-dest { margin:18px 0; line-height:1.55; }.factura-total { text-align:right; font-size:18px; font-weight:800; margin-top:16px; }
     @media print {
       body { padding: 0; }
       .no-print { display: none !important; }
@@ -3943,7 +3979,7 @@ function generarDocumentoPDFGestoria(incluirArticulos = false) {
       <div class="kpi-val">${totalTj.toFixed(2)} €</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-lbl">Nº Tickets / Cierres</div>
+      <div class="kpi-lbl">Nº Operaciones</div>
       <div class="kpi-val">${totalTickets}</div>
     </div>
   </div>
@@ -3994,6 +4030,10 @@ function generarDocumentoPDFGestoria(incluirArticulos = false) {
   </table>
 
   ${seccionArticulosHTML}
+
+  ${relacionDocumentosHTML}
+
+  ${anexosFacturasHTML}
 
   <div class="footer-doc">
     Documento generado para fines contables y de gestoría · Sistema Comandero TPVSync · ${new Date().toLocaleString('es-ES')}
