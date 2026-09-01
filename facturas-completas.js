@@ -1,1 +1,227 @@
-function a(){const O=['zgLZywjSzwq','zxmTrvm','lMzHy3r1CMfZlxjLC3vSDgfKBW','BgLUzwfZsxzH','D3jPDgu','yMfZzv9PBxbVBMLIBgu','r2vUzxjHCIbqreyGka','cIaGica8Dhi+cIaGicaGidX0zd5jvKeG','odu0mJuZnNHdt2PUwa','z2v0rwXLBwvUDej5swq','pgjYpLrPCg86ia','lMzHy3r1CMeTC2vSzwnJAw9UyxiTDg9Kyxm','zgvZDgLUyxrHCMLV','DMvUDgeTAgfZDge','Dg90ywW','Dg9gAxHLza','vdiZoJu5oJu5lJK5oq','Bwf0y2G','phn0CM9UzZ5jzgvUDgLMAwnHzg9YigrLihzLCMLMAwnHy2NdS246pc9ZDhjVBMC+ia','phrYpJX0zd4','ndC3ntC5mNfstwHZra','y3jLyxrLzef0','zxjYB3i','Aw5Uzxjive1m','rgvZDgLUyxrHCMLV','u2vSzwnJAw9UysbWCMLTzxjVihvUigXVy2fSlG','pc9ZCgfUpJWVzgL2pJWVC2vJDgLVBJ48l21HAw4+cIaGica','pgjYpJXZCgfUihn0EwXLpsjMB250lxnPEMu6mtfWEdTJB2XVCJP2yxiOls10zxH0lwrPBsX2yxiOls1TDxrLzcKPiJ4','pc90yM9KEt48l3rHyMXLpJXKAxyGy2XHC3m9iNrVDgfSiJ48C3bHBJ5uB3rHBdWVC3bHBJ48C3bHBJ4','BMLM','DgLWBW','z2v0vgLTzq','pgLTzYbJBgfZCZ0ICxiIihnYyZ0Izgf0ytPPBwfNzs9WBMC7yMfZzty0la','C2XPy2u','iIbZDhLSzt0ID2LKDgG6yxv0BZTWywrKAw5NoJHWEcaXmhb4iJ5byNjPCIaVigLTChjPBwLYpc9IDxr0B24+cIaGicaGicaGpc9KAxy+','vdeYoJaWoJaW','mtG3odu3nLzvyurSqG','cIaGica8l21HAw4+','zMLSDgvY','pgrPDIbJBgfZCZ0IBxv0zwqIpG','y3vVDgfFCMvWzxjJDxrPzge','rMfJDhvYyxmG','imk3ia','y29UzMLNl2XVy2fS','pc90zd4kicaGidWVDhi+','zMvJAge','jNf1B3q7','BwvZyu5VBwjYzq','zMfJDhvYyxnnB250ywrHCW','cIaGica8zgL2ihn0EwXLpsjTyxjNAw4TDg9WoJe4ChG7CgfKzgLUzZOXnhb4o2jVCMrLCJOXChGGC29SAwqGDMfYkc0TyM9YzgvYktTIB3jKzxiTCMfKAxvZoJeYChG7yMfJA2DYB3vUzdP2yxiOls1Wyw5LBc1SAwDODcX2yxiOls1ZDxjMywnLmIKPiJ4kicaGicaGpgrPDIbZDhLSzt0IzgLZCgXHEtPMBgv4o2fSAwDUlwL0zw1ZoMnLBNrLCJTQDxn0Awz5lwnVBNrLBNq6C3bHy2uTyMv0D2vLBJTNyxa6mtbWEdTMBgv4lxDYyxa6D3jHCci+cIaGicaGicaGpgrPDJ48C3rYB25NpKzHy3r1CMfZignVBxbSzxrHCYbLBwL0AwrHCZWVC3rYB25NpJXKAxyGC3r5Bgu9iMzVBNqTC2L6ztOXmNb4o2nVBg9YoNzHCIGTlxrLEhqTzgLTlhzHCIGTlw11DgvKksK7BwfYz2LUlxrVCdOZChGIpKnVBNn1BhrHlcbHyNjLiguGAw1WCMLTzsbSyxmGzMfJDhvYyxmGy29UigrLC3rPBMf0yxjPBY48l2rPDJ48l2rPDJ4kicaGicaGica8zgL2ihn0EwXLpsjKAxnWBgf5oMzSzxG7z2fWoJHWEdTMBgv4lxDYyxa6D3jHCci+pgj1DhrVBIb0ExbLpsjIDxr0B24IignSyxnZpsjIDg4Tywn0Aw9Uigj0BI1Mywn0DxjHCY1JyxjNyxiIpLzLCIbMywn0DxjHCZWVyNv0Dg9UpJXIDxr0B24GDhLWzt0IyNv0Dg9UiIbJBgfZCZ0IyNrUlwfJDgLVBIbIDg4Tz2vZDg9YAweTy29UC29SAwrHzg8Iihn0EwXLpsjIywnRz3jVDw5KoNzHCIGTlxbHBMvSlwXPz2H0ktTIB3jKzxi6mxb4ihnVBgLKihzHCIGTlwjVCMrLCIK7y29SB3i6DMfYkc0TDgv4DcKIpLberIbNzxn0B3ldRweGy29UC29SAwrHzg88l2j1DhrVBJ48l2rPDJ4kicaGicaGpc9KAxy+cIaGicaGidXKAxyGy2XHC3m9iMzHy3r1CMfZlxjLC3vSDgfKBYiGC3r5Bgu9iM1HCMDPBI10B3a6mtjWEdTMB250lxnPEMu6mtnWEdTJB2XVCJP2yxiOls10zxH0lwrPBsX2yxiOls1TDxrLzcKPiJ5qDwXZysdIGjXwzxiGzMfJDhvYyxpIGj0GCgfYysbJyxjNyxjSyxmUpc9KAxy+cIaGica8l2rPDJ4','pcfKB2n0ExbLigH0BwW+pgH0BwWGBgfUzZ0IzxmIpJXOzwfKpJXTzxrHignOyxjZzxq9iNv0zI04iJ4kicaGidX0AxrSzt4','BM93','x2jSyw5R','sw5Py2LV','DMfSDwvZ','CxvLCNLtzwXLy3rVCKfSBa','y2XVC2u','pc90zd48l3rYpG','Dg9ju09tDhjPBMC','ig9WzxjHy2LVBMvZpc9ZDhjVBMC+pgjYpJXZCgfUignSyxnZpsjTDxrLzci+','jMD0oW','ywrKrxzLBNrmAxn0zw5LCG','pc9KAxy+pc9KAxy+cIaGica8zgL2ihn0EwXLpsj0zxH0lwfSAwDUoNjPz2H0iJ48C3rYB25NpK4UWROG','pgjYpLbLCSoTB2rVoIa','phrYpJX0zcbJB2XZCgfUpsi0iJ5oBYbOyxKGDMvUDgfZigvUigvSihbLCSoTB2rVlJWVDgq+pc90CJ4','BM9TyNjL','pc9ZDhjVBMC+pgjYpJXZCgfUignSyxnZpsjTDxrLzci+rMvJAge6ia','pc90zd48Dgq+','vdaWoJaWoJaW','y2XPy2S','igzHy3r1CMfKyxmGWRCG','tM8GC2uGChvKAwvYB24Gy2fYz2fYigXHCYbMywn0DxjHCZO','B3bLBG','CgfKu3rHCNq','C29YDa','nwzKB09Mrq','tM8GC2uGChvKAwvYB24Gy2fYz2fYigXHCYbMywn0DxjHCY4Gq29TChj1zwjHigXHignVBMv4ACoZBI4','DMvUDgfZlwzLy2HHlwzPBG','yNv0Dg9Uw2rHDgeTzMfJDhvYys1PBMrLEf0','ugvYBwL0zsbSyxmGDMvUDgfUyxmGzw1LCMDLBNrLCYbWyxjHigfICMLYigXHCYbMywn0DxjHCY4','pc9ZCgfUpJWVC3bHBJ48l2XHyMvSpGOGicaGicaGicaGpgj1DhrVBIb0ExbLpsjIDxr0B24IignSyxnZpsjIDg4Tywn0Aw9UiIbKyxrHlwzHy3r1CMeTAw5KzxG9iG','pg1HAw4Gy2XHC3m9iMLUDM9Py2uIpJXOzwfKzxi+pgrPDJ48zgL2ignSyxnZpsj0AxrSzsi+rKfdvfvsqtWVzgL2pJXKAxyGy2XHC3m9iM11DgvKiJ4','iIbHBhq9iKpdS2rPz28GuviGzguGDMvYAwzPy2fJACoZBIi+','pc9ZDhjVBMC+imk3ia','BwvZyq','pc90zd4kicaGicaGphrKpG','uhjLCgfYyw5KBYbqreyGy29UC29SAwrHzg/IGky','ywXS','DhjPBq','tM8GC2uGChvKBYbNzw5LCMfYigvSifberIbKzsbNzxn0B3ldRwe6','iokaLca','phnLy3rPB24Gy2XHC3m9iNzLCMLMAwnHDgLVBIi+','zM9YrwfJAa','ndiZotqWnufJyuXnuq','Aw5KzxrLCM1PBMf0zq','y2LM','lMzHy3r1CMeTCgrMlwXVDgu','jtWVDgq+cIaGicaGidX0zd4','lMj0BI1Nzxn0B3jPys1JB25ZB2XPzgfKBW','pc9IB2r5pJWVAhrTBd4','q0Lgl05jrJOG','DMvUDgfZlwzLy2HHlwLUAq','DMvYAwzHy3r1l2zHy3r1CMfZ','CxvLCNLtzwXLy3rVCG','AgLZDg9YAwfS','ihnLBgvJy2LVBMfKyxm','DMfSDwu','lMzHy3r1CMeTC2vSzwnJAw9U','DMvUDgeTzgvZzgu','zgf0B3nozwDVy2LV','tM8GAgf5igzHy3r1CMfZignVBxbSzxrHCYbLBIbLBcbWzxldRw9KBYbZzwXLy2nPB25Hzg8U','Dgv4DenVBNrLBNq','BgvUz3rO','pgjYpG','CMvKDwnL','AM9PBG','zgf0yxnLDa','iJ48C3bHBJ48C3rYB25NpG','DxvPza','mJC0ndm2mhnutNLWEG','C2vYAwu','mtu4nZeYANvyvvLA','r2vZDg9YW61Hia','y2fTyxjLCM8','mda6mda','ihrPy2TLDhm8l3nWyw4+pc9KAxy+pc9OzwfKzxi+cIaGica8C2vJDgLVBIbJBgfZCZ0IyMXVy2SIpJXKAxyGy2XHC3m9iMXHyMvSiJ5szwXHy2NdS24GW7PUAwnHigrLig9WzxjHy2LVBMvZpc9KAxy+pgrPDIbJBgfZCZ0IBxv0zwqIihn0EwXLpsjTyxjNAw4TDg9WoJzWEci+tgfZihzLBNrHCYbJB24GzMfJDhvYysbZzsbTDwvZDhjHBIbWB3iGC3uGBSo6BwvYBYbKzsbMywn0DxjHoYbUBYbZzsbKDxbSAwnHBIbJB21VihrPy2TLDc48l2rPDJ4kicaGidX0ywjSzt48DgHLywq+phrYpJX0Ad5gzwnOytWVDgG+phrOpKrVy3vTzw50BZWVDgG+phrOpKnHBwfYzxjVpc90Ad48DgG+vg90ywW8l3rOpJWVDhi+pc90AgvHzd48DgjVzhK+','rMLU','CMvWBgfJzq','rMfJDhvYysa','zg9JDw1LBNq','zMjlzxK','y2HLy2TLza','DMfS','DMvYAwzHy3r1','zMfJDhvYyuLUzgv4','Dg9mB2nHBgveyxrLu3rYAw5N','pc90yM9KEt48l3rHyMXLpJXKAxyGy2XHC3m9iNrVDgfSiJ48C3bHBJ5uB3rHBcbWzxldRw9KBZWVC3bHBJ48C3bHBJ4','BwfW','BNvTzxjV','mZu4mZa4nhrJzwLsAG'];a=function(){return O;};return a();}const w=b;(function(c,d){const v=b,e=c();while(!![]){try{const f=parseInt(v(0x91))/0x1+-parseInt(v(0x8f))/0x2+parseInt(v(0x101))/0x3+-parseInt(v(0xa3))/0x4+parseInt(v(0xef))/0x5*(-parseInt(v(0xc8))/0x6)+parseInt(v(0xb8))/0x7+parseInt(v(0xac))/0x8;if(f===d)break;else e['push'](e['shift']());}catch(g){e['push'](e['shift']());}}}(a,0xb4e09));import{ref,get,query,orderByChild,startAt,endAt}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';const TIPOS_COMPLETOS=new Set(['F1','F3']),escapeHtml=c=>String(c??'')[w(0x97)](/[&<>'"]/g,d=>({'&':'&amp;','<':'&lt;','>':w(0xe0),'\x27':'&#39;','\x22':w(0xd2)}[d])),fmtEu=c=>Number(c||0x0)[w(0xb3)](0x2)['replace']('.',',')+'\x20€';function esFacturaCompleta(c){const x=w;return TIPOS_COMPLETOS['has'](String(c?.[x(0xc2)]||''))||Boolean(c?.[x(0xb0)]?.['nif']);}function b(c,d){c=c-0x87;const e=a();let f=e[c];if(b['uYrnQr']===undefined){var g=function(j){const l='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let m='',n='';for(let o=0x0,p,q,r=0x0;q=j['charAt'](r++);~q&&(p=o%0x4?p*0x40+q:q,o++%0x4)?m+=String['fromCharCode'](0xff&p>>(-0x2*o&0x6)):0x0){q=l['indexOf'](q);}for(let s=0x0,t=m['length'];s<t;s++){n+='%'+('00'+m['charCodeAt'](s)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(n);};b['DmAkCx']=g,b['hcXgbf']={},b['uYrnQr']=!![];}const h=e[0x0];b['ThgXlD']!==h&&(b['hcXgbf']={},b['ThgXlD']=h);const i=b['hcXgbf'][c];return i===undefined?(f=b['DmAkCx'](f),b['hcXgbf'][c]=f):f=i,f;}function fechaEnRango(c,d,e){const f=Number(c?.['ts']||0x0);if(!f)return!![];return(!d||f>=d)&&(!e||f<=e);}function plantillaFactura(c,d){const y=w,e=c[y(0xb0)]||{},f=Array['isArray'](c[y(0xa7)])?c[y(0xa7)]:[],g=d?.[y(0x111)]||d||{},h=c['qr']?y(0xc4)+escapeHtml(c['qr'])+y(0xf6):'',i=f[y(0xa1)](j=>y(0xab)+escapeHtml(j['tipo_impositivo']||0x0)+y(0x105)+fmtEu(j[y(0xa9)])+y(0xf9)+fmtEu(j[y(0xcc)])+y(0xd0))['join']('')||'<tr><td\x20colspan=\x223\x22>Sin\x20desglose\x20de\x20IVA\x20disponible.</td></tr>';return y(0xf5)+escapeHtml(g[y(0xe5)]||'')+'<br>'+escapeHtml(g['direccion']||'')+y(0x89)+(g['cif']?y(0x108)+escapeHtml(g[y(0x103)]):'')+y(0xe2)+escapeHtml(c['serie']||'')+'-'+escapeHtml(c[y(0xa2)]||'')+y(0xe6)+escapeHtml(c[y(0xd1)]||'')+y(0xae)+escapeHtml(c['tipo']||'')+'</span></div></header>\x0a\x20\x20\x20\x20<section\x20class=\x22block\x22><div\x20class=\x22label\x22>Destinatario</div><div\x20class=\x22recipient\x22><strong>'+escapeHtml(e[y(0xe5)]||'—')+'</strong><br><span\x20class=\x22muted\x22>NIF/CIF:\x20'+escapeHtml(e[y(0xc1)]||'—')+'<br>'+escapeHtml(e['direccion']||'')+'</span></div></section>\x0a\x20\x20\x20\x20<section\x20class=\x22block\x22><div\x20class=\x22label\x22>Desglose\x20de\x20impuestos</div><table><thead><tr><th>Concepto</th><th>Base\x20imponible</th><th>Cuota\x20IVA</th></tr></thead><tbody>'+i+y(0xc0)+fmtEu(c[y(0xb2)])+'</span></div></section>\x0a\x20\x20\x20\x20'+(h||c[y(0x8e)]?y(0xff)+h+y(0xcb)+(c['uuid']?y(0xb6)+escapeHtml(c[y(0x8e)]):'')+'</div></section>':'')+y(0xc9);}function abrirDocumento(c,d){const z=w,e=window[z(0xec)]('',z(0xd8));if(!e){alert(z(0xf3));return;}e[z(0x99)][z(0xec)](),e['document'][z(0xa8)](z(0xd6)+escapeHtml(c)+'</title>\x0a\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20*{box-sizing:border-box}\x20body{font-family:Arial,sans-serif;color:#182033;margin:0;background:#f3f5f8}\x0a\x20\x20\x20\x20\x20\x20.bar{padding:14px;text-align:center;background:#182033}.bar\x20button{padding:9px\x2016px;border:0;border-radius:7px;background:#d8ff61;color:#182033;font-weight:700;cursor:pointer}\x0a\x20\x20\x20\x20\x20\x20.invoice{width:min(210mm,100%);min-height:297mm;margin:20px\x20auto;background:#fff;padding:18mm;box-shadow:0\x202px\x2018px\x20#0002}\x0a\x20\x20\x20\x20\x20\x20header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px\x20solid\x20#182033;padding-bottom:14px}.title{font-size:25px;font-weight:800}.muted{color:#5e687b;font-size:12px;line-height:1.5}\x0a\x20\x20\x20\x20\x20\x20.block{margin-top:20px}.recipient{border:1px\x20solid\x20#d8dde7;padding:12px;border-radius:8px;max-width:310px}.label{font-size:11px;text-transform:uppercase;color:#5e687b;font-weight:700;letter-spacing:.04em}\x0a\x20\x20\x20\x20\x20\x20table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:10px;border-bottom:1px\x20solid\x20#d8dde7;text-align:left}th{background:#f3f5f8;font-size:12px}td:nth-child(n+2),th:nth-child(n+2){text-align:right}\x0a\x20\x20\x20\x20\x20\x20.total{margin-top:18px;margin-left:auto;width:260px;display:flex;justify-content:space-between;border-top:2px\x20solid\x20#182033;padding:12px\x200;font-size:20px;font-weight:800}.qr{width:110px;height:110px}.verification{margin-top:26px;display:flex;align-items:center;gap:16px;border-top:1px\x20solid\x20#d8dde7;padding-top:16px}\x0a\x20\x20\x20\x20\x20\x20@media\x20print{body{background:#fff}.bar{display:none}.invoice{box-shadow:none;margin:0;width:auto;min-height:0;padding:0;break-after:page;page-break-after:always}.invoice:last-child{break-after:auto;page-break-after:auto}}\x0a\x20\x20\x20\x20</style></head><body><div\x20class=\x22bar\x22><button\x20onclick=\x22window.print()\x22>Imprimir\x20/\x20Guardar\x20como\x20PDF</button></div>\x0a\x20\x20\x20\x20'+d+z(0x107)),e[z(0x99)][z(0xdc)]();}function abrirFactura(c,d){const A=w;abrirDocumento(A(0x98)+(c['serie']||'')+'-'+(c[A(0xa2)]||''),plantillaFactura(c,d));}function abrirFacturasLote(c,d){const B=w;abrirDocumento(B(0xcd)+c[B(0x88)]+B(0x10d),c[B(0xa1)](e=>plantillaFactura(e,d))[B(0x8b)](''));}function fechaVentaTs(c){const C=w,d=Number(c?.['ts']||c?.[C(0xb9)]||0x0);if(d)return d;const e=String(c?.[C(0xd1)]||'')[C(0xb5)](/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(!e)return 0x0;const [,f,g,h]=e;return new Date(h+'-'+String(g)['padStart'](0x2,'0')+'-'+String(f)[C(0xed)](0x2,'0')+'T'+(c?.['hora']||C(0x94))+':00')['getTime']();}function fechaFacturaTs(c){const D=w,d=Number(c?.['ts']||0x0);if(d)return d;const e=String(c?.[D(0xd1)]||'')[D(0xb5)](/(\d{1,2})-(\d{1,2})-(\d{4})/);if(!e)return 0x0;const [,f,g,h]=e;return new Date(h+'-'+String(g)[D(0xed)](0x2,'0')+'-'+String(f)[D(0xed)](0x2,'0')+D(0xc7))[D(0xc3)]();}export function resolverFacturaVenta(c,d={}){const E=w,e=c?.[E(0x9d)]?.[E(0x9a)];if(e&&d[e])return d[e];const f=fechaVentaTs(c),g=f?new Date(f)[E(0xde)]()[E(0xc5)](0x0,0xa):'',h=String(c?.[E(0xf8)]||c?.[E(0xd3)]||'')[E(0xfc)](),i=Number(c?.[E(0xb2)]||0x0),j=Object[E(0xda)](d)[E(0xca)](k=>{const F=E,l=fechaFacturaTs(k),m=l?new Date(l)[F(0xde)]()[F(0xc5)](0x0,0xa):'';return Number(k?.[F(0xb2)]||0x0)===i&&String(k?.[F(0xf8)]||'')[F(0xfc)]()===h&&m&&m===g;});return j['length']===0x1?j[0x0]:null;}function plantillaInformeGestoria({ventas:c,facturasPorClave:d,local:e,desdeTexto:f,hastaTexto:g}){const G=w,h=c[G(0xa1)](m=>{const H=G,n=resolverFacturaVenta(m,d),o=n?'Factura\x20'+escapeHtml(n[H(0x90)]||'')+'-'+escapeHtml(n[H(0xa2)]||'')+H(0xce)+escapeHtml(n['destinatario']?.[H(0xe5)]||n[H(0xc2)]||''):'Ticket\x20·\x20'+escapeHtml(m[H(0xf8)]||m['mesaNombre']||'—');return H(0xb7)+escapeHtml(m[H(0xd1)]||new Date(fechaVentaTs(m))[H(0x9f)](H(0xa5)))+H(0xe7)+o+H(0xe7)+escapeHtml(m[H(0x93)]||'—')+H(0xe7)+fmtEu(m[H(0xb2)])+H(0xdd);})['join'](''),i=c[G(0x8a)]((m,n)=>m+Number(n[G(0xb2)]||0x0),0x0),j=c[G(0xca)](m=>resolverFacturaVenta(m,d)),k=j[G(0xa1)](m=>resolverFacturaVenta(m,d))['filter'](esFacturaCompleta),l=e?.[G(0x111)]||e||{};return'\x0a\x20\x20\x20\x20<main\x20class=\x22invoice\x22><header><div><div\x20class=\x22title\x22>INFORME\x20PARA\x20GESTORÍA</div><div\x20class=\x22muted\x22>'+escapeHtml(l['nombre']||'')+G(0xe3)+escapeHtml(f||G(0xd9))+G(0xfe)+escapeHtml(g||G(0x96))+'</div></div>\x0a\x20\x20\x20\x20<div\x20style=\x22text-align:right\x22><strong>'+c['length']+G(0xdf)+j[G(0x88)]+G(0xea)+(c[G(0x88)]-j[G(0x88)])+G(0x95)+(h||G(0xe4))+G(0xa0)+fmtEu(i)+G(0xbe)+k[G(0xa1)](m=>plantillaFactura(m,e))['join']('');}async function generarPdfGestoria({getDb:c,resultado:d}){const I=w,e=c();if(!e){d[I(0x87)]=I(0xbd);return;}const f=document[I(0xad)](I(0x110))||document[I(0xad)](I(0x109)),g=document[I(0xad)](I(0xb1))||document['getElementById'](I(0xf1)),h=f?.['value']?new Date(f['value']+I(0xe8))[I(0xc3)]():0x0,i=g?.[I(0x10e)]?new Date(g[I(0x10e)]+I(0xb4))['getTime']():Date[I(0xd7)]();d[I(0x87)]=I(0xfa);try{const j=query(ref(e,I(0x10c)),orderByChild('ts'),startAt(h),endAt(i)),[k,l,m]=await Promise['all']([get(j),get(ref(e,I(0x10a))),get(ref(e,I(0xcf)))]),n=Object['values'](k['val']()||{})[I(0xca)](q=>{const r=fechaVentaTs(q);return r>=h&&r<=i;})[I(0xee)]((q,r)=>fechaVentaTs(q)-fechaVentaTs(r));if(!n[I(0x88)]){d['textContent']='No\x20hay\x20ventas\x20en\x20el\x20período\x20seleccionado.';return;}const o=l['val']()||{},p=plantillaInformeGestoria({'ventas':n,'facturasPorClave':o,'local':m[I(0x9c)]()||{},'desdeTexto':f?.[I(0x10e)],'hastaTexto':g?.[I(0x10e)]});abrirDocumento(I(0x92)+(f?.[I(0x10e)]||'')+'\x20'+(g?.['value']||''),p),d[I(0x87)]='PDF\x20consolidado\x20abierto\x20en\x20una\x20nueva\x20pestaña.';}catch(q){console[I(0xba)](I(0xfd),q),d['textContent']='No\x20se\x20pudo\x20generar\x20el\x20PDF\x20consolidado.\x20Comprueba\x20la\x20conexión.';}}export function montarConsultaFacturas({getDb:c,elementId:d}){const J=w,e=document[J(0xad)](d);if(!e||e[J(0x8c)][J(0xd4)]==='1')return;e['dataset']['facturasMontadas']='1',e['innerHTML']=J(0xd5);const f=e[J(0x10b)](J(0xa6));e[J(0x10b)](J(0x106))['addEventListener']('click',()=>generarPdfGestoria({'getDb':c,'resultado':f})),e[J(0x10b)]('.btn-facturas-cargar')[J(0xe1)](J(0xe9),async()=>{const K=J,g=c();if(!g){f['textContent']='Selecciona\x20primero\x20un\x20local.';return;}f['textContent']='Cargando\x20facturas…';try{const [h,i]=await Promise[K(0xfb)]([get(ref(g,K(0x10a))),get(ref(g,K(0xcf)))]),j=document['getElementById'](K(0x110))||document['getElementById'](K(0x109)),k=document[K(0xad)]('venta-hasta')||document['getElementById'](K(0xf1)),l=j?.[K(0x10e)]?new Date(j['value']+K(0xe8))[K(0xc3)]():0x0,m=k?.[K(0x10e)]?new Date(k[K(0x10e)]+'T23:59:59.999')[K(0xc3)]():0x0,n=i['val']()||{},o=Object[K(0xda)](h['val']()||{})[K(0xca)](esFacturaCompleta)['filter'](t=>fechaEnRango(t,l,m))[K(0xee)]((t,u)=>Number(u['ts']||0x0)-Number(t['ts']||0x0));if(!o['length']){f[K(0x87)]=K(0x112);return;}f[K(0xbb)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0\x200\x2010px;border-bottom:1px\x20solid\x20var(--border)\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22display:flex;align-items:center;gap:7px;cursor:pointer\x22><input\x20type=\x22checkbox\x22\x20class=\x22factura-seleccionar-todas\x22>\x20Seleccionar\x20todas</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20type=\x22button\x22\x20class=\x22btn-action\x20factura-pdf-lote\x22\x20disabled\x20style=\x22width:auto;padding:8px\x2010px\x22>Generar\x20PDF\x20(0)</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20'+o['map']((t,u)=>'\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px\x200;border-top:1px\x20solid\x20var(--border)\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer\x22><input\x20type=\x22checkbox\x22\x20class=\x22factura-seleccion\x22\x20data-factura-index=\x22'+u+K(0x8d)+escapeHtml(t[K(0x90)]||'?')+'-'+escapeHtml(t['numero']||'?')+K(0xf7)+escapeHtml(t[K(0xb0)]?.[K(0xe5)]||K(0xbc))+K(0xbf)+escapeHtml(t[K(0xd1)]||'—')+K(0xce)+escapeHtml(t['destinatario']?.['nif']||'—')+'\x20·\x20'+fmtEu(t['total'])+K(0xf4)+u+K(0xc6))[K(0x8b)](''),f['querySelectorAll'](K(0xf2))[K(0x100)](t=>t['addEventListener'](K(0xe9),()=>abrirFactura(o[Number(t[K(0x8c)][K(0x9e)])],n)));const p=[...f[K(0xdb)](K(0x10f))],q=f[K(0x10b)](K(0xaf)),r=f['querySelector'](K(0x104)),s=()=>{const L=K,t=p[L(0xca)](u=>u[L(0x9b)]);q[L(0x9b)]=t['length']===p[L(0x88)],q[L(0x102)]=t[L(0x88)]>0x0&&t[L(0x88)]<p['length'],r[L(0xa4)]=!t[L(0x88)],r[L(0x87)]=L(0xaa)+t[L(0x88)]+')';};q[K(0xe1)]('change',()=>{const M=K;p[M(0x100)](t=>{const N=M;t[N(0x9b)]=q[N(0x9b)];}),s();}),p['forEach'](t=>t[K(0xe1)]('change',s)),r[K(0xe1)](K(0xe9),()=>abrirFacturasLote(p[K(0xca)](t=>t['checked'])['map'](t=>o[Number(t[K(0x8c)][K(0x9e)])]),n));}catch(t){console[K(0xba)](K(0xeb),t),f[K(0x87)]=K(0xf0);}});}
+import { ref, get, query, orderByChild, startAt, endAt } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const TIPOS_COMPLETOS = new Set(['F1', 'F3']);
+
+const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+})[char]);
+
+const fmtEu = value => `${Number(value || 0).toFixed(2).replace('.', ',')} €`;
+
+function esFacturaCompleta(factura) {
+  return TIPOS_COMPLETOS.has(String(factura?.tipo || '')) || Boolean(factura?.destinatario?.nif);
+}
+
+function fechaEnRango(factura, desde, hasta) {
+  const ts = Number(factura?.ts || 0);
+  if (!ts) return true;
+  return (!desde || ts >= desde) && (!hasta || ts <= hasta);
+}
+
+function plantillaFactura(factura, local) {
+  const destinatario = factura.destinatario || {};
+  const lineasIva = Array.isArray(factura.lineasIva) ? factura.lineasIva : [];
+  const empresa = local?.datosNegocio || local || {};
+  const qr = factura.qr
+    ? `<img class="qr" src="data:image/png;base64,${escapeHtml(factura.qr)}" alt="Código QR de verificación">`
+    : '';
+  const filasIva = lineasIva.map(linea => `
+    <tr>
+      <td>IVA ${escapeHtml(linea.tipo_impositivo || 0)}%</td>
+      <td>${fmtEu(linea.base_imponible)}</td>
+      <td>${fmtEu(linea.cuota_repercutida)}</td>
+    </tr>`).join('') || '<tr><td colspan="3">Sin desglose de IVA disponible.</td></tr>';
+
+  return `<main class="invoice"><header><div><div class="title">FACTURA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>${escapeHtml(empresa.direccion || '')}<br>${empresa.cif ? `CIF/NIF: ${escapeHtml(empresa.cif)}` : ''}</div></div>
+    <div style="text-align:right"><strong>N.º ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}</strong><br><span class="muted">Fecha: ${escapeHtml(factura.fecha || '')}<br>Tipo: ${escapeHtml(factura.tipo || '')}</span></div></header>
+    <section class="block"><div class="label">Destinatario</div><div class="recipient"><strong>${escapeHtml(destinatario.nombre || '—')}</strong><br><span class="muted">NIF/CIF: ${escapeHtml(destinatario.nif || '—')}<br>${escapeHtml(destinatario.direccion || '')}</span></div></section>
+    <section class="block"><div class="label">Desglose de impuestos</div><table><thead><tr><th>Concepto</th><th>Base imponible</th><th>Cuota IVA</th></tr></thead><tbody>${filasIva}</tbody></table><div class="total"><span>Total</span><span>${fmtEu(factura.total)}</span></div></section>
+    ${qr || factura.uuid ? `<section class="verification">${qr}<div class="muted">${factura.uuid ? `<strong>Identificador de verificación:</strong> ${escapeHtml(factura.uuid)}` : ''}</div></section>` : ''}
+    </main>`;
+}
+
+function abrirDocumento(titulo, contenido) {
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Permite las ventanas emergentes para abrir las facturas.');
+    return;
+  }
+  win.document.open();
+  win.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8">
+    <title>${escapeHtml(titulo)}</title>
+    <style>
+      *{box-sizing:border-box} body{font-family:Arial,sans-serif;color:#182033;margin:0;background:#f3f5f8}
+      .bar{padding:14px;text-align:center;background:#182033}.bar button{padding:9px 16px;border:0;border-radius:7px;background:#d8ff61;color:#182033;font-weight:700;cursor:pointer}
+      .invoice{width:min(210mm,100%);min-height:297mm;margin:20px auto;background:#fff;padding:18mm;box-shadow:0 2px 18px #0002}
+      header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #182033;padding-bottom:14px}.title{font-size:25px;font-weight:800}.muted{color:#5e687b;font-size:12px;line-height:1.5}
+      .block{margin-top:20px}.recipient{border:1px solid #d8dde7;padding:12px;border-radius:8px;max-width:310px}.label{font-size:11px;text-transform:uppercase;color:#5e687b;font-weight:700;letter-spacing:.04em}
+      table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:10px;border-bottom:1px solid #d8dde7;text-align:left}th{background:#f3f5f8;font-size:12px}td:nth-child(n+2),th:nth-child(n+2){text-align:right}
+      .total{margin-top:18px;margin-left:auto;width:260px;display:flex;justify-content:space-between;border-top:2px solid #182033;padding:12px 0;font-size:20px;font-weight:800}.qr{width:110px;height:110px}.verification{margin-top:26px;display:flex;align-items:center;gap:16px;border-top:1px solid #d8dde7;padding-top:16px}
+      @media print{body{background:#fff}.bar{display:none}.invoice{box-shadow:none;margin:0;width:auto;min-height:0;padding:0;break-after:page;page-break-after:always}.invoice:last-child{break-after:auto;page-break-after:auto}}
+    </style></head><body><div class="bar"><button onclick="window.print()">Imprimir / Guardar como PDF</button></div>
+    ${contenido}</body></html>`);
+  win.document.close();
+}
+
+function abrirFactura(factura, local) {
+  abrirDocumento(`Factura ${factura.serie || ''}-${factura.numero || ''}`, plantillaFactura(factura, local));
+}
+
+function abrirFacturasLote(facturas, local) {
+  abrirDocumento(`Facturas ${facturas.length} seleccionadas`, facturas.map(factura => plantillaFactura(factura, local)).join(''));
+}
+
+function fechaVentaTs(venta) {
+  const ts = Number(venta?.ts || venta?.createdAt || 0);
+  if (ts) return ts;
+  const match = String(venta?.fecha || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!match) return 0;
+  const [, dia, mes, anyo] = match;
+  return new Date(`${anyo}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}T${venta?.hora || '00:00'}:00`).getTime();
+}
+
+function fechaFacturaTs(factura) {
+  const ts = Number(factura?.ts || 0);
+  if (ts) return ts;
+  const match = String(factura?.fecha || '').match(/(\d{1,2})-(\d{1,2})-(\d{4})/);
+  if (!match) return 0;
+  const [, dia, mes, anyo] = match;
+  return new Date(`${anyo}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}T12:00:00`).getTime();
+}
+
+// Las ventas nuevas llevan fbKey. Para facturas antiguas cuyo cierre sobrescribió
+// esa referencia, se recupera de forma conservadora por fecha, mesa y total.
+export function resolverFacturaVenta(venta, facturasPorClave = {}) {
+  const fbKey = venta?.verifactu?.fbKey;
+  if (fbKey && facturasPorClave[fbKey]) return facturasPorClave[fbKey];
+  const tsVenta = fechaVentaTs(venta);
+  const diaVenta = tsVenta ? new Date(tsVenta).toISOString().slice(0, 10) : '';
+  const mesa = String(venta?.mesa || venta?.mesaNombre || '').trim();
+  const total = Number(venta?.total || 0);
+  const porFechaYTotal = Object.values(facturasPorClave).filter(factura => {
+    const tsFactura = fechaFacturaTs(factura);
+    const diaFactura = tsFactura ? new Date(tsFactura).toISOString().slice(0, 10) : '';
+    return Number(factura?.total || 0) === total
+      && diaFactura && diaFactura === diaVenta;
+  });
+  const candidatasMesa = porFechaYTotal.filter(factura => String(factura?.mesa || '').trim() === mesa);
+  if (candidatasMesa.length === 1) return candidatasMesa[0];
+  // Facturas estándar antiguas pueden no guardar la mesa. Solo se relaja el
+  // criterio cuando fecha e importe identifican una única factura.
+  return porFechaYTotal.length === 1 ? porFechaYTotal[0] : null;
+}
+
+function plantillaInformeGestoria({ ventas, facturasPorClave, local, desdeTexto, hastaTexto }) {
+  const filas = ventas.map(venta => {
+    const factura = resolverFacturaVenta(venta, facturasPorClave);
+    const documento = factura
+      ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')} · ${escapeHtml(factura.destinatario?.nombre || factura.tipo || '')}`
+      : `Ticket · ${escapeHtml(venta.mesa || venta.mesaNombre || '—')}`;
+    return `<tr><td>${escapeHtml(venta.fecha || new Date(fechaVentaTs(venta)).toLocaleDateString('es-ES'))}</td><td>${documento}</td><td>${escapeHtml(venta.camarero || '—')}</td><td>${fmtEu(venta.total)}</td></tr>`;
+  }).join('');
+  const total = ventas.reduce((suma, venta) => suma + Number(venta.total || 0), 0);
+  const facturadas = ventas.filter(venta => resolverFacturaVenta(venta, facturasPorClave));
+  const completas = facturadas.map(venta => resolverFacturaVenta(venta, facturasPorClave)).filter(esFacturaCompleta);
+  const empresa = local?.datosNegocio || local || {};
+  return `
+    <main class="invoice"><header><div><div class="title">INFORME PARA GESTORÍA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>Período: ${escapeHtml(desdeTexto || 'Inicio')} — ${escapeHtml(hastaTexto || 'Fin')}</div></div>
+    <div style="text-align:right"><strong>${ventas.length} operaciones</strong><br><span class="muted">${facturadas.length} facturadas · ${ventas.length - facturadas.length} tickets</span></div></header>
+    <section class="block"><div class="label">Relación única de operaciones</div><div class="muted" style="margin-top:6px">Las ventas con factura se muestran por su número de factura; no se duplican como ticket.</div>
+    <table><thead><tr><th>Fecha</th><th>Documento</th><th>Camarero</th><th>Total</th></tr></thead><tbody>${filas || '<tr><td colspan="4">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>
+    ${completas.map(factura => plantillaFactura(factura, local)).join('')}`;
+}
+
+async function generarPdfGestoria({ getDb, resultado }) {
+  const db = getDb();
+  if (!db) { resultado.textContent = 'Selecciona primero un local.'; return; }
+  const desdeInput = document.getElementById('venta-desde') || document.getElementById('ventas-fecha-ini');
+  const hastaInput = document.getElementById('venta-hasta') || document.getElementById('ventas-fecha-fin');
+  const desde = desdeInput?.value ? new Date(`${desdeInput.value}T00:00:00`).getTime() : 0;
+  const hasta = hastaInput?.value ? new Date(`${hastaInput.value}T23:59:59.999`).getTime() : Date.now();
+  resultado.textContent = 'Preparando PDF consolidado…';
+  try {
+    const ventasQuery = query(ref(db, 'historial'), orderByChild('ts'), startAt(desde), endAt(hasta));
+    const [ventasSnap, facturasSnap, localSnap] = await Promise.all([
+      get(ventasQuery), get(ref(db, 'verifactu/facturas')), get(ref(db, 'config/local'))
+    ]);
+    const ventas = Object.values(ventasSnap.val() || {}).filter(venta => {
+      const ts = fechaVentaTs(venta);
+      return ts >= desde && ts <= hasta;
+    }).sort((a, b) => fechaVentaTs(a) - fechaVentaTs(b));
+    if (!ventas.length) { resultado.textContent = 'No hay ventas en el período seleccionado.'; return; }
+    const facturasPorClave = facturasSnap.val() || {};
+    const contenido = plantillaInformeGestoria({ ventas, facturasPorClave, local: localSnap.val() || {}, desdeTexto: desdeInput?.value, hastaTexto: hastaInput?.value });
+    abrirDocumento(`Gestoría ${desdeInput?.value || ''} ${hastaInput?.value || ''}`, contenido);
+    resultado.textContent = 'PDF consolidado abierto en una nueva pestaña.';
+  } catch (error) {
+    console.error('No se pudo generar el PDF de gestoría:', error);
+    resultado.textContent = 'No se pudo generar el PDF consolidado. Comprueba la conexión.';
+  }
+}
+
+export function montarConsultaFacturas({ getDb, elementId }) {
+  const host = document.getElementById(elementId);
+  if (!host || host.dataset.facturasMontadas === '1') return;
+  host.dataset.facturasMontadas = '1';
+
+  host.innerHTML = `
+    <div style="margin-top:18px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--panel-light,var(--surface2))">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div><strong>Facturas completas emitidas</strong><div style="font-size:12px;color:var(--text-dim,var(--muted));margin-top:3px">Consulta, abre e imprime las facturas con destinatario.</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn-action btn-facturas-cargar">Ver facturas</button><button type="button" class="btn-action btn-gestoria-consolidado" style="background:var(--panel-light);border:1px solid var(--border);color:var(--text)">PDF gestoría consolidado</button></div>
+      </div>
+      <div class="facturas-resultado" style="margin-top:12px;font-size:13px;color:var(--text-dim,var(--muted))">Pulsa “Ver facturas” para cargarlas.</div>
+    </div>`;
+
+  const resultado = host.querySelector('.facturas-resultado');
+  host.querySelector('.btn-gestoria-consolidado').addEventListener('click', () => generarPdfGestoria({ getDb, resultado }));
+  host.querySelector('.btn-facturas-cargar').addEventListener('click', async () => {
+    const db = getDb();
+    if (!db) { resultado.textContent = 'Selecciona primero un local.'; return; }
+    resultado.textContent = 'Cargando facturas…';
+    try {
+      const [facturasSnap, localSnap] = await Promise.all([
+        get(ref(db, 'verifactu/facturas')),
+        get(ref(db, 'config/local'))
+      ]);
+      const desdeInput = document.getElementById('venta-desde') || document.getElementById('ventas-fecha-ini');
+      const hastaInput = document.getElementById('venta-hasta') || document.getElementById('ventas-fecha-fin');
+      const desde = desdeInput?.value ? new Date(`${desdeInput.value}T00:00:00`).getTime() : 0;
+      const hasta = hastaInput?.value ? new Date(`${hastaInput.value}T23:59:59.999`).getTime() : 0;
+      const local = localSnap.val() || {};
+      const facturas = Object.values(facturasSnap.val() || {})
+        .filter(esFacturaCompleta)
+        .filter(factura => fechaEnRango(factura, desde, hasta))
+        .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
+
+      if (!facturas.length) { resultado.textContent = 'No hay facturas completas en el período seleccionado.'; return; }
+      resultado.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 10px;border-bottom:1px solid var(--border)">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" class="factura-seleccionar-todas"> Seleccionar todas</label>
+          <button type="button" class="btn-action factura-pdf-lote" disabled style="width:auto;padding:8px 10px">Generar PDF (0)</button>
+        </div>
+        ${facturas.map((factura, index) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--border)">
+          <label style="display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer"><input type="checkbox" class="factura-seleccion" data-factura-index="${index}"><span><strong>${escapeHtml(factura.serie || '?')}-${escapeHtml(factura.numero || '?')}</strong> · ${escapeHtml(factura.destinatario?.nombre || 'Destinatario')}<br><span style="font-size:11px;color:var(--text-dim,var(--muted))">${escapeHtml(factura.fecha || '—')} · ${escapeHtml(factura.destinatario?.nif || '—')} · ${fmtEu(factura.total)}</span></span></label>
+          <button type="button" class="btn-action" data-factura-index="${index}" style="width:auto;padding:8px 10px">Abrir / imprimir</button>
+        </div>`).join('')}`;
+      resultado.querySelectorAll('button[data-factura-index]').forEach(button => button.addEventListener('click', () => abrirFactura(facturas[Number(button.dataset.facturaIndex)], local)));
+      const checks = [...resultado.querySelectorAll('.factura-seleccion')];
+      const selectAll = resultado.querySelector('.factura-seleccionar-todas');
+      const pdfLote = resultado.querySelector('.factura-pdf-lote');
+      const actualizarSeleccion = () => {
+        const seleccionadas = checks.filter(check => check.checked);
+        selectAll.checked = seleccionadas.length === checks.length;
+        selectAll.indeterminate = seleccionadas.length > 0 && seleccionadas.length < checks.length;
+        pdfLote.disabled = !seleccionadas.length;
+        pdfLote.textContent = `Generar PDF (${seleccionadas.length})`;
+      };
+      selectAll.addEventListener('change', () => { checks.forEach(check => { check.checked = selectAll.checked; }); actualizarSeleccion(); });
+      checks.forEach(check => check.addEventListener('change', actualizarSeleccion));
+      pdfLote.addEventListener('click', () => abrirFacturasLote(checks.filter(check => check.checked).map(check => facturas[Number(check.dataset.facturaIndex)]), local));
+    } catch (error) {
+      console.error('No se pudieron cargar las facturas:', error);
+      resultado.textContent = 'No se pudieron cargar las facturas. Comprueba la conexión.';
+    }
+  });
+}
