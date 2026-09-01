@@ -108,7 +108,12 @@ export function resolverFacturaVenta(venta, facturasPorClave = {}) {
   if (candidatasMesa.length === 1) return candidatasMesa[0];
   // Facturas estándar antiguas pueden no guardar la mesa. Solo se relaja el
   // criterio cuando fecha e importe identifican una única factura.
-  return porFechaYTotal.length === 1 ? porFechaYTotal[0] : null;
+  if (porFechaYTotal.length === 1) return porFechaYTotal[0];
+  // Último respaldo para historiales migrados cuyo formato de fecha difiere:
+  // se acepta solo si ese importe identifica una única factura en todo el local.
+  const porImporte = Object.values(facturasPorClave)
+    .filter(factura => Number(factura?.total || 0) === total);
+  return porImporte.length === 1 ? porImporte[0] : null;
 }
 
 function plantillaInformeGestoria({ ventas, facturasPorClave, local, desdeTexto, hastaTexto }) {
