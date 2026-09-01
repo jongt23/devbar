@@ -3,6 +3,7 @@ import { getDatabase, ref, onValue, get, query, orderByChild, startAt, endAt,
   set as fbSet, push as fbPush, remove as fbRemove, update as fbUpdate } 
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import qrcode from "./qrcode.mjs";
+import { montarConsultaFacturas } from './facturas-completas.js';
 
 const checkAndTouchMenu = (refVal) => {
   if (!refVal) return;
@@ -93,6 +94,7 @@ const AUDIT_PWD_DEFAULT = "audit1234";
 document.addEventListener("DOMContentLoaded", () => {
   cargarLocales();
   renderLocales();
+  montarConsultaFacturas({ getDb: () => db, elementId: 'facturas-completas-desarrollador' });
   
   // Exponer funciones globales para interactuar con botones del HTML
   window.abrirModalLocal = abrirModalLocal;
@@ -1234,7 +1236,10 @@ function actualizarAjustesSeguridad() {
   }
   const passEncargado = document.getElementById("config-encargado-pass-dev");
   if (passEncargado) {
-    passEncargado.value = seguridadData.encargadoPassword || "encargado1234";
+    passEncargado.value = seguridadData.encargadoPassword || "";
+    passEncargado.placeholder = seguridadData.encargadoPassword
+      ? ""
+      : "Sin contraseña configurada";
   }
 
   // Emparejamiento de Dispositivos por QR (Token del Local)
@@ -1322,6 +1327,13 @@ async function guardarPassEncargadoDev() {
       encargadoPassword: val,
       updatedAt: Date.now()
     });
+    // No se registra la contraseña: sólo el cambio y su origen para auditoría.
+    await push(ref(db, `auditoria/${new Date().toISOString().slice(0, 10)}`), {
+      ts: Date.now(),
+      accion: 'encargado_password_actualizada',
+      detalle: 'Contraseña de encargado actualizada desde Desarrollador',
+      origen: 'desarrollador'
+    }).catch(() => {});
     alert("Contraseña de encargado guardada correctamente.");
   } catch (error) {
     alert("Error al guardar la contraseña de encargado.");
