@@ -70,6 +70,11 @@ let ventasDataList = [];
 let ventasPaginaActual = 1;
 const VENTAS_POR_PAGINA = 15;
 
+// Informe comercial para el propietario: solo se llena tras una consulta manual.
+let propietarioTickets = [];
+let propietarioRanking = [];
+let propietarioConsultaRealizada = false;
+
 // ID de categoría seleccionada actualmente en el editor de carta
 let categoriaSeleccionadaId = null;
 let currentCatVarsDev = [];
@@ -173,6 +178,12 @@ document.addEventListener("DOMContentLoaded", () => {
   window.aplicarFiltrosVentas = aplicarFiltrosVentas;
   window.resetFiltrosVentas = resetFiltrosVentas;
   window.cambiarPaginaVentas = cambiarPaginaVentas;
+
+  // Informe comercial para propietario
+  window.consultarInformePropietario = consultarInformePropietario;
+  window.actualizarInformePropietario = actualizarInformePropietario;
+  window.invalidarConsultaInformePropietario = invalidarConsultaInformePropietario;
+  window.exportarPDFInformePropietario = exportarPDFInformePropietario;
 
   // Paginación de Auditoría
   window.cambiarPaginaAuditoria = cambiarPaginaAuditoria;
@@ -300,6 +311,16 @@ async function seleccionarLocal(id) {
   if (vIni) vIni.value = hoy;
   if (vFin) vFin.value = hoy;
 
+  const pIni = document.getElementById("propietario-fecha-ini");
+  const pFin = document.getElementById("propietario-fecha-fin");
+  if (pIni) pIni.value = hoy;
+  if (pFin) pFin.value = hoy;
+  propietarioTickets = [];
+  propietarioRanking = [];
+  propietarioConsultaRealizada = false;
+  actualizarSelectorCategoriasPropietario();
+  actualizarVistaPropietario();
+
   const tbody = document.getElementById("ventas-tbody");
   if (tbody) {
     tbody.innerHTML = `
@@ -402,6 +423,7 @@ function suscribirseAFirebase() {
   onValue(ref(db, "categorias"), snap => {
     categoriasData = snap.val() || {};
     renderCategorias();
+    actualizarSelectorCategoriasPropietario();
   });
   
   onValue(ref(db, "carta"), snap => {
@@ -409,6 +431,7 @@ function suscribirseAFirebase() {
     if (categoriaSeleccionadaId) {
       renderProductos(categoriaSeleccionadaId);
     }
+    actualizarSelectorCategoriasPropietario();
   });
   
   // Historial de Ventas no se escucha en tiempo real para evitar consumos masivos de cuotas.
@@ -1193,6 +1216,193 @@ function resetFiltrosVentas() {
   document.getElementById("ventas-paginacion-info").textContent = "Página 1 de 1";
   document.getElementById("btn-ventas-prev").disabled = true;
   document.getElementById("btn-ventas-next").disabled = true;
+}
+
+// --- INFORME COMERCIAL PARA PROPIETARIO ---
+function formatUnidadesInforme(valor) {
+  const redondeado = Math.round(Number(valor || 0) * 1000) / 1000;
+  return Number.isInteger(redondeado)
+    ? String(redondeado)
+    : redondeado.toLocaleString('es-ES', { maximumFractionDigits: 3 });
+}
+
+function actualizarSelectorCategoriasPropietario() {
+  const select = document.getElementById('propietario-categoria');
+  if (!select) return;
+
+  const valorActual = select.value;
+  const categorias = Object.entries(categoriasData || {})
+    .sort(([, a], [, b]) => (a.orden ?? 999) - (b.orden ?? 999) || String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
+
+  select.innerHTML = '<option value="">Todas las categorías</option>' +
+    categorias.map(([id, categoria]) => `<option value="${id}">${escapeHtml(categoria.nombre || 'Sin nombre')}</option>`).join('') +
+    '<option value="__sin_categoria__">Sin categoría / histórico</option>';
+  select.value = [...select.options].some(opcion => opcion.value === valorActual) ? valorActual : '';
+}
+
+function categoriaDeLineaPropietario(linea = {}) {
+  const articulo = cartaData[linea.artId] || cartaData[linea.articuloId] || null;
+  const categoriaId = articulo?.catId || linea.catId || linea.categoriaId || '';
+  const categoria = categoriasData[categoriaId] || null;
+  return {
+    id: categoriaId || '__sin_categoria__',
+    nombre: categoria?.nombre || linea.categoriaNombre || linea.categoria || 'Sin categoría / histórico'
+  };
+}
+
+function cantidadLineaPropietario(linea = {}) {
+  const candidatos = [linea.qtyTicket, linea.qtyServida, linea.qty, linea.cantidad];
+  const cantidad = candidatos.find(valor => valor !== undefined && valor !== null && Number.isFinite(Number(valor)));
+  return Math.max(0, Number(cantidad || 0));
+}
+
+function crearRankingPropietario(tickets = []) {
+  const acumulado = new Map();
+  tickets.forEach(ticket => {
+    (ticket.lineas || []).forEach(linea => {
+      if (!linea || linea.estado === 'cancelado') return;
+      const unidades = cantidadLineaPropietario(linea);
+      if (!unidades) return;
+
+      const articuloCarta = cartaData[linea.artId] || cartaData[linea.articuloId] || {};
+      const nombre = String(linea.nombre || articuloCarta.nombre || 'Artículo sin nombre').trim();
+      const precio = Number(linea.precioTicket ?? linea.precio ?? articuloCarta.precio ?? 0);
+      const categoria = categoriaDeLineaPropietario(linea);
+      const clave = `${linea.artId || linea.articuloId || nombre}::${categoria.id}`;
+      const actual = acumulado.get(clave) || {
+        nombre,
+        categoriaId: categoria.id,
+        categoriaNombre: categoria.nombre,
+        unidades: 0,
+        facturacion: 0
+      };
+      actual.unidades += unidades;
+      actual.facturacion += precio * unidades;
+      acumulado.set(clave, actual);
+    });
+  });
+  return [...acumulado.values()];
+}
+
+function obtenerRankingVisiblePropietario() {
+  const categoriaId = document.getElementById('propietario-categoria')?.value || '';
+  const orden = document.getElementById('propietario-orden')?.value || 'unidades';
+  return propietarioRanking
+    .filter(item => !categoriaId || item.categoriaId === categoriaId)
+    .sort((a, b) => orden === 'facturacion'
+      ? b.facturacion - a.facturacion || b.unidades - a.unidades || a.nombre.localeCompare(b.nombre, 'es')
+      : b.unidades - a.unidades || b.facturacion - a.facturacion || a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+function actualizarVistaPropietario() {
+  const tbody = document.getElementById('propietario-tbody');
+  if (!tbody) return;
+  const totalFacturacionEl = document.getElementById('propietario-total-facturacion');
+  const totalUnidadesEl = document.getElementById('propietario-total-unidades');
+  const totalTicketsEl = document.getElementById('propietario-total-tickets');
+
+  if (!propietarioConsultaRealizada) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:30px;">Selecciona el período y pulsa Consultar para generar el informe comercial.</td></tr>';
+    if (totalFacturacionEl) totalFacturacionEl.textContent = '0,00 €';
+    if (totalUnidadesEl) totalUnidadesEl.textContent = '0';
+    if (totalTicketsEl) totalTicketsEl.textContent = '0';
+    return;
+  }
+
+  const ranking = obtenerRankingVisiblePropietario();
+  const totalFacturacion = ranking.reduce((suma, item) => suma + item.facturacion, 0);
+  const totalUnidades = ranking.reduce((suma, item) => suma + item.unidades, 0);
+  if (totalFacturacionEl) totalFacturacionEl.textContent = `${totalFacturacion.toFixed(2)} €`;
+  if (totalUnidadesEl) totalUnidadesEl.textContent = formatUnidadesInforme(totalUnidades);
+  if (totalTicketsEl) totalTicketsEl.textContent = String(propietarioTickets.length);
+
+  if (!ranking.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:30px;">No hay artículos vendidos para el filtro seleccionado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = ranking.map((item, indice) => {
+    const porcentaje = totalFacturacion ? (item.facturacion / totalFacturacion) * 100 : 0;
+    return `<tr><td style="text-align:right;color:var(--text-dim);">${indice + 1}</td><td style="font-weight:600;">${escapeHtml(item.nombre)}</td><td>${escapeHtml(item.categoriaNombre)}</td><td style="text-align:right;font-family:var(--font-code);">${formatUnidadesInforme(item.unidades)}</td><td class="table-price" style="text-align:right;color:var(--accent);">${item.facturacion.toFixed(2)} €</td><td style="text-align:right;">${porcentaje.toFixed(1)} %</td></tr>`;
+  }).join('');
+}
+
+async function consultarInformePropietario() {
+  if (!db) return;
+  const desde = document.getElementById('propietario-fecha-ini')?.value;
+  const hasta = document.getElementById('propietario-fecha-fin')?.value;
+  if (!desde || !hasta) {
+    showCustomAlert('Informe propietario', 'Selecciona un período de fechas para consultar las ventas.');
+    return;
+  }
+
+  const tbody = document.getElementById('propietario-tbody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:30px;">Consultando ventas del período...</td></tr>';
+  try {
+    const data = await cargarVentasRango(desde, hasta);
+    propietarioTickets = Object.entries(data).map(([id, ticket]) => ({ id, ...ticket }));
+    propietarioRanking = crearRankingPropietario(propietarioTickets);
+    propietarioConsultaRealizada = true;
+    actualizarVistaPropietario();
+  } catch (error) {
+    console.error('Error al cargar el informe comercial:', error);
+    propietarioConsultaRealizada = false;
+    actualizarVistaPropietario();
+    showCustomAlert('Informe propietario', 'No se pudieron consultar las ventas del período.');
+  }
+}
+
+function actualizarInformePropietario() {
+  if (propietarioConsultaRealizada) actualizarVistaPropietario();
+}
+
+function invalidarConsultaInformePropietario() {
+  if (!propietarioConsultaRealizada) return;
+  propietarioTickets = [];
+  propietarioRanking = [];
+  propietarioConsultaRealizada = false;
+  actualizarVistaPropietario();
+}
+
+function exportarPDFInformePropietario() {
+  if (!propietarioConsultaRealizada) {
+    showCustomAlert('Informe propietario', 'Pulsa Consultar antes de generar el PDF.');
+    return;
+  }
+
+  const ranking = obtenerRankingVisiblePropietario();
+  if (!ranking.length) {
+    showCustomAlert('Informe propietario', 'No hay artículos para el filtro seleccionado.');
+    return;
+  }
+
+  const desde = document.getElementById('propietario-fecha-ini').value;
+  const hasta = document.getElementById('propietario-fecha-fin').value;
+  const categoriaTexto = document.getElementById('propietario-categoria').selectedOptions[0]?.textContent || 'Todas las categorías';
+  const orden = document.getElementById('propietario-orden').value;
+  const ordenTexto = orden === 'facturacion' ? 'Facturación' : 'Unidades vendidas';
+  const totalFacturacion = ranking.reduce((suma, item) => suma + item.facturacion, 0);
+  const totalUnidades = ranking.reduce((suma, item) => suma + item.unidades, 0);
+  const localNombre = localActivo?.nombre || localConfig?.datosNegocio?.nombre || 'Establecimiento';
+  const fmtFecha = valor => {
+    const [anyo, mes, dia] = String(valor).split('-');
+    return anyo && mes && dia ? `${dia}/${mes}/${anyo}` : valor;
+  };
+  const filas = ranking.map((item, indice) => {
+    const porcentaje = totalFacturacion ? (item.facturacion / totalFacturacion) * 100 : 0;
+    return `<tr><td>${indice + 1}</td><td><strong>${escapeHtml(item.nombre)}</strong></td><td>${escapeHtml(item.categoriaNombre)}</td><td class="num">${formatUnidadesInforme(item.unidades)}</td><td class="num">${item.facturacion.toFixed(2)} €</td><td class="num">${porcentaje.toFixed(1)} %</td></tr>`;
+  }).join('');
+
+  const ventana = window.open('', '_blank');
+  if (!ventana) {
+    showCustomAlert('Informe propietario', 'Permite las ventanas emergentes para generar el PDF.');
+    return;
+  }
+  ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe comercial ${escapeHtml(localNombre)}</title>
+    <style>
+      *{box-sizing:border-box} body{margin:0;background:#eef1f5;color:#172033;font-family:Arial,sans-serif}.toolbar{padding:14px;text-align:center;background:#172033}.toolbar button{padding:10px 18px;border:0;border-radius:7px;background:#cfff4d;color:#172033;font-weight:700;cursor:pointer}.page{width:min(210mm,100%);min-height:297mm;margin:20px auto;padding:18mm;background:#fff;box-shadow:0 2px 18px #0002}.header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #172033;padding-bottom:14px}.eyebrow{font-size:11px;color:#667085;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title{font-size:27px;font-weight:800;margin-top:5px}.muted{margin-top:6px;color:#667085;font-size:12px;line-height:1.45}.badge{text-align:right;font-size:13px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}.kpi{border:1px solid #d9e0ea;border-radius:8px;padding:13px;background:#fafbfd}.kpi label{display:block;color:#667085;font-size:10px;font-weight:700;text-transform:uppercase}.kpi strong{display:block;margin-top:5px;font:700 20px monospace;color:#087f5b}h2{font-size:15px;margin:20px 0 9px;border-left:4px solid #2563eb;padding-left:8px;text-transform:uppercase}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid #dde3eb;text-align:left}th{background:#f1f4f8;text-transform:uppercase;font-size:10px;color:#42526a}.num{text-align:right;font-family:monospace}.footer{border-top:1px solid #dde3eb;margin-top:24px;padding-top:10px;font-size:10px;color:#7a8599;text-align:center}@media print{body{background:#fff}.toolbar{display:none}.page{width:auto;min-height:0;margin:0;box-shadow:none;padding:0}}
+    </style></head><body><div class="toolbar"><button onclick="window.print()">Imprimir / Guardar como PDF</button></div><main class="page"><div class="header"><div><div class="eyebrow">Informe comercial</div><div class="title">${escapeHtml(localNombre)}</div><div class="muted">Período: ${fmtFecha(desde)} — ${fmtFecha(hasta)}<br>Familia: ${escapeHtml(categoriaTexto)} · Orden: ${escapeHtml(ordenTexto)}</div></div><div class="badge"><strong>Resumen de ventas</strong><br><span class="muted">${propietarioTickets.length} tickets analizados</span></div></div><div class="kpis"><div class="kpi"><label>Facturación de artículos</label><strong>${totalFacturacion.toFixed(2)} €</strong></div><div class="kpi"><label>Unidades vendidas</label><strong>${formatUnidadesInforme(totalUnidades)}</strong></div><div class="kpi"><label>Artículos distintos</label><strong>${ranking.length}</strong></div></div><h2>Ranking de artículos</h2><table><thead><tr><th>Pos.</th><th>Artículo</th><th>Categoría</th><th class="num">Unidades</th><th class="num">Facturación</th><th class="num">% fact.</th></tr></thead><tbody>${filas}</tbody></table><div class="footer">Informe comercial generado el ${new Date().toLocaleString('es-ES')} · Comandero TPVSync</div></main></body></html>`);
+  ventana.document.close();
 }
 
 // --- VISTA: AJUSTES DE SEGURIDAD ---

@@ -1745,6 +1745,7 @@
           <button class="nav-tab" onclick="cambiarPestana('carta')">Carta</button>
           <button class="nav-tab" onclick="cambiarPestana('ventas')">Ventas</button>
           <button class="nav-tab" onclick="cambiarPestana('gestoria')">Gestoría / Trimestres</button>
+          <button class="nav-tab" onclick="cambiarPestana('propietario')">Informe propietario</button>
           <button class="nav-tab" onclick="cambiarPestana('camareros')">Camareros</button>
           <button class="nav-tab" onclick="cambiarPestana('config')">Ajustes</button>
           <button class="nav-tab" onclick="cambiarPestana('auditoria')">Auditoría</button>
@@ -2410,6 +2411,72 @@
                 </div>
               </div>
 
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA: INFORME COMERCIAL PARA PROPIETARIO -->
+        <div class="view-pane" id="pane-propietario">
+          <div class="ventas-container">
+            <div class="auditoria-filter-bar" style="margin-bottom: 20px;">
+              <div class="form-group">
+                <label>Desde Fecha</label>
+                <input type="date" class="input-text" id="propietario-fecha-ini" onchange="invalidarConsultaInformePropietario()">
+              </div>
+              <div class="form-group">
+                <label>Hasta Fecha</label>
+                <input type="date" class="input-text" id="propietario-fecha-fin" onchange="invalidarConsultaInformePropietario()">
+              </div>
+              <div class="form-group">
+                <label>Familia</label>
+                <select class="input-text" id="propietario-categoria" onchange="actualizarInformePropietario()">
+                  <option value="">Todas las categorías</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Ordenar por</label>
+                <select class="input-text" id="propietario-orden" onchange="actualizarInformePropietario()">
+                  <option value="unidades">Unidades vendidas</option>
+                  <option value="facturacion">Facturación</option>
+                </select>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: end;">
+                <button class="btn" onclick="consultarInformePropietario()" style="padding: 8px 12px;">🔍 Consultar</button>
+                <button class="btn btn-secondary" onclick="exportarPDFInformePropietario()" style="padding: 8px 12px; border-color: rgba(96,165,250,0.5); color: #60a5fa;">📄 Generar PDF</button>
+              </div>
+            </div>
+
+            <div class="ventas-totals-bar">
+              <div class="total-card">
+                <div class="total-card-label">FACTURACIÓN DE ARTÍCULOS</div>
+                <div class="total-card-val" id="propietario-total-facturacion">0,00 €</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">UNIDADES VENDIDAS</div>
+                <div class="total-card-val" id="propietario-total-unidades">0</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">TICKETS ANALIZADOS</div>
+                <div class="total-card-val" id="propietario-total-tickets">0</div>
+              </div>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto;">
+              <table class="app-table">
+                <thead>
+                  <tr>
+                    <th style="width: 60px; text-align: right;">Pos.</th>
+                    <th>Artículo</th>
+                    <th>Categoría</th>
+                    <th style="text-align: right;">Unidades</th>
+                    <th style="text-align: right;">Facturación</th>
+                    <th style="text-align: right;">% facturación</th>
+                  </tr>
+                </thead>
+                <tbody id="propietario-tbody">
+                  <tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:30px;">Selecciona el período y pulsa Consultar para generar el informe comercial.</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
