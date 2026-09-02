@@ -74,6 +74,7 @@ const VENTAS_POR_PAGINA = 15;
 let propietarioTickets = [];
 let propietarioRanking = [];
 let propietarioConsultaRealizada = false;
+let propietarioCategoriasIncluidas = null;
 
 // ID de categoría seleccionada actualmente en el editor de carta
 let categoriaSeleccionadaId = null;
@@ -184,6 +185,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.actualizarInformePropietario = actualizarInformePropietario;
   window.invalidarConsultaInformePropietario = invalidarConsultaInformePropietario;
   window.exportarPDFInformePropietario = exportarPDFInformePropietario;
+  window.toggleSelectorCategoriasPropietario = toggleSelectorCategoriasPropietario;
+  window.toggleCategoriaInformePropietario = toggleCategoriaInformePropietario;
+  window.seleccionarTodasCategoriasPropietario = seleccionarTodasCategoriasPropietario;
 
   // Paginación de Auditoría
   window.cambiarPaginaAuditoria = cambiarPaginaAuditoria;
@@ -318,7 +322,7 @@ async function seleccionarLocal(id) {
   propietarioTickets = [];
   propietarioRanking = [];
   propietarioConsultaRealizada = false;
-  actualizarSelectorCategoriasPropietario();
+  propietarioCategoriasIncluidas = null;
   actualizarVistaPropietario();
 
   const tbody = document.getElementById("ventas-tbody");
@@ -1229,17 +1233,37 @@ function formatUnidadesInforme(valor) {
 }
 
 function actualizarSelectorCategoriasPropietario() {
-  const select = document.getElementById('propietario-categoria');
-  if (!select) return;
-
-  const valorActual = select.value;
+  const lista = document.getElementById('propietario-categorias-lista');
+  const resumen = document.getElementById('propietario-categorias-resumen');
+  if (!lista || !resumen) return;
   const categorias = Object.entries(categoriasData || {})
     .sort(([, a], [, b]) => (a.orden ?? 999) - (b.orden ?? 999) || String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'));
+  const opciones = [...categorias.map(([id, categoria]) => ({ id, nombre: categoria.nombre || 'Sin nombre' })), { id: '__sin_categoria__', nombre: 'Sin categoría / histórico' }];
+  const clave = `propietario_categorias_${localActivo?.id || 'local'}`;
+  if (propietarioCategoriasIncluidas === null) {
+    try { propietarioCategoriasIncluidas = new Set(JSON.parse(localStorage.getItem(clave) || 'null') || opciones.map(opcion => opcion.id)); }
+    catch { propietarioCategoriasIncluidas = new Set(opciones.map(opcion => opcion.id)); }
+  }
+  propietarioCategoriasIncluidas = new Set([...propietarioCategoriasIncluidas].filter(id => opciones.some(opcion => opcion.id === id)));
+  lista.innerHTML = opciones.map(opcion => `<label style="display:flex;gap:8px;align-items:center;font-size:12px;cursor:pointer;"><input type="checkbox" ${propietarioCategoriasIncluidas.has(opcion.id) ? 'checked' : ''} onchange="toggleCategoriaInformePropietario('${opcion.id}', this.checked)"><span>${escapeHtml(opcion.nombre)}</span></label>`).join('');
+  resumen.textContent = propietarioCategoriasIncluidas.size === opciones.length ? 'Todas las categorías' : propietarioCategoriasIncluidas.size ? `${propietarioCategoriasIncluidas.size} categorías seleccionadas` : 'Ninguna categoría';
+}
 
-  select.innerHTML = '<option value="">Todas las categorías</option>' +
-    categorias.map(([id, categoria]) => `<option value="${id}">${escapeHtml(categoria.nombre || 'Sin nombre')}</option>`).join('') +
-    '<option value="__sin_categoria__">Sin categoría / histórico</option>';
-  select.value = [...select.options].some(opcion => opcion.value === valorActual) ? valorActual : '';
+function guardarCategoriasPropietario() {
+  localStorage.setItem(`propietario_categorias_${localActivo?.id || 'local'}`, JSON.stringify([...propietarioCategoriasIncluidas]));
+}
+function toggleSelectorCategoriasPropietario() {
+  const panel = document.getElementById('propietario-categorias-panel');
+  if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+function toggleCategoriaInformePropietario(id, marcada) {
+  if (marcada) propietarioCategoriasIncluidas.add(id); else propietarioCategoriasIncluidas.delete(id);
+  guardarCategoriasPropietario(); actualizarSelectorCategoriasPropietario(); actualizarInformePropietario();
+}
+function seleccionarTodasCategoriasPropietario(marcar) {
+  const ids = [...Object.keys(categoriasData || {}), '__sin_categoria__'];
+  propietarioCategoriasIncluidas = marcar ? new Set(ids) : new Set();
+  guardarCategoriasPropietario(); actualizarSelectorCategoriasPropietario(); actualizarInformePropietario();
 }
 
 function normalizarNombreArticuloPropietario(nombre) {
@@ -1324,11 +1348,10 @@ function crearRankingPropietario(tickets = []) {
 }
 
 function obtenerRankingVisiblePropietario() {
-  const categoriaId = document.getElementById('propietario-categoria')?.value || '';
   const destinoFiltro = document.getElementById('propietario-destino')?.value || '';
   const orden = document.getElementById('propietario-orden')?.value || 'unidades';
   return propietarioRanking
-    .filter(item => !categoriaId || item.categoriaId === categoriaId)
+    .filter(item => propietarioCategoriasIncluidas?.has(item.categoriaId))
     .filter(item => {
       if (!destinoFiltro) return true;
       if (destinoFiltro === 'bebida') return item.destinoId === 'barra';
@@ -1375,6 +1398,7 @@ function actualizarVistaPropietario() {
 
 async function consultarInformePropietario() {
   if (!db) return;
+  if (propietarioCategoriasIncluidas === null) actualizarSelectorCategoriasPropietario();
   const desde = document.getElementById('propietario-fecha-ini')?.value;
   const hasta = document.getElementById('propietario-fecha-fin')?.value;
   if (!desde || !hasta) {
@@ -1430,7 +1454,7 @@ function exportarPDFInformePropietario() {
 
   const desde = document.getElementById('propietario-fecha-ini').value;
   const hasta = document.getElementById('propietario-fecha-fin').value;
-  const categoriaTexto = document.getElementById('propietario-categoria').selectedOptions[0]?.textContent || 'Todas las categorías';
+  const categoriaTexto = document.getElementById('propietario-categorias-resumen')?.textContent || 'Todas las categorías';
   const destinoTexto = document.getElementById('propietario-destino').selectedOptions[0]?.textContent || 'Todo';
   const orden = document.getElementById('propietario-orden').value;
   const ordenTexto = orden === 'facturacion' ? 'Facturación' : 'Unidades vendidas';
@@ -1465,7 +1489,6 @@ function exportarPDFInformePropietario() {
     const cuotaUnidades = totalUnidades ? (item.unidades / totalUnidades) * 100 : 0;
     return `<li><strong>${escapeHtml(item.nombre)}</strong><span>${cuotaUnidades.toFixed(1)} % de las unidades</span></li>`;
   }).join('');
-  const categoriaFiltro = document.getElementById('propietario-categoria').value || '';
   const destinoFiltro = document.getElementById('propietario-destino').value || '';
   const coincideDestino = destinoId => {
     if (!destinoFiltro) return true;
@@ -1478,7 +1501,7 @@ function exportarPDFInformePropietario() {
       const categoria = categoriaDeLineaPropietario({}, articulo);
       const destino = destinoDeLineaPropietario({}, articulo);
       const tuvoVentas = propietarioRanking.some(item => item.articuloId === id);
-      return (!categoriaFiltro || categoria.id === categoriaFiltro) && coincideDestino(destino.id) && !tuvoVentas;
+      return propietarioCategoriasIncluidas?.has(categoria.id) && coincideDestino(destino.id) && !tuvoVentas;
     })
     .sort(([, a], [, b]) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es'))
     .slice(0, 6);
