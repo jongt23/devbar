@@ -1293,6 +1293,7 @@ function cancelarSelectorCategoriasPropietario() {
 function normalizarNombreArticuloPropietario(nombre) {
   return String(nombre || '').trim().toLocaleLowerCase('es')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/^>\s*/, '')
     .replace(/\s+/g, ' ');
 }
 
@@ -1305,6 +1306,15 @@ function resolverArticuloCartaPropietario(linea = {}) {
   if (!nombre) return { id: '', articulo: null };
   let candidatos = Object.entries(cartaData)
     .filter(([, articulo]) => normalizarNombreArticuloPropietario(articulo?.nombre) === nombre);
+  // Las variantes históricas se guardan como "Artículo (Variante)". Al no
+  // conservar siempre el artId al cerrar mesa, se enlazan con el artículo base.
+  if (!candidatos.length) {
+    const nombreBase = nombre.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    if (nombreBase && nombreBase !== nombre) {
+      candidatos = Object.entries(cartaData)
+        .filter(([, articulo]) => normalizarNombreArticuloPropietario(articulo?.nombre) === nombreBase);
+    }
+  }
   if (candidatos.length > 1 && linea.precio !== undefined && linea.precio !== null) {
     const precio = Number(linea.precioTicket ?? linea.precio);
     const porPrecio = candidatos.filter(([, articulo]) => Number(articulo?.precio) === precio);
