@@ -2431,9 +2431,12 @@
                 <label>Categorías incluidas</label>
                 <button type="button" class="input-text" id="propietario-categorias-resumen" onclick="toggleSelectorCategoriasPropietario()" style="width:100%;text-align:left;cursor:pointer;">Todas las categorías</button>
                 <div id="propietario-categorias-panel" style="display:none;position:absolute;z-index:20;min-width:250px;max-width:330px;margin-top:4px;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 26px rgba(0,0,0,.28);">
-                  <div style="display:flex;gap:6px;margin-bottom:8px;">
+                  <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
                     <button type="button" class="btn btn-secondary" onclick="seleccionarTodasCategoriasPropietario(true)" style="padding:4px 8px;font-size:11px;">Todas</button>
                     <button type="button" class="btn btn-secondary" onclick="seleccionarTodasCategoriasPropietario(false)" style="padding:4px 8px;font-size:11px;">Ninguna</button>
+                    <span style="flex:1;"></span>
+                    <button type="button" class="btn" onclick="aplicarSelectorCategoriasPropietario()" style="padding:4px 8px;font-size:11px;" title="Aplicar y cerrar">✓</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelarSelectorCategoriasPropietario()" style="padding:4px 8px;font-size:11px;" title="Cancelar cambios">✕</button>
                   </div>
                   <div id="propietario-categorias-lista" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;"></div>
                 </div>

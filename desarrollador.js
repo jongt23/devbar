@@ -75,6 +75,7 @@ let propietarioTickets = [];
 let propietarioRanking = [];
 let propietarioConsultaRealizada = false;
 let propietarioCategoriasIncluidas = null;
+let propietarioCategoriasAntesEdicion = null;
 
 // ID de categoría seleccionada actualmente en el editor de carta
 let categoriaSeleccionadaId = null;
@@ -188,6 +189,8 @@ document.addEventListener("DOMContentLoaded", () => {
   window.toggleSelectorCategoriasPropietario = toggleSelectorCategoriasPropietario;
   window.toggleCategoriaInformePropietario = toggleCategoriaInformePropietario;
   window.seleccionarTodasCategoriasPropietario = seleccionarTodasCategoriasPropietario;
+  window.aplicarSelectorCategoriasPropietario = aplicarSelectorCategoriasPropietario;
+  window.cancelarSelectorCategoriasPropietario = cancelarSelectorCategoriasPropietario;
 
   // Paginación de Auditoría
   window.cambiarPaginaAuditoria = cambiarPaginaAuditoria;
@@ -1254,7 +1257,13 @@ function guardarCategoriasPropietario() {
 }
 function toggleSelectorCategoriasPropietario() {
   const panel = document.getElementById('propietario-categorias-panel');
-  if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (!panel) return;
+  if (panel.style.display === 'none') {
+    propietarioCategoriasAntesEdicion = new Set(propietarioCategoriasIncluidas || []);
+    panel.style.display = 'block';
+  } else {
+    aplicarSelectorCategoriasPropietario();
+  }
 }
 function toggleCategoriaInformePropietario(id, marcada) {
   if (marcada) propietarioCategoriasIncluidas.add(id); else propietarioCategoriasIncluidas.delete(id);
@@ -1264,6 +1273,21 @@ function seleccionarTodasCategoriasPropietario(marcar) {
   const ids = [...Object.keys(categoriasData || {}), '__sin_categoria__'];
   propietarioCategoriasIncluidas = marcar ? new Set(ids) : new Set();
   guardarCategoriasPropietario(); actualizarSelectorCategoriasPropietario(); actualizarInformePropietario();
+}
+function aplicarSelectorCategoriasPropietario() {
+  guardarCategoriasPropietario();
+  const panel = document.getElementById('propietario-categorias-panel');
+  if (panel) panel.style.display = 'none';
+  propietarioCategoriasAntesEdicion = null;
+}
+function cancelarSelectorCategoriasPropietario() {
+  if (propietarioCategoriasAntesEdicion) propietarioCategoriasIncluidas = new Set(propietarioCategoriasAntesEdicion);
+  guardarCategoriasPropietario();
+  actualizarSelectorCategoriasPropietario();
+  actualizarInformePropietario();
+  const panel = document.getElementById('propietario-categorias-panel');
+  if (panel) panel.style.display = 'none';
+  propietarioCategoriasAntesEdicion = null;
 }
 
 function normalizarNombreArticuloPropietario(nombre) {
