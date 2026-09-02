@@ -2062,7 +2062,8 @@ function cambiarPestana(paneId) {
     }
   }
 
-  // Si entra a gestoría
+  // Al entrar a gestoría solo se preparan las fechas: la lectura de historial
+  // queda reservada para el botón «Consultar» o los filtros rápidos.
   if (paneId === "gestoria") {
     const dDesde = document.getElementById("gestoria-desde");
     const dHasta = document.getElementById("gestoria-hasta");
@@ -2071,7 +2072,6 @@ function cambiarPestana(paneId) {
       dDesde.value = hoy;
       dHasta.value = hoy;
     }
-    cargarGestoriaBajoDemanda();
   }
 }
 
