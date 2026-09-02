@@ -2434,6 +2434,18 @@
                 </select>
               </div>
               <div class="form-group">
+                <label>Tipo de servicio</label>
+                <select class="input-text" id="propietario-destino" onchange="actualizarInformePropietario()">
+                  <option value="">Todo</option>
+                  <option value="bebida">Bebida (Barra)</option>
+                  <option value="comida">Comida (Cocina, Pizzas y Ambos)</option>
+                  <option value="barra">Solo Barra</option>
+                  <option value="cocina">Solo Cocina</option>
+                  <option value="pizzas">Solo Pizzas</option>
+                  <option value="ambos">Barra y Cocina (Ambos)</option>
+                </select>
+              </div>
+              <div class="form-group">
                 <label>Ordenar por</label>
                 <select class="input-text" id="propietario-orden" onchange="actualizarInformePropietario()">
                   <option value="unidades">Unidades vendidas</option>
@@ -2468,13 +2480,14 @@
                     <th style="width: 60px; text-align: right;">Pos.</th>
                     <th>Artículo</th>
                     <th>Categoría</th>
+                    <th>Destino</th>
                     <th style="text-align: right;">Unidades</th>
                     <th style="text-align: right;">Facturación</th>
                     <th style="text-align: right;">% facturación</th>
                   </tr>
                 </thead>
                 <tbody id="propietario-tbody">
-                  <tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:30px;">Selecciona el período y pulsa Consultar para generar el informe comercial.</td></tr>
+                  <tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:30px;">Selecciona el período y pulsa Consultar para generar el informe comercial.</td></tr>
                 </tbody>
               </table>
             </div>
