@@ -60,6 +60,7 @@ let historialData = {};
 let seguridadData = {};
 let localConfig = {};
 let usuariosData = {};
+let sesionesCamarerosData = {};
 let selectedEmojisDev = [];
 const EMOJI_LIST = ['🍔', '🍺', '🍕', '🍷', '☕', '🍰', '🍦', '🍟', '🌮', '🥗'];
 let printServiceData = {};
@@ -145,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.guardarPassEncargadoDev = guardarPassEncargadoDev;
   window.guardarPassAuditDev = guardarPassAuditDev;
   window.toggleCamareroActivoDev = toggleCamareroActivoDev;
+  window.cerrarSesionCamareroDev = cerrarSesionCamareroDev;
   window.seleccionarEmojiDev = seleccionarEmojiDev;
   window.limpiarEmojisDev = limpiarEmojisDev;
   window.guardarEmojisDev = guardarEmojisDev;
@@ -473,6 +475,10 @@ function suscribirseAFirebase() {
     usuariosData = snap.val() || {};
     renderCamareros();
     poblarCamarerosAuditoria(usuariosData);
+  });
+  onValue(ref(db, "config/sesionesCamareros"), snap => {
+    sesionesCamarerosData = snap.val() || {};
+    renderCamareros();
   });
 
   // 8. Escuchar Servicio de Impresión
@@ -2466,16 +2472,24 @@ function renderCamareros() {
     const card = document.createElement("div");
     card.className = "camarero-card";
     const isActive = u.activo !== false;
+    const sesion = sesionesCamarerosData[id];
+    const sesionActiva = Boolean(sesion?.sessionId);
+    const presencia = sesion?.estado === 'desconectado'
+      ? 'DESCONECTADO'
+      : (sesion?.estado === 'segundo_plano' ? 'EN SEGUNDO PLANO' : 'EN USO');
+    const ultimaActividad = sesion?.ultimaActividad ? new Date(sesion.ultimaActividad).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
     card.innerHTML = `
       <div class="camarero-card-info">
         <span class="camarero-card-name">${u.nombre}</span>
         <span class="camarero-card-pin">PIN: ${u.pin}</span>
+        <span style="font-size:11px;color:${sesionActiva ? (sesion?.estado === 'desconectado' ? '#f59e0b' : '#22c55e') : 'var(--text-dim)'};font-weight:700;">${sesionActiva ? `● ${presencia}${ultimaActividad ? ` · ${ultimaActividad}` : ''}` : '○ SIN SESIÓN'}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 12px;">
         <label class="switch" style="transform: scale(0.85); margin: 0; display: inline-block;">
           <input type="checkbox" ${isActive ? "checked" : ""} onchange="window.toggleCamareroActivoDev('${id}', this.checked)">
           <span class="slider"></span>
         </label>
+        ${sesionActiva ? `<button class="btn-icon" onclick="cerrarSesionCamareroDev('${id}')" title="Cerrar sesión remota">⏏</button>` : ''}
         <button class="btn-icon delete" onclick="deleteCamarero('${id}')" title="Eliminar Camarero">🗑️</button>
       </div>
     `;
@@ -2487,9 +2501,22 @@ async function toggleCamareroActivoDev(id, activo) {
   if (!db) return;
   try {
     await update(ref(db, `config/usuarios/${id}`), { activo });
+    if (!activo) await remove(ref(db, `config/sesionesCamareros/${id}`));
     console.log(`Estado activo del camarero ${id} actualizado a:`, activo);
   } catch (error) {
     alert("Error al actualizar el estado del camarero.");
+  }
+}
+
+async function cerrarSesionCamareroDev(id) {
+  if (!db) return;
+  const camarero = usuariosData[id]?.nombre || 'este camarero';
+  const ok = await showCustomConfirm('Cerrar sesión', `¿Cerrar remotamente la sesión de ${camarero}?`);
+  if (!ok) return;
+  try {
+    await remove(ref(db, `config/sesionesCamareros/${id}`));
+  } catch (_) {
+    await showCustomAlert('Cerrar sesión', 'No se pudo cerrar la sesión remota.');
   }
 }
 
