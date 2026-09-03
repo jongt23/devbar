@@ -147,6 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.guardarPassAuditDev = guardarPassAuditDev;
   window.toggleCamareroActivoDev = toggleCamareroActivoDev;
   window.cerrarSesionCamareroDev = cerrarSesionCamareroDev;
+  window.editarEtiquetaDispositivoDev = editarEtiquetaDispositivoDev;
   window.seleccionarEmojiDev = seleccionarEmojiDev;
   window.limpiarEmojisDev = limpiarEmojisDev;
   window.guardarEmojisDev = guardarEmojisDev;
@@ -2478,18 +2479,19 @@ function renderCamareros() {
       ? 'DESCONECTADO'
       : (sesion?.estado === 'segundo_plano' ? 'EN SEGUNDO PLANO' : 'EN USO');
     const ultimaActividad = sesion?.ultimaActividad ? new Date(sesion.ultimaActividad).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
+    const dispositivo = escapeHtml(sesion?.deviceLabel || 'Sin etiqueta');
     card.innerHTML = `
       <div class="camarero-card-info">
         <span class="camarero-card-name">${u.nombre}</span>
         <span class="camarero-card-pin">PIN: ${u.pin}</span>
-        <span style="font-size:11px;color:${sesionActiva ? (sesion?.estado === 'desconectado' ? '#f59e0b' : '#22c55e') : 'var(--text-dim)'};font-weight:700;">${sesionActiva ? `● ${presencia}${ultimaActividad ? ` · ${ultimaActividad}` : ''}` : '○ SIN SESIÓN'}</span>
+        <span style="font-size:11px;color:${sesionActiva ? (sesion?.estado === 'desconectado' ? '#f59e0b' : '#22c55e') : 'var(--text-dim)'};font-weight:700;">${sesionActiva ? `● ${presencia} · ${dispositivo}${ultimaActividad ? ` · ${ultimaActividad}` : ''}` : '○ SIN SESIÓN'}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 12px;">
         <label class="switch" style="transform: scale(0.85); margin: 0; display: inline-block;">
           <input type="checkbox" ${isActive ? "checked" : ""} onchange="window.toggleCamareroActivoDev('${id}', this.checked)">
           <span class="slider"></span>
         </label>
-        ${sesionActiva ? `<button class="btn-icon" onclick="cerrarSesionCamareroDev('${id}')" title="Cerrar sesión remota">⏏</button>` : ''}
+        ${sesionActiva ? `<button class="btn-icon" onclick="editarEtiquetaDispositivoDev('${id}')" title="Renombrar dispositivo">✎</button><button class="btn-icon" onclick="cerrarSesionCamareroDev('${id}')" title="Cerrar sesión remota">⏏</button>` : ''}
         <button class="btn-icon delete" onclick="deleteCamarero('${id}')" title="Eliminar Camarero">🗑️</button>
       </div>
     `;
@@ -2517,6 +2519,21 @@ async function cerrarSesionCamareroDev(id) {
     await remove(ref(db, `config/sesionesCamareros/${id}`));
   } catch (_) {
     await showCustomAlert('Cerrar sesión', 'No se pudo cerrar la sesión remota.');
+  }
+}
+
+async function editarEtiquetaDispositivoDev(id) {
+  const sesion = sesionesCamarerosData[id];
+  if (!db || !sesion?.sessionId) return;
+  const etiqueta = await showCustomPrompt('Renombrar dispositivo', 'Nombre visible para esta sesión y la auditoría:', sesion.deviceLabel || '');
+  const limpia = String(etiqueta || '').trim().slice(0, 40);
+  if (!limpia) return;
+  const cambios = { [`config/sesionesCamareros/${id}/deviceLabel`]: limpia };
+  if (sesion.deviceId) cambios[`config/dispositivosCamareros/${sesion.deviceId}/etiqueta`] = limpia;
+  try {
+    await update(ref(db), cambios);
+  } catch (_) {
+    await showCustomAlert('Dispositivo', 'No se pudo guardar el nuevo nombre.');
   }
 }
 
@@ -2959,7 +2976,7 @@ function renderAuditoriaPagina() {
       <div class="audit-col-user">${ev.camarero || "—"}</div>
       <div class="audit-col-table">Mesa ${ev.mesa || "—"}</div>
       <div class="audit-col-action" style="color: ${info.color};">${info.label}</div>
-      <div class="audit-col-detail">${ev.detalle || ""}${importeStr}</div>
+      <div class="audit-col-detail">${ev.detalle || ""}${ev.dispositivo ? `<br><span style="font-size:10px;color:var(--text-dim)">📱 ${escapeHtml(ev.dispositivo)}</span>` : ''}${importeStr}</div>
     `;
     listContainer.appendChild(div);
   });
