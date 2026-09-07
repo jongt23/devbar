@@ -162,6 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.guardarDatosNegocio = guardarDatosNegocio;
   window.guardarAjustesTicket = guardarAjustesTicket;
   window.guardarConfigImpresoras = guardarConfigImpresoras;
+  window.guardarAutoupdateWorker = guardarAutoupdateWorker;
   window.togglePausaImpresion = togglePausaImpresion;
   window.checkAuditPassword = checkAuditPassword;
   window.bloquearAuditoria = bloquearAuditoria;
@@ -2661,6 +2662,45 @@ function renderConfigImpresoras() {
   setPrinterVals("barra");
   setPrinterVals("cocina");
   setPrinterVals("pizzas");
+
+  // Worker autoupdate
+  const workerVer = printServiceData.workerVersion || "";
+  const workerUrl = printServiceData.workerDownloadUrl || "";
+  const workerVerInput = document.getElementById("ps-worker-version");
+  const workerUrlInput = document.getElementById("ps-worker-url");
+  const workerBadge = document.getElementById("ps-worker-version-badge");
+
+  if (workerVerInput && document.activeElement !== workerVerInput) {
+    workerVerInput.value = workerVer;
+  }
+  if (workerUrlInput && document.activeElement !== workerUrlInput) {
+    workerUrlInput.value = workerUrl;
+  }
+  if (workerBadge) {
+    workerBadge.textContent = workerVer ? `v${workerVer}` : "v--";
+  }
+}
+
+async function guardarAutoupdateWorker() {
+  if (!db) return;
+  const version = (document.getElementById("ps-worker-version")?.value || "").trim();
+  const url = (document.getElementById("ps-worker-url")?.value || "").trim();
+
+  if (!version) {
+    alert("Por favor indica una versión para el worker (ej: 2.7.4).");
+    return;
+  }
+
+  try {
+    await update(ref(db, "config/printService"), {
+      workerVersion: version,
+      workerDownloadUrl: url
+    });
+    alert(`Configuración del worker guardada con éxito:\n\n• Versión: ${version}\n• URL: ${url || "(Sin URL)"}`);
+  } catch (err) {
+    console.error("Error al guardar worker:", err);
+    alert("Error al guardar la versión del worker: " + err.message);
+  }
 }
 
 async function togglePausaImpresion() {

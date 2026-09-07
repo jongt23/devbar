@@ -2222,6 +2222,33 @@
                 </div>
                 
                 <button class="btn" onclick="guardarConfigImpresoras()" style="align-self: flex-start; margin-top: 6px;">Guardar Impresoras</button>
+
+                <!-- Subsección: Actualización Automática del Worker -->
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-weight: 600; font-size: 13px; color: var(--accent); display: flex; align-items: center; gap: 8px;">
+                      <span>🔄 Actualización Automática del Worker (psVF.exe)</span>
+                    </div>
+                    <span id="ps-worker-version-badge" style="font-family: var(--font-code); font-size: 11px; background: rgba(84, 231, 193, 0.12); color: var(--accent); border: 1px solid rgba(84, 231, 193, 0.3); padding: 2px 8px; border-radius: 4px;">v--</span>
+                  </div>
+                  <p style="font-size: 11px; color: var(--text-dim); line-height: 1.4;">
+                    El supervisor del local comprobará la versión. Si no coincide con la suya, descargará y sustituirá automáticamente <code>psVF.exe</code> desde la URL indicada.
+                  </p>
+                  
+                  <div class="form-group">
+                    <label style="font-size: 12px;">Versión Objetivo (workerVersion)</label>
+                    <input type="text" class="input-text" id="ps-worker-version" placeholder="Ej: 2.7.4" style="font-family: var(--font-code);">
+                  </div>
+
+                  <div class="form-group">
+                    <label style="font-size: 12px;">URL de Descarga Directa (workerDownloadUrl)</label>
+                    <input type="text" class="input-text" id="ps-worker-url" placeholder="https://github.com/.../psVF.exe" style="font-family: var(--font-code); font-size: 12px;">
+                  </div>
+
+                  <button class="btn btn-secondary" onclick="guardarAutoupdateWorker()" style="align-self: flex-start; font-size: 12px; margin-top: 2px;">
+                    Guardar Versión del Worker
+                  </button>
+                </div>
               </div>
 
               <!-- Tarjeta 5: Cuota y Consumo de Firebase -->
