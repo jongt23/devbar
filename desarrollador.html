@@ -1748,6 +1748,7 @@
           <button class="nav-tab" onclick="cambiarPestana('propietario')">Informe propietario</button>
           <button class="nav-tab" onclick="cambiarPestana('camareros')">Camareros</button>
           <button class="nav-tab" onclick="cambiarPestana('config')">Ajustes</button>
+          <button class="nav-tab" onclick="cambiarPestana('verifactu-aeat')">VERI*FACTU AEAT</button>
           <button class="nav-tab" onclick="cambiarPestana('auditoria')">Auditoría</button>
           <button class="nav-tab" onclick="cambiarPestana('novedades')">Novedades</button>
         </div>
@@ -2281,6 +2282,72 @@
           </div>
         </div>
 
+        <!-- VISTA: VERI*FACTU DIRECTO AEAT. No comparte configuración con Verifacti. -->
+        <div class="view-pane" id="pane-verifactu-aeat">
+          <div class="config-scroll-container">
+            <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px">
+              <div>
+                <h2 style="margin:0;color:var(--accent)">VERI*FACTU AEAT directo</h2>
+                <p style="margin:7px 0 0;color:var(--text-dim);max-width:760px;font-size:13px;line-height:1.45">Circuito independiente de Verifacti. La emisión se realizará mediante el servicio local del PC fiscal y certificado digital; aquí sólo se configura y consulta.</p>
+              </div>
+              <div id="vf-aeat-worker-status" style="padding:8px 12px;border:1px solid var(--border);border-radius:9px;font-size:12px;color:var(--text-dim)">Servicio fiscal: sin conexión</div>
+            </div>
+
+            <div class="config-grid">
+              <div class="config-card">
+                <div class="config-card-title">Modo y datos del emisor</div>
+                <label style="display:flex;gap:9px;align-items:center;font-size:13px;margin:0 0 13px"><input id="vf-aeat-habilitado" type="checkbox"> Activar proveedor directo AEAT al cobrar y cerrar</label>
+                <div class="form-group"><label for="vf-aeat-modo">Entorno</label><select class="input-text" id="vf-aeat-modo"><option value="pruebas">Pruebas AEAT</option><option value="produccion">Producción AEAT</option></select></div>
+                <div class="form-group"><label for="vf-aeat-nif">NIF del obligado a emitir</label><input class="input-text" id="vf-aeat-nif" maxlength="20" placeholder="B12345678"></div>
+                <div class="form-group"><label for="vf-aeat-razon">Razón social</label><input class="input-text" id="vf-aeat-razon" maxlength="120" placeholder="Razón social fiscal"></div>
+                <div style="margin:16px 0 12px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--accent);font-weight:700">Datos del productor del SIF (desarrollador)</div>
+                <p style="font-size:12px;color:var(--text-dim);line-height:1.45;margin:-4px 0 12px">No son los datos del comercio ni los del certificado. Deben corresponder al NIF y nombre censal del productor de Comandero.</p>
+                <div class="form-group"><label for="vf-aeat-dev-nif">NIF del desarrollador</label><input class="input-text" id="vf-aeat-dev-nif" maxlength="20" placeholder="12345678Z"></div>
+                <div class="form-group"><label for="vf-aeat-dev-razon">Nombre o razón social del desarrollador</label><input class="input-text" id="vf-aeat-dev-razon" maxlength="120" placeholder="Nombre censal exacto"></div>
+                <div class="form-group"><label for="vf-aeat-dev-direccion">Dirección del productor (declaración responsable)</label><input class="input-text" id="vf-aeat-dev-direccion" maxlength="180" placeholder="Domicilio de localización"></div>
+                <div class="form-group"><label for="vf-aeat-dev-cp">Código postal del productor</label><input class="input-text" id="vf-aeat-dev-cp" maxlength="10" placeholder="00000"></div>
+                <div class="form-group"><label for="vf-aeat-dev-municipio">Municipio del productor</label><input class="input-text" id="vf-aeat-dev-municipio" maxlength="100" placeholder="Municipio"></div>
+                <div class="form-group"><label for="vf-aeat-dev-provincia">Provincia del productor</label><input class="input-text" id="vf-aeat-dev-provincia" maxlength="100" placeholder="Provincia"></div>
+                <div class="form-group"><label for="vf-aeat-dev-email">Correo de contacto del productor</label><input class="input-text" id="vf-aeat-dev-email" maxlength="160" type="email" placeholder="contacto@ejemplo.es"></div>
+                <div class="form-group"><label for="vf-aeat-declaracion-fecha">Fecha de firma de la declaración</label><input class="input-text" id="vf-aeat-declaracion-fecha" type="date"></div>
+                <div class="form-group"><label for="vf-aeat-declaracion-pdf-url">Enlace al PDF firmado</label><input class="input-text" id="vf-aeat-declaracion-pdf-url" maxlength="300" placeholder="declaracion-responsable-comandero-firmada.pdf"></div>
+                <div class="form-group"><label for="vf-aeat-sif-nombre">Nombre del sistema</label><input class="input-text" id="vf-aeat-sif-nombre" maxlength="40" value="Comandero"></div>
+                <div class="form-group"><label for="vf-aeat-sif-id">Identificador del sistema</label><input class="input-text" id="vf-aeat-sif-id" maxlength="2" value="01"></div>
+                <div class="form-group"><label for="vf-aeat-sif-version">Versión</label><input class="input-text" id="vf-aeat-sif-version" maxlength="20" value="1.0.0"></div>
+                <div class="form-group"><label for="vf-aeat-sif-instalacion">N.º instalación</label><input class="input-text" id="vf-aeat-sif-instalacion" maxlength="20" value="1"></div>
+                <div class="form-group"><label for="vf-aeat-serie-f2">Serie simplificadas F2</label><input class="input-text" id="vf-aeat-serie-f2" maxlength="60" value="F2"></div>
+                <div class="form-group"><label for="vf-aeat-serie-f1">Serie completas F1</label><input class="input-text" id="vf-aeat-serie-f1" maxlength="60" value="F1"></div>
+                <div class="form-group"><label for="vf-aeat-serie-f3">Serie sustitutivas F3</label><input class="input-text" id="vf-aeat-serie-f3" maxlength="60" value="F3"></div>
+                <div class="form-group"><label for="vf-aeat-serie-r">Serie rectificativas</label><input class="input-text" id="vf-aeat-serie-r" maxlength="60" value="R"></div>
+                <div class="form-group"><label for="vf-aeat-digitos-numero">Dígitos del número de factura</label><input class="input-text" id="vf-aeat-digitos-numero" type="number" min="1" max="12" value="4"><small style="color:var(--text-dim)">Ejemplo: 4 muestra 0001. Es formato visible; no reinicia ninguna serie.</small></div>
+                <button class="btn" type="button" onclick="guardarConfigVerifactuAeat()">Guardar configuración AEAT</button>
+              </div>
+
+              <div class="config-card">
+                <div class="config-card-title">PC fiscal y certificado</div>
+                <p style="font-size:12px;color:var(--text-dim);line-height:1.45;margin-top:0">El certificado no se almacena en Firebase. Se vincula desde el servicio local del PC fiscal y queda protegido en dicho equipo.</p>
+                <div id="vf-aeat-cert-status" style="padding:12px;border-radius:8px;background:var(--panel-light);font-size:12px;line-height:1.55">Aún no hay certificado vinculado.</div>
+                <div class="form-group" style="margin-top:14px"><label for="vf-aeat-cert-file">Certificado .pfx / .p12</label><input class="input-text" id="vf-aeat-cert-file" type="file" accept=".pfx,.p12,application/x-pkcs12"></div>
+                <div class="form-group"><label for="vf-aeat-cert-password">Contraseña del certificado</label><input class="input-text" id="vf-aeat-cert-password" type="password" autocomplete="new-password"></div>
+                <button class="btn" type="button" onclick="vincularCertificadoVerifactuAeat()">Vincular certificado en este PC</button>
+                <div style="margin-top:14px;padding:11px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-dim);line-height:1.45">Antes de activar producción, el servicio debe superar una prueba contra AEAT y devolver su identidad, versión e instalación fiscal.</div>
+              </div>
+            </div>
+
+            <div class="config-card" style="margin-top:18px">
+              <div class="config-card-title">Registros AEAT</div>
+              <p style="font-size:12px;color:var(--text-dim);margin-top:0">No se cargan automáticamente. Consulta un período concreto para proteger cuota y rendimiento.</p>
+              <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+                <div class="form-group" style="margin:0"><label for="vf-aeat-desde">Desde</label><input class="input-text" id="vf-aeat-desde" type="date"></div>
+                <div class="form-group" style="margin:0"><label for="vf-aeat-hasta">Hasta</label><input class="input-text" id="vf-aeat-hasta" type="date"></div>
+                <div class="form-group" style="margin:0;min-width:140px"><label for="vf-aeat-estado">Estado</label><select class="input-text" id="vf-aeat-estado"><option value="">Todos</option><option value="accepted">Aceptados</option><option value="accepted_with_errors">Aceptados con errores</option><option value="rejected">Rechazados</option><option value="pending">Pendientes</option></select></div>
+                <button class="btn" type="button" onclick="consultarRegistrosVerifactuAeat()">Consultar</button>
+              </div>
+              <div id="vf-aeat-registros" style="margin-top:16px;font-size:13px;color:var(--text-dim)">Elige un rango y pulsa «Consultar».</div>
+            </div>
+          </div>
+        </div>
+
         <!-- VISTA: AUDITORÍA -->
         <div class="view-pane" id="pane-auditoria">
           <div class="auditoria-container" id="audit-locked">
@@ -2797,6 +2864,11 @@
         <div class="form-group">
           <label for="form-prod-precio">Precio (€)</label>
           <input type="number" step="0.01" class="input-text" id="form-prod-precio" placeholder="1.50">
+        </div>
+        <div class="form-group">
+          <label for="form-prod-iva">IVA aplicable (%)</label>
+          <input type="number" min="0" max="100" step="0.01" class="input-text" id="form-prod-iva" value="10" placeholder="10">
+          <small style="display:block;margin-top:5px;color:var(--muted);font-size:11px;line-height:1.35;">Por defecto 10 %. Se conserva este valor también para los artículos antiguos que aún no tengan IVA configurado.</small>
         </div>
         <div class="form-group">
           <label for="form-prod-destino">Destino de Comanda</label>
