@@ -191,6 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.eliminarNovedad = eliminarNovedad;
   window.guardarAvisoTPV = guardarAvisoTPV;
   window.retirarAvisoTPV = retirarAvisoTPV;
+  window.togglePanelAvisoTPV = togglePanelAvisoTPV;
   montarPanelAvisoTPV();
 
   // Filtros y Paginación de Ventas
@@ -244,12 +245,31 @@ function montarPanelAvisoTPV() {
   panel.id = 'dev-tpv-aviso';
   panel.style.cssText = 'position:fixed;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));z-index:9000;background:var(--panel,#fff);border:1px solid var(--border,#ccd);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none;flex-direction:column;gap:9px';
   panel.innerHTML = `
-    <strong style="font-size:13px">📣 Aviso persistente para TPV</strong>
-    <span id="dev-tpv-aviso-destino" style="font-size:12px;color:var(--text-dim)"></span>
-    <textarea id="dev-tpv-aviso-texto" rows="3" placeholder="Ej.: Llámame cuando puedas" style="resize:vertical;width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border);border-radius:8px;font:13px var(--sans)"></textarea>
-    <select id="dev-tpv-aviso-tipo" style="padding:8px;border:1px solid var(--border);border-radius:8px"><option value="info">Información</option><option value="warning">Atención</option><option value="urgent">Urgente</option></select>
-    <div style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="guardarAvisoTPV()">Enviar al TPV</button><button class="btn btn-secondary" onclick="retirarAvisoTPV()">Retirar</button></div>`;
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <strong style="font-size:13px">📣 Aviso persistente para TPV</strong>
+      <button id="dev-tpv-aviso-toggle" class="btn-icon" type="button" title="Ocultar panel de aviso" aria-expanded="true" onclick="togglePanelAvisoTPV()">⌄</button>
+    </div>
+    <div data-dev-tpv-aviso-contenido style="display:flex;flex-direction:column;gap:9px">
+      <span id="dev-tpv-aviso-destino" style="font-size:12px;color:var(--text-dim)"></span>
+      <textarea id="dev-tpv-aviso-texto" rows="3" placeholder="Ej.: Llámame cuando puedas" style="resize:vertical;width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border);border-radius:8px;font:13px var(--sans)"></textarea>
+      <select id="dev-tpv-aviso-tipo" style="padding:8px;border:1px solid var(--border);border-radius:8px"><option value="info">Información</option><option value="warning">Atención</option><option value="urgent">Urgente</option></select>
+      <div style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="guardarAvisoTPV()">Enviar al TPV</button><button class="btn btn-secondary" onclick="retirarAvisoTPV()">Retirar</button></div>
+    </div>`;
   document.body.appendChild(panel);
+  if (localStorage.getItem('dev-tpv-aviso-panel-colapsado') === 'true') togglePanelAvisoTPV(true);
+}
+
+function togglePanelAvisoTPV(forzarColapsado) {
+  const panel = document.getElementById('dev-tpv-aviso');
+  const contenido = panel?.querySelector('[data-dev-tpv-aviso-contenido]');
+  const boton = document.getElementById('dev-tpv-aviso-toggle');
+  if (!panel || !contenido || !boton) return;
+  const colapsado = typeof forzarColapsado === 'boolean' ? forzarColapsado : contenido.hidden === false;
+  contenido.hidden = colapsado;
+  boton.textContent = colapsado ? '⌃' : '⌄';
+  boton.title = colapsado ? 'Mostrar panel de aviso' : 'Ocultar panel de aviso';
+  boton.setAttribute('aria-expanded', String(!colapsado));
+  localStorage.setItem('dev-tpv-aviso-panel-colapsado', String(colapsado));
 }
 
 function actualizarPanelAvisoTPV(nombreLocal) {
