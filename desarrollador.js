@@ -247,7 +247,7 @@ function montarPanelAvisoTPV() {
   panel.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <strong style="font-size:13px">📣 Aviso persistente para TPV</strong>
-      <button id="dev-tpv-aviso-toggle" class="btn-icon" type="button" title="Ocultar panel de aviso" aria-expanded="true" onclick="togglePanelAvisoTPV()">⌄</button>
+      <button id="dev-tpv-aviso-toggle" class="btn-icon" type="button" title="Ocultar panel de aviso" aria-expanded="true">⌄</button>
     </div>
     <div data-dev-tpv-aviso-contenido style="display:flex;flex-direction:column;gap:9px">
       <span id="dev-tpv-aviso-destino" style="font-size:12px;color:var(--text-dim)"></span>
@@ -256,6 +256,7 @@ function montarPanelAvisoTPV() {
       <div style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="guardarAvisoTPV()">Enviar al TPV</button><button class="btn btn-secondary" onclick="retirarAvisoTPV()">Retirar</button></div>
     </div>`;
   document.body.appendChild(panel);
+  document.getElementById('dev-tpv-aviso-toggle')?.addEventListener('click', () => togglePanelAvisoTPV());
   if (localStorage.getItem('dev-tpv-aviso-panel-colapsado') === 'true') togglePanelAvisoTPV(true);
 }
 
@@ -264,8 +265,11 @@ function togglePanelAvisoTPV(forzarColapsado) {
   const contenido = panel?.querySelector('[data-dev-tpv-aviso-contenido]');
   const boton = document.getElementById('dev-tpv-aviso-toggle');
   if (!panel || !contenido || !boton) return;
-  const colapsado = typeof forzarColapsado === 'boolean' ? forzarColapsado : contenido.hidden === false;
-  contenido.hidden = colapsado;
+  const colapsado = typeof forzarColapsado === 'boolean'
+    ? forzarColapsado
+    : panel.dataset.colapsado !== 'true';
+  contenido.style.display = colapsado ? 'none' : 'flex';
+  panel.dataset.colapsado = String(colapsado);
   boton.textContent = colapsado ? '⌃' : '⌄';
   boton.title = colapsado ? 'Mostrar panel de aviso' : 'Ocultar panel de aviso';
   boton.setAttribute('aria-expanded', String(!colapsado));
