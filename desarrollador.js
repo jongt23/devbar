@@ -243,7 +243,7 @@ function montarPanelAvisoTPV() {
   if (document.getElementById('dev-tpv-aviso')) return;
   const panel = document.createElement('section');
   panel.id = 'dev-tpv-aviso';
-  panel.style.cssText = 'position:fixed;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));z-index:9000;background:var(--panel,#fff);border:1px solid var(--border,#ccd);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none;flex-direction:column;gap:9px';
+  panel.style.cssText = 'position:fixed;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));z-index:9000;background:var(--panel,#fff);border:1px solid var(--border,#ccd);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none;flex-direction:column;gap:9px;transition:opacity .18s ease,background .18s ease,width .18s ease';
   panel.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <strong style="font-size:13px">📣 Aviso persistente para TPV</strong>
@@ -257,6 +257,12 @@ function montarPanelAvisoTPV() {
     </div>`;
   document.body.appendChild(panel);
   document.getElementById('dev-tpv-aviso-toggle')?.addEventListener('click', () => togglePanelAvisoTPV());
+  panel.addEventListener('mouseenter', () => {
+    if (panel.dataset.colapsado === 'true') panel.style.opacity = '1';
+  });
+  panel.addEventListener('mouseleave', () => {
+    if (panel.dataset.colapsado === 'true') panel.style.opacity = '.35';
+  });
   if (localStorage.getItem('dev-tpv-aviso-panel-colapsado') === 'true') togglePanelAvisoTPV(true);
 }
 
@@ -270,6 +276,9 @@ function togglePanelAvisoTPV(forzarColapsado) {
     : panel.dataset.colapsado !== 'true';
   contenido.style.display = colapsado ? 'none' : 'flex';
   panel.dataset.colapsado = String(colapsado);
+  panel.style.width = colapsado ? 'auto' : 'min(360px,calc(100vw - 36px))';
+  panel.style.background = colapsado ? 'color-mix(in srgb, var(--panel,#fff) 65%, transparent)' : 'var(--panel,#fff)';
+  panel.style.opacity = colapsado ? '.35' : '1';
   boton.textContent = colapsado ? '⌃' : '⌄';
   boton.title = colapsado ? 'Mostrar panel de aviso' : 'Ocultar panel de aviso';
   boton.setAttribute('aria-expanded', String(!colapsado));
