@@ -189,6 +189,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.limpiarNovedadForm = limpiarNovedadForm;
   window.cargarNovedadForm = cargarNovedadForm;
   window.eliminarNovedad = eliminarNovedad;
+  window.guardarAvisoTPV = guardarAvisoTPV;
+  window.retirarAvisoTPV = retirarAvisoTPV;
+  montarPanelAvisoTPV();
 
   // Filtros y Paginación de Ventas
   window.aplicarFiltrosVentas = aplicarFiltrosVentas;
@@ -234,6 +237,41 @@ document.addEventListener("DOMContentLoaded", () => {
   window.toggleSidebar = toggleSidebar;
   window.volverACategorias = volverACategorias;
 });
+
+function montarPanelAvisoTPV() {
+  if (document.getElementById('dev-tpv-aviso')) return;
+  const panel = document.createElement('section');
+  panel.id = 'dev-tpv-aviso';
+  panel.style.cssText = 'position:fixed;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));z-index:9000;background:var(--panel,#fff);border:1px solid var(--border,#ccd);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none;flex-direction:column;gap:9px';
+  panel.innerHTML = `
+    <strong style="font-size:13px">📣 Aviso persistente para TPV</strong>
+    <span id="dev-tpv-aviso-destino" style="font-size:12px;color:var(--text-dim)"></span>
+    <textarea id="dev-tpv-aviso-texto" rows="3" placeholder="Ej.: Llámame cuando puedas" style="resize:vertical;width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border);border-radius:8px;font:13px var(--sans)"></textarea>
+    <select id="dev-tpv-aviso-tipo" style="padding:8px;border:1px solid var(--border);border-radius:8px"><option value="info">Información</option><option value="warning">Atención</option><option value="urgent">Urgente</option></select>
+    <div style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="guardarAvisoTPV()">Enviar al TPV</button><button class="btn btn-secondary" onclick="retirarAvisoTPV()">Retirar</button></div>`;
+  document.body.appendChild(panel);
+}
+
+function actualizarPanelAvisoTPV(nombreLocal) {
+  const panel = document.getElementById('dev-tpv-aviso');
+  const destino = document.getElementById('dev-tpv-aviso-destino');
+  if (!panel || !destino) return;
+  destino.textContent = `Destino: TPV de ${nombreLocal}`;
+  panel.style.display = 'flex';
+}
+
+async function guardarAvisoTPV() {
+  if (!db) return showCustomAlert('Aviso TPV', 'Selecciona primero un local.');
+  const texto = document.getElementById('dev-tpv-aviso-texto')?.value.trim();
+  if (!texto) return showCustomAlert('Aviso TPV', 'Escribe el mensaje que verá el TPV.');
+  const tipo = document.getElementById('dev-tpv-aviso-tipo')?.value || 'info';
+  await set(ref(db, 'config/tpvAviso'), { activo:true, texto, tipo, actualizadoEn:Date.now() });
+}
+
+async function retirarAvisoTPV() {
+  if (!db) return;
+  await set(ref(db, 'config/tpvAviso'), { activo:false, texto:'', tipo:'info', actualizadoEn:Date.now() });
+}
 
 // --- GESTIÓN DE LOCALES (LOCALSTORAGE) ---
 function cargarLocales() {
@@ -409,6 +447,7 @@ async function seleccionarLocal(id) {
     document.getElementById("label-nombre-local-activo").querySelector("span").textContent = local.nombre;
     document.getElementById("active-status-dot").className = "local-status-dot connected";
     document.getElementById(`dot-${local.id}`).className = "local-status-dot connected";
+    actualizarPanelAvisoTPV(local.nombre);
     
     // Activar escuchas en tiempo real
     suscribirseAFirebase();
@@ -480,6 +519,15 @@ function suscribirseAFirebase() {
     localConfig = snap.val() || {};
     actualizarDatosConfigLocal();
     renderConfigImpresoras();
+  });
+
+  // Reflejar el aviso que está activo para este local al abrir Desarrollo.
+  onValue(ref(db, "config/tpvAviso"), snap => {
+    const aviso = snap.val() || {};
+    const texto = document.getElementById('dev-tpv-aviso-texto');
+    const tipo = document.getElementById('dev-tpv-aviso-tipo');
+    if (texto && document.activeElement !== texto) texto.value = aviso.texto || '';
+    if (tipo) tipo.value = ['info', 'warning', 'urgent'].includes(aviso.tipo) ? aviso.tipo : 'info';
   });
 
   // 7. Escuchar Camareros
