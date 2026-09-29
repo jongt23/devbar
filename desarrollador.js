@@ -2736,7 +2736,13 @@ async function consultarRegistrosVerifactuAeat() {
       .filter(item => (!item.modo || item.modo === (verifactuAeatConfig?.modo || 'pruebas')) && (!estadoFiltro || item.estado === estadoFiltro))
       .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
     if (!registros.length) { panel.textContent = 'No hay registros para este filtro.'; return; }
-    panel.innerHTML = `<div style="overflow:auto"><table class="app-table"><thead><tr><th>Fecha</th><th>Factura</th><th>Tipo</th><th>Estado</th><th style="text-align:right">Total</th><th>Acción</th></tr></thead><tbody>${registros.map(r => { const id = escapeHtml(r.uuid || r.id); const etiqueta = escapeHtml(`${r.serie || ''}-${r.numero || ''}`); return `<tr><td>${escapeHtml(r.fecha || new Date(r.ts || 0).toLocaleString('es-ES'))}</td><td>${etiqueta}</td><td>${escapeHtml(r.tipo || '—')}</td><td>${escapeHtml(r.estado || 'pending')}</td><td style="text-align:right">${Number(r.total || 0).toFixed(2).replace('.', ',')} €</td><td style="white-space:nowrap"><button class="btn" type="button" style="padding:6px 8px;font-size:11px" onclick="verRegistroVerifactuAeat('${id}')">Ver</button> <button class="btn" type="button" style="padding:6px 8px;font-size:11px" onclick="reimprimirRegistroVerifactuAeat('${id}', '${etiqueta}', ${Number(r.total || 0)})">Reimprimir</button> <button class="btn" type="button" style="padding:6px 8px;font-size:11px" onclick="rectificarTotalRegistroVerifactuAeat('${id}')">Rectificar total</button></td></tr>`; }).join('')}</tbody></table></div>`;
+    const etiquetaEstado = estado => ({ accepted: 'Aceptado AEAT', pending: 'Pendiente AEAT', rejected: 'Rechazado AEAT' }[estado] || estado || 'Pendiente AEAT');
+    panel.innerHTML = `<div style="overflow:auto"><table class="app-table"><thead><tr><th>Fecha</th><th>Factura</th><th>Tipo</th><th>Estado</th><th style="text-align:right">Total</th><th>Acción</th></tr></thead><tbody>${registros.map(r => {
+      const id = escapeHtml(r.uuid || r.id);
+      const etiqueta = escapeHtml(`${r.serie || ''}-${r.numero || ''}`);
+      const retry = r.estado === 'pending' ? ` <button class="btn" type="button" style="padding:6px 8px;font-size:11px" onclick="reintentarRegistroVerifactuAeat('${id}')">Reintentar envío</button>` : '';
+      return `<tr><td>${escapeHtml(r.fecha || new Date(r.ts || 0).toLocaleString('es-ES'))}</td><td>${etiqueta}</td><td>${escapeHtml(r.tipo || '—')}</td><td>${escapeHtml(etiquetaEstado(r.estado))}</td><td style="text-align:right">${Number(r.total || 0).toFixed(2).replace('.', ',')} €</td><td style="white-space:nowrap"><button class="btn" type="button" style="padding:6px 8px;font-size:11px" onclick="verRegistroVerifactuAeat('${id}')">Ver</button> <button class="btn" type="button" style="padding:6px 8px;font-size:11px" onclick="reimprimirRegistroVerifactuAeat('${id}', '${etiqueta}', ${Number(r.total || 0)})">Reimprimir</button> <button class="btn" type="button" style="padding:6px 8px;font-size:11px" onclick="rectificarTotalRegistroVerifactuAeat('${id}')">Rectificar total</button>${retry}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
     window.__vfAeatRegistros = Object.fromEntries(registros.map(r => [r.uuid || r.id, r]));
   } catch (error) {
     console.error('Consulta VERI*FACTU AEAT', error);
@@ -2750,7 +2756,26 @@ function verRegistroVerifactuAeat(uuid) {
   if (!r) return;
   const desglose = (r.lineasIva || []).map(x => `IVA ${x.tipo_impositivo}%: base ${x.base_imponible} €, cuota ${x.cuota_repercutida} €`).join(' · ') || 'Detalle pendiente de sincronizar';
   const destino = r.destinatario ? `${r.destinatario.nif || ''} ${r.destinatario.nombre || ''}`.trim() : 'No aplica';
-  showCustomAlert('Detalle VERI*FACTU', `${r.serie}-${r.numero} · ${r.tipo}\n${r.descripcion || 'Venta'}\nTotal: ${r.total} €\n${desglose}\nDestinatario: ${destino}`);
+  const estado = r.estado === 'accepted' ? 'Aceptado AEAT' : (r.estado === 'rejected' ? 'Rechazado AEAT' : 'Pendiente AEAT');
+  const reintento = r.proximoReintento ? `\nPróximo reintento automático: ${new Date(r.proximoReintento).toLocaleString('es-ES')}` : '';
+  const error = r.errorAeat ? `\nÚltimo error: ${r.errorAeat}` : '';
+  showCustomAlert('Detalle VERI*FACTU', `${r.serie}-${r.numero} · ${r.tipo}\n${r.descripcion || 'Venta'}\nTotal: ${r.total} €\nEstado: ${estado} · Intentos: ${Number(r.intentos || 0)}${reintento}${error}\n${desglose}\nDestinatario: ${destino}`);
+}
+
+async function reintentarRegistroVerifactuAeat(uuid) {
+  const r = window.__vfAeatRegistros?.[uuid];
+  if (!r || r.estado !== 'pending') {
+    await showCustomAlert('VERI*FACTU AEAT', 'Solo se pueden reintentar registros pendientes. Un rechazo debe revisarse antes de emitir una corrección fiscal.');
+    return;
+  }
+  const ok = await showCustomConfirm('Reintentar envío a AEAT', `Se reenviará ${r.serie}-${r.numero} usando exactamente el XML ya emitido. No se imprimirá ni se creará otra factura.`);
+  if (!ok) return;
+  try {
+    await push(ref(db, 'print_jobs'), { kind: 'verifactu_retry', verifactuRetryUuid: uuid, status: 'pending', createdAt: Date.now() });
+    await showCustomAlert('VERI*FACTU AEAT', 'Reintento enviado al PC fiscal. Consulta de nuevo el registro en unos segundos para ver el resultado.');
+  } catch (error) {
+    await showCustomAlert('VERI*FACTU AEAT', `No se pudo solicitar el reintento: ${error?.message || 'error desconocido'}`);
+  }
 }
 
 async function rectificarTotalRegistroVerifactuAeat(uuid) {
