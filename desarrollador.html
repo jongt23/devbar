@@ -601,7 +601,7 @@
 
     .ventas-totals-bar {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 16px;
       margin-bottom: 20px;
     }
@@ -1840,12 +1840,13 @@
               <div style="display: flex; gap: 8px;">
                 <button class="btn" onclick="aplicarFiltrosVentas()" style="padding: 8px 12px;">Filtrar</button>
                 <button class="btn btn-secondary" onclick="resetFiltrosVentas()" style="padding: 8px 12px;" title="Limpiar Filtros">↺</button>
+                <button class="btn btn-secondary" onclick="abrirModalReconciliacion()" style="padding: 8px 12px;" title="Reconciliar Auditoría de Tickets vs Ventas">🔄 Reconciliar</button>
               </div>
             </div>
 
             <div class="ventas-totals-bar">
               <div class="total-card">
-                <div class="total-card-label">TOTAL RECAUDADO</div>
+                <div class="total-card-label">TOTAL COBRADO (REAL)</div>
                 <div class="total-card-val" id="venta-total-recaudado">0,00 €</div>
               </div>
               <div class="total-card">
@@ -1856,8 +1857,43 @@
                 <div class="total-card-label">TICKET MEDIO</div>
                 <div class="total-card-val" id="venta-ticket-medio">0,00 €</div>
               </div>
+              <div class="total-card">
+                <div class="total-card-label">TICKETS IMPRESOS (REAL)</div>
+                <div class="total-card-val" id="venta-total-impreso" style="color: #60a5fa;">0,00 €</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">ANULADOS / VACIADOS</div>
+                <div class="total-card-val" id="venta-total-anulado" style="color: #f87171;">0,00 €</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">DISCREPANCIA / POSIBLE FUGA</div>
+                <div class="total-card-val" id="venta-total-discrepancia">0,00 €</div>
+              </div>
+            </div>
+
+            <!-- Banner Alerta de Discrepancia con acceso a Reconciliación -->
+            <div id="ventas-alerta-discrepancia-container" style="display: none; margin-bottom: 16px; background: rgba(239,68,68,0.08); border: 1px solid #ef4444; border-radius: 8px; padding: 12px 16px; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">⚠️</span>
+                <div>
+                  <strong style="color: #ef4444; font-size: 13px; display: block;">Discrepancia detectada: Tickets impresos en papel no constan en ventas</strong>
+                  <div id="ventas-alerta-discrepancia-txt" style="font-size: 12px; color: var(--text-dim); margin-top: 2px;">
+                    Se detectaron tickets impresos en auditoría que no figuran en el historial de ventas.
+                  </div>
+                </div>
+              </div>
+              <button class="btn" onclick="abrirModalReconciliacion()" style="background: #ef4444; border-color: #ef4444; color: #fff; font-size: 12px; padding: 6px 14px; font-weight: 600;">
+                🔄 Desglose y Recuperación por Día
+              </button>
             </div>
             <div id="facturas-completas-desarrollador"></div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 12px; color: var(--text-dim); font-weight: 600;">ESTADO:</span>
+              <button type="button" class="btn btn-secondary" id="btn-filtro-ventas-todos" onclick="filtrarEstadoVentas('todos')" style="padding: 6px 12px; font-size: 12px; border-color: var(--accent); background: var(--surface2); font-weight: bold;">Todos</button>
+              <button type="button" class="btn btn-secondary" id="btn-filtro-ventas-cobrados" onclick="filtrarEstadoVentas('cobrados')" style="padding: 6px 12px; font-size: 12px;">✅ Solo Cobrados</button>
+              <button type="button" class="btn btn-secondary" id="btn-filtro-ventas-anulados" onclick="filtrarEstadoVentas('anulados')" style="padding: 6px 12px; font-size: 12px; color: #f87171;">⚠️ Anulados / Vaciados</button>
+            </div>
             
             <div style="flex: 1; overflow-y: auto;">
               <table class="app-table">
@@ -2404,6 +2440,7 @@
                 <button class="btn" onclick="aplicarFiltrosAuditoria()" style="padding: 8px 12px;">Filtrar</button>
                 <button class="btn btn-secondary" onclick="resetFiltrosAuditoria()" style="padding: 8px 12px;" title="Limpiar Filtros">↺</button>
                 <button class="btn btn-secondary" onclick="exportarAuditoriaCSV()" style="padding: 8px 12px;" title="Exportar CSV">📥</button>
+                <button class="btn btn-secondary" onclick="abrirModalReconciliacion()" style="padding: 8px 12px;" title="Reconciliar Tickets Impresos con Ventas">🔄 Reconciliar con Ventas</button>
               </div>
             </div>
 
@@ -2988,6 +3025,84 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="window.copiarInformeCierres()">📋 Copiar Resumen</button>
         <button class="btn" onclick="window.cerrarModalCierresAfectados()">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RECONCILIACIÓN Y RECUPERACIÓN DE VENTAS DESDE AUDITORÍA -->
+  <div class="modal-overlay" id="modal-reconciliacion-ventas">
+    <div class="modal" style="max-width: 920px; width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 8px; color: var(--accent);">
+          <span>🔄</span> Reconciliación y Recuperación de Ventas (Auditoría vs Ventas)
+        </div>
+        <button class="btn-icon" onclick="window.cerrarModalReconciliacion()">&times;</button>
+      </div>
+      <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: rgba(96,165,250,0.08); border: 1px solid #60a5fa; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; line-height: 1.5; color: var(--text);">
+          ℹ️ Esta herramienta compara todos los tickets impresos físicamente registrados en <b>Auditoría</b> contra las ventas guardadas en <b>Historial</b>. Te muestra la diferencia día por día y permite unificar / insertar los tickets faltantes en el historial de ventas con su fecha, hora e importe real.
+        </div>
+
+        <!-- Selector de Fechas para Reconciliar -->
+        <div style="display: flex; gap: 10px; align-items: flex-end; background: var(--panel-light); border: 1px solid var(--border); padding: 12px; border-radius: 8px; flex-wrap: wrap;">
+          <div class="form-group" style="margin: 0; min-width: 140px;">
+            <label style="font-size: 11px;">Desde Fecha</label>
+            <input type="date" class="input-text" id="rec-fecha-ini" style="padding: 6px 10px;">
+          </div>
+          <div class="form-group" style="margin: 0; min-width: 140px;">
+            <label style="font-size: 11px;">Hasta Fecha</label>
+            <input type="date" class="input-text" id="rec-fecha-fin" style="padding: 6px 10px;">
+          </div>
+          <button class="btn" onclick="window.ejecutarAnalisisReconciliacion()" style="padding: 8px 16px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+            🔍 Analizar Período
+          </button>
+        </div>
+
+        <!-- KPI Cards Resumen -->
+        <div id="rec-resumen-kpis" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;">
+          <div class="total-card">
+            <div class="total-card-label">TICKETS IMPRESOS (AUDITORÍA)</div>
+            <div class="total-card-val" id="rec-total-impreso" style="color: #60a5fa;">0,00 €</div>
+          </div>
+          <div class="total-card">
+            <div class="total-card-label">VENTAS EN HISTORIAL</div>
+            <div class="total-card-val" id="rec-total-ventas">0,00 €</div>
+          </div>
+          <div class="total-card">
+            <div class="total-card-label">FALTANTES POR REGISTRAR</div>
+            <div class="total-card-val" id="rec-total-faltante" style="color: #ef4444;">0,00 €</div>
+          </div>
+        </div>
+
+        <!-- Progreso de Importación -->
+        <div id="rec-progreso-box" style="display: none; background: rgba(16,185,129,0.1); border: 1px solid #10b981; border-radius: 8px; padding: 12px; text-align: center;">
+          <div id="rec-progreso-txt" style="font-weight: 600; color: #10b981; margin-bottom: 6px;">Guardando tickets en ventas...</div>
+          <div style="background: rgba(0,0,0,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+            <div id="rec-progreso-bar" style="background: #10b981; height: 100%; width: 0%; transition: width 0.15s;"></div>
+          </div>
+        </div>
+
+        <!-- Desglose por Día y Selección -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <h4 style="font-size: 12px; color: var(--accent); margin: 0; text-transform: uppercase;">Desglose por Día y Tickets Detectados:</h4>
+          <div style="display: flex; gap: 8px;" id="rec-acciones-seleccion">
+            <button type="button" class="btn btn-secondary" onclick="window.marcarTodosReconciliacion(true)" style="padding: 4px 10px; font-size: 11px;">Marcar Todos</button>
+            <button type="button" class="btn btn-secondary" onclick="window.marcarTodosReconciliacion(false)" style="padding: 4px 10px; font-size: 11px;">Desmarcar Todos</button>
+          </div>
+        </div>
+
+        <div style="flex: 1; min-height: 220px; max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--panel);">
+          <div id="rec-lista-dias" style="padding: 20px; font-size: 13px; color: var(--text-dim); text-align: center;">
+            Selecciona un rango de fechas y pulsa "Analizar Período".
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn btn-secondary" onclick="window.cerrarModalReconciliacion()">Cerrar</button>
+        <button class="btn" id="btn-ejecutar-unificacion" onclick="window.ejecutarUnificacionVentas()" style="background: #10b981; border-color: #10b981; color: #000; font-weight: 700;" disabled>
+          ⚡ Unificar e Insertar en Ventas (0 tickets)
+        </button>
       </div>
     </div>
   </div>

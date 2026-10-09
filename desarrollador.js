@@ -198,6 +198,17 @@ document.addEventListener("DOMContentLoaded", () => {
   window.aplicarFiltrosVentas = aplicarFiltrosVentas;
   window.resetFiltrosVentas = resetFiltrosVentas;
   window.cambiarPaginaVentas = cambiarPaginaVentas;
+  window.filtrarEstadoVentas = filtrarEstadoVentas;
+
+  // Reconciliación de Ventas desde Auditoría
+  window.abrirModalReconciliacion = abrirModalReconciliacion;
+  window.cerrarModalReconciliacion = cerrarModalReconciliacion;
+  window.ejecutarAnalisisReconciliacion = ejecutarAnalisisReconciliacion;
+  window.toggleDetalleDiaReconciliacion = toggleDetalleDiaReconciliacion;
+  window.toggleDiaReconciliacion = toggleDiaReconciliacion;
+  window.toggleTicketReconciliacion = toggleTicketReconciliacion;
+  window.marcarTodosReconciliacion = marcarTodosReconciliacion;
+  window.ejecutarUnificacionVentas = ejecutarUnificacionVentas;
 
   // Informe comercial para propietario
   window.consultarInformePropietario = consultarInformePropietario;
@@ -1229,6 +1240,33 @@ async function cargarVentasRango(fechaIni, fechaFin) {
 }
 
 
+let ventasFiltroEstado = 'todos'; // 'todos' | 'cobrados' | 'anulados'
+
+function filtrarEstadoVentas(estado) {
+  ventasFiltroEstado = estado;
+  const botones = [
+    { id: 'btn-filtro-ventas-todos', est: 'todos' },
+    { id: 'btn-filtro-ventas-cobrados', est: 'cobrados' },
+    { id: 'btn-filtro-ventas-anulados', est: 'anulados' }
+  ];
+  botones.forEach(b => {
+    const el = document.getElementById(b.id);
+    if (el) {
+      if (b.est === estado) {
+        el.style.borderColor = 'var(--accent)';
+        el.style.background = 'var(--surface2)';
+        el.style.fontWeight = 'bold';
+      } else {
+        el.style.borderColor = 'var(--border)';
+        el.style.background = 'transparent';
+        el.style.fontWeight = 'normal';
+      }
+    }
+  });
+  ventasPaginaActual = 1;
+  renderVentasPagina();
+}
+
 async function aplicarFiltrosVentas() {
   if (!db) return;
 
@@ -1243,9 +1281,9 @@ async function aplicarFiltrosVentas() {
   }
 
   const tbody = document.getElementById("ventas-tbody");
-  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">Cargando ventas...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">Cargando ventas y auditoría...</td></tr>`;
 
-  // Realizar lectura bajo demanda única
+  // Realizar lectura bajo demanda única de historial
   historialData = await cargarVentasRango(fechaIni, fechaFin);
   
   // Transformar a lista para ordenamiento y paginación
@@ -1257,17 +1295,79 @@ async function aplicarFiltrosVentas() {
   // Ordenar cronológicamente descendiente
   ventasDataList.sort((a, b) => Number(b.ts || b.createdAt || 0) - Number(a.ts || a.createdAt || 0));
 
-  // Calcular y actualizar estadísticas globales para el período seleccionado
-  let recaudado = 0;
-  let conteo = 0;
+  // Separar cobrados reales vs anulados
+  let recaudadoCobrado = 0;
+  let conteoCobrados = 0;
+  let totalAnulado = 0;
+  let conteoAnulados = 0;
+
   ventasDataList.forEach(t => {
-    recaudado += Number(t.total || 0);
-    conteo++;
+    const total = Number(t.total || 0);
+    if (t.anulado) {
+      totalAnulado += total;
+      conteoAnulados++;
+    } else {
+      recaudadoCobrado += total;
+      conteoCobrados++;
+    }
   });
 
-  document.getElementById("venta-total-recaudado").textContent = `${recaudado.toFixed(2)} €`;
-  document.getElementById("venta-total-tickets").textContent = conteo;
-  document.getElementById("venta-ticket-medio").textContent = conteo ? `${(recaudado / conteo).toFixed(2)} €` : "0,00 €";
+  // Leer eventos de auditoría para calcular tickets impresos en el período
+  let totalImpreso = 0;
+  let conteoImpresos = 0;
+  try {
+    const evAudit = await leerEventosAuditoriaRango(fechaIni, fechaFin);
+    evAudit.forEach(ev => {
+      if (ev.accion === 'ticket_impreso' && !ev.reimpresionDe && !ev.esReimpresion) {
+        totalImpreso += Number(ev.total || 0);
+        conteoImpresos++;
+      }
+    });
+  } catch (errAudit) {
+    console.warn("No se pudo calcular tickets impresos desde auditoría:", errAudit);
+  }
+
+  const discrepancia = Math.max(0, Math.round((totalImpreso - recaudadoCobrado) * 100) / 100);
+
+  // Actualizar indicadores numéricos
+  document.getElementById("venta-total-recaudado").textContent = `${recaudadoCobrado.toFixed(2)} €`;
+  document.getElementById("venta-total-tickets").textContent = conteoCobrados;
+  document.getElementById("venta-ticket-medio").textContent = conteoCobrados ? `${(recaudadoCobrado / conteoCobrados).toFixed(2)} €` : "0,00 €";
+
+  const elImpreso = document.getElementById("venta-total-impreso");
+  if (elImpreso) {
+    elImpreso.textContent = `${totalImpreso.toFixed(2)} € (${conteoImpresos})`;
+  }
+
+  const elAnulado = document.getElementById("venta-total-anulado");
+  if (elAnulado) {
+    elAnulado.textContent = `${totalAnulado.toFixed(2)} € (${conteoAnulados})`;
+  }
+
+  const elDiscrepancia = document.getElementById("venta-total-discrepancia");
+  if (elDiscrepancia) {
+    elDiscrepancia.textContent = `${discrepancia.toFixed(2)} €`;
+    if (discrepancia > 0.01) {
+      elDiscrepancia.style.color = "#ef4444";
+      elDiscrepancia.title = `⚠️ Discrepancia detectada: se imprimieron ${totalImpreso.toFixed(2)} € pero solo se cobraron ${recaudadoCobrado.toFixed(2)} €`;
+    } else {
+      elDiscrepancia.style.color = "var(--accent)";
+      elDiscrepancia.title = "Todo coincide correctamente";
+    }
+  }
+
+  const alertaCont = document.getElementById("ventas-alerta-discrepancia-container");
+  const alertaTxt = document.getElementById("ventas-alerta-discrepancia-txt");
+  if (alertaCont) {
+    if (discrepancia > 0.01) {
+      alertaCont.style.display = 'flex';
+      if (alertaTxt) {
+        alertaTxt.textContent = `Se detectaron ${conteoImpresos} tickets impresos (${totalImpreso.toFixed(2)} €) frente a ${conteoCobrados} ventas cobradas (${recaudadoCobrado.toFixed(2)} €). Discrepancia: ${discrepancia.toFixed(2)} €. Pulsa para ver el desglose por día y recuperar las ventas.`;
+      }
+    } else {
+      alertaCont.style.display = 'none';
+    }
+  }
 
   ventasPaginaActual = 1;
   renderVentasPagina();
@@ -1277,15 +1377,22 @@ function renderVentasPagina() {
   const tbody = document.getElementById("ventas-tbody");
   tbody.innerHTML = "";
 
-  if (ventasDataList.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">No se registran ventas en el rango de fechas seleccionado.</td></tr>`;
+  // Filtrar según estado seleccionado
+  const ticketsFiltrados = ventasDataList.filter(t => {
+    if (ventasFiltroEstado === 'cobrados') return !t.anulado;
+    if (ventasFiltroEstado === 'anulados') return !!t.anulado;
+    return true;
+  });
+
+  if (ticketsFiltrados.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">No se registran ventas con el filtro seleccionado en este rango de fechas.</td></tr>`;
     document.getElementById("ventas-paginacion-info").textContent = "Página 1 de 1";
     document.getElementById("btn-ventas-prev").disabled = true;
     document.getElementById("btn-ventas-next").disabled = true;
     return;
   }
 
-  const totalPages = Math.ceil(ventasDataList.length / VENTAS_POR_PAGINA) || 1;
+  const totalPages = Math.ceil(ticketsFiltrados.length / VENTAS_POR_PAGINA) || 1;
   
   // Limitar página actual a rango válido
   if (ventasPaginaActual < 1) ventasPaginaActual = 1;
@@ -1293,24 +1400,32 @@ function renderVentasPagina() {
 
   const startIdx = (ventasPaginaActual - 1) * VENTAS_POR_PAGINA;
   const endIdx = startIdx + VENTAS_POR_PAGINA;
-  const pageTickets = ventasDataList.slice(startIdx, endIdx);
+  const pageTickets = ticketsFiltrados.slice(startIdx, endIdx);
 
   pageTickets.forEach(t => {
     const total = Number(t.total || 0);
     // Formatear Fecha
     const ts = Number(t.createdAt || t.ts || 0);
     const fechaTxt = ts ? new Date(ts).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
-    const metodo = t.pagoMetodo || (t.cobro ? 'Efectivo' : '—');
+    const esAnulado = !!t.anulado;
+
+    let metodo = t.pagoMetodo || (t.cobro ? 'Efectivo' : '—');
+    if (esAnulado) {
+      metodo = `<span style="background:rgba(239,68,68,0.15);color:#ef4444;padding:2px 7px;border-radius:4px;font-weight:700;font-size:11px">⚠️ ANULADO / VACIADO</span>`;
+    }
 
     const tr = document.createElement("tr");
     tr.style.cursor = "pointer";
+    if (esAnulado) {
+      tr.style.background = "rgba(239,68,68,0.04)";
+    }
     tr.onclick = () => mostrarDetalleTicketHistorico(t.id);
     tr.innerHTML = `
       <td>${fechaTxt}</td>
       <td style="font-weight:600;">${t.mesaNombre || t.mesa || '—'}</td>
       <td>${t.camarero || '—'}</td>
       <td style="text-transform: capitalize;">${metodo}</td>
-      <td class="table-price" style="text-align: right; color: var(--accent); font-weight:600;">${total.toFixed(2)} €</td>
+      <td class="table-price" style="text-align: right; color: ${esAnulado ? '#ef4444; text-decoration: line-through;' : 'var(--accent); font-weight:600;'}">${total.toFixed(2)} €</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1333,6 +1448,8 @@ function resetFiltrosVentas() {
   
   ventasDataList = [];
   historialData = {};
+  ventasFiltroEstado = 'todos';
+  filtrarEstadoVentas('todos');
   
   document.getElementById("ventas-tbody").innerHTML = `
     <tr>
@@ -1344,11 +1461,545 @@ function resetFiltrosVentas() {
   document.getElementById("venta-total-recaudado").textContent = "0,00 €";
   document.getElementById("venta-total-tickets").textContent = "0";
   document.getElementById("venta-ticket-medio").textContent = "0,00 €";
+  if (document.getElementById("venta-total-impreso")) document.getElementById("venta-total-impreso").textContent = "0,00 €";
+  if (document.getElementById("venta-total-anulado")) document.getElementById("venta-total-anulado").textContent = "0,00 €";
+  if (document.getElementById("venta-total-discrepancia")) {
+    document.getElementById("venta-total-discrepancia").textContent = "0,00 €";
+    document.getElementById("venta-total-discrepancia").style.color = "var(--text)";
+  }
+  const alertaCont = document.getElementById("ventas-alerta-discrepancia-container");
+  if (alertaCont) alertaCont.style.display = 'none';
   
   ventasPaginaActual = 1;
   document.getElementById("ventas-paginacion-info").textContent = "Página 1 de 1";
   document.getElementById("btn-ventas-prev").disabled = true;
   document.getElementById("btn-ventas-next").disabled = true;
+}
+
+// --- MÓDULO DE RECONCILIACIÓN Y RECUPERACIÓN DE VENTAS DESDE AUDITORÍA ---
+let recAnalisisActual = null;
+let recTicketsSeleccionados = new Set();
+
+function abrirModalReconciliacion() {
+  const modal = document.getElementById("modal-reconciliacion-ventas");
+  if (!modal) return;
+
+  const fIniInput = document.getElementById("ventas-fecha-ini");
+  const fFinInput = document.getElementById("ventas-fecha-fin");
+  const hoy = new Date().toISOString().split("T")[0];
+
+  const iniVal = fIniInput?.value || document.getElementById("audit-fecha-ini")?.value || hoy;
+  const finVal = fFinInput?.value || document.getElementById("audit-fecha-fin")?.value || hoy;
+
+  const recIni = document.getElementById("rec-fecha-ini");
+  const recFin = document.getElementById("rec-fecha-fin");
+  if (recIni) recIni.value = iniVal;
+  if (recFin) recFin.value = finVal;
+
+  modal.classList.add("open");
+  ejecutarAnalisisReconciliacion();
+}
+
+function cerrarModalReconciliacion() {
+  const modal = document.getElementById("modal-reconciliacion-ventas");
+  if (modal) modal.classList.remove("open");
+}
+
+function parsearLineasDeDetalleAuditoria(detalle, numLineas, total) {
+  if (!detalle || typeof detalle !== 'string') {
+    return [{ nombre: 'Consumición TPV', qty: Number(numLineas || 1), precio: Number(total || 0) }];
+  }
+  const partes = detalle.split(',').map(p => p.trim()).filter(Boolean);
+  if (!partes.length) {
+    return [{ nombre: 'Consumición TPV', qty: Number(numLineas || 1), precio: Number(total || 0) }];
+  }
+  const lineas = [];
+  partes.forEach(p => {
+    const m = p.match(/^(\d+)\s*[×x]\s*(.+)$/i);
+    if (m) {
+      const q = parseInt(m[1], 10) || 1;
+      lineas.push({ nombre: m[2].trim(), qty: q, precio: 0 });
+    } else {
+      lineas.push({ nombre: p, qty: 1, precio: 0 });
+    }
+  });
+
+  if (lineas.length === 1) {
+    lineas[0].precio = Math.round((Number(total || 0) / (lineas[0].qty || 1)) * 100) / 100;
+  }
+  return lineas;
+}
+
+async function ejecutarAnalisisReconciliacion() {
+  const ini = document.getElementById("rec-fecha-ini")?.value;
+  const fin = document.getElementById("rec-fecha-fin")?.value;
+  if (!ini || !fin) {
+    alert("Por favor selecciona un rango de fechas válido.");
+    return;
+  }
+
+  const contenedor = document.getElementById("rec-lista-dias");
+  if (contenedor) {
+    contenedor.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-dim);">
+      <div style="font-size: 15px; margin-bottom: 6px;">⏳ Analizando auditoría y ventas...</div>
+      <div style="font-size: 12px;">Comparando tickets físicos impresos frente a ventas guardadas...</div>
+    </div>`;
+  }
+
+  const btnUnificar = document.getElementById("btn-ejecutar-unificacion");
+  if (btnUnificar) btnUnificar.disabled = true;
+
+  try {
+    const [historialObj, eventosAudit] = await Promise.all([
+      cargarVentasRango(ini, fin),
+      leerEventosAuditoriaRango(ini, fin)
+    ]);
+
+    const impresiones = eventosAudit.filter(ev => 
+      ev.accion === 'ticket_impreso' && 
+      !ev.reimpresionDe && 
+      !ev.esReimpresion && 
+      Number(ev.total || 0) > 0
+    );
+
+    const ventasPorDia = {};
+    const anuladosPorDia = {};
+    Object.entries(historialObj).forEach(([id, t]) => {
+      const ts = Number(t.ts || t.createdAt || 0);
+      if (!ts) return;
+      const d = new Date(ts);
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (t.anulado) {
+        if (!anuladosPorDia[dateKey]) anuladosPorDia[dateKey] = [];
+        anuladosPorDia[dateKey].push({ id, ...t, matched: false });
+      } else {
+        if (!ventasPorDia[dateKey]) ventasPorDia[dateKey] = [];
+        ventasPorDia[dateKey].push({ id, ...t, matched: false });
+      }
+    });
+
+    const impresionesPorDia = {};
+    impresiones.forEach(ev => {
+      const dk = ev.dateKey || (ev.ts ? new Date(ev.ts).toISOString().split('T')[0] : 'desconocido');
+      if (!impresionesPorDia[dk]) impresionesPorDia[dk] = [];
+      impresionesPorDia[dk].push({
+        ...ev,
+        totalNum: Math.round(Number(ev.total || 0) * 100) / 100,
+        matched: false
+      });
+    });
+
+    const todasLasFechas = Array.from(new Set([
+      ...Object.keys(ventasPorDia),
+      ...Object.keys(impresionesPorDia),
+      ...Object.keys(anuladosPorDia)
+    ])).sort();
+
+    const resultadoDias = [];
+    let totalImpresoGlobal = 0;
+    let totalVentasGlobal = 0;
+    let totalFaltanteGlobal = 0;
+    const todosCandidatosFaltantes = [];
+
+    for (const dateKey of todasLasFechas) {
+      const ventasDelDia = ventasPorDia[dateKey] || [];
+      const impresionesDelDia = impresionesPorDia[dateKey] || [];
+      const anuladosDelDia = anuladosPorDia[dateKey] || [];
+
+      // Paso 0: Limpiar anulados huérfanos que ya tienen su ticket recuperado o cobrado equivalente
+      // (evita que sigan apareciendo ambos si ya se unificaron anteriormente)
+      for (const a of anuladosDelDia) {
+        const aTotal = Math.round(Number(a.total || 0) * 100) / 100;
+        const aTs = Number(a.ts || 0);
+        const yaExisteCobrado = ventasDelDia.find(v => {
+          const vTotal = Math.round(Number(v.total || 0) * 100) / 100;
+          const vTs = Number(v.ts || 0);
+          return Math.abs(vTotal - aTotal) < 0.02 && Math.abs(vTs - aTs) < 45 * 60 * 1000;
+        });
+        if (yaExisteCobrado) {
+          a.esRedundante = true;
+          try {
+            await remove(ref(db, 'historial/' + a.id));
+            console.log('Limpiado ticket anulado duplicado:', a.id);
+          } catch (_) {}
+        }
+      }
+
+      // Paso A: Emparejar si ya fue recuperado previamente con auditId
+      impresionesDelDia.forEach(ev => {
+        const matchExacto = ventasDelDia.find(v => !v.matched && (v.auditId === ev.id));
+        if (matchExacto) {
+          ev.matched = true;
+          matchExacto.matched = true;
+        }
+      });
+
+      // Paso B: Emparejar por importe idéntico y proximidad temporal con ventas activas
+      impresionesDelDia.forEach(ev => {
+        if (ev.matched) return;
+        const evTotal = ev.totalNum;
+        const evTs = Number(ev.ts || 0);
+
+        let mejorMatch = null;
+        let menorDifTiempo = Infinity;
+
+        ventasDelDia.forEach(v => {
+          if (v.matched) return;
+          const vTotal = Math.round(Number(v.total || 0) * 100) / 100;
+          if (Math.abs(vTotal - evTotal) < 0.02) {
+            const vTs = Number(v.ts || 0);
+            const difTiempo = Math.abs(vTs - evTs);
+            if (difTiempo < menorDifTiempo) {
+              menorDifTiempo = difTiempo;
+              mejorMatch = v;
+            }
+          }
+        });
+
+        if (mejorMatch) {
+          ev.matched = true;
+          mejorMatch.matched = true;
+        }
+      });
+
+      // Paso C: Para las impresiones NO cobradas, verificar si proceden de un ticket que estaba anulado
+      impresionesDelDia.forEach(ev => {
+        if (ev.matched) return;
+        const evTotal = ev.totalNum;
+        const evTs = Number(ev.ts || 0);
+
+        let mejorAnulado = null;
+        let menorDifTiempo = Infinity;
+
+        anuladosDelDia.forEach(a => {
+          if (a.matched || a.esRedundante) return;
+          const aTotal = Math.round(Number(a.total || 0) * 100) / 100;
+          if (Math.abs(aTotal - evTotal) < 0.02) {
+            const aTs = Number(a.ts || 0);
+            const difTiempo = Math.abs(aTs - evTs);
+            if (difTiempo < menorDifTiempo) {
+              menorDifTiempo = difTiempo;
+              mejorAnulado = a;
+            }
+          }
+        });
+
+        if (mejorAnulado) {
+          mejorAnulado.matched = true;
+          ev.ticketAnuladoId = mejorAnulado.id;
+          ev.esReactivacion = true;
+        } else {
+          ev.ticketAnuladoId = null;
+          ev.esReactivacion = false;
+        }
+      });
+
+      let sumaImpresoDia = 0;
+      impresionesDelDia.forEach(ev => { sumaImpresoDia += ev.totalNum; });
+
+      let sumaVentasDia = 0;
+      ventasDelDia.forEach(v => { sumaVentasDia += Number(v.total || 0); });
+
+      const faltantesDelDia = impresionesDelDia.filter(ev => !ev.matched);
+      let sumaFaltanteDia = 0;
+      faltantesDelDia.forEach(ev => { sumaFaltanteDia += ev.totalNum; });
+
+      totalImpresoGlobal += sumaImpresoDia;
+      totalVentasGlobal += sumaVentasDia;
+      totalFaltanteGlobal += sumaFaltanteDia;
+      todosCandidatosFaltantes.push(...faltantesDelDia);
+
+      resultadoDias.push({
+        dateKey,
+        sumaImpresoDia: Math.round(sumaImpresoDia * 100) / 100,
+        conteoImpresoDia: impresionesDelDia.length,
+        sumaVentasDia: Math.round(sumaVentasDia * 100) / 100,
+        conteoVentasDia: ventasDelDia.length,
+        sumaFaltanteDia: Math.round(sumaFaltanteDia * 100) / 100,
+        conteoFaltanteDia: faltantesDelDia.length,
+        faltantes: faltantesDelDia
+      });
+    }
+
+    recAnalisisActual = {
+      resultadoDias,
+      totalImpresoGlobal: Math.round(totalImpresoGlobal * 100) / 100,
+      totalVentasGlobal: Math.round(totalVentasGlobal * 100) / 100,
+      totalFaltanteGlobal: Math.round(totalFaltanteGlobal * 100) / 100,
+      todosCandidatosFaltantes
+    };
+
+    // Actualizar KPI Cards en el modal
+    document.getElementById("rec-total-impreso").textContent = `${recAnalisisActual.totalImpresoGlobal.toFixed(2)} € (${impresiones.length})`;
+    document.getElementById("rec-total-ventas").textContent = `${recAnalisisActual.totalVentasGlobal.toFixed(2)} €`;
+    const elFaltante = document.getElementById("rec-total-faltante");
+    elFaltante.textContent = `${recAnalisisActual.totalFaltanteGlobal.toFixed(2)} € (${todosCandidatosFaltantes.length})`;
+    elFaltante.style.color = recAnalisisActual.totalFaltanteGlobal > 0.01 ? "#ef4444" : "#10b981";
+
+    // Por defecto, pre-seleccionar todos los tickets faltantes detectados
+    recTicketsSeleccionados = new Set(todosCandidatosFaltantes.map(c => c.id));
+
+    renderizarDiasReconciliacion();
+    actualizarBotonUnificacion();
+
+  } catch (err) {
+    console.error("Error en reconciliación:", err);
+    if (contenedor) {
+      contenedor.innerHTML = `<div style="padding: 20px; color: #ef4444; text-align: center;">
+        Error al analizar el período: ${escapeHtml(err.message)}
+      </div>`;
+    }
+  }
+}
+
+function renderizarDiasReconciliacion() {
+  const contenedor = document.getElementById("rec-lista-dias");
+  if (!contenedor || !recAnalisisActual) return;
+
+  if (recAnalisisActual.resultadoDias.length === 0) {
+    contenedor.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-dim);">
+      No se encontraron datos de impresiones ni de ventas en este rango de fechas.
+    </div>`;
+    return;
+  }
+
+  let html = `<div style="display: flex; flex-direction: column; gap: 8px; padding: 6px;">`;
+
+  recAnalisisActual.resultadoDias.forEach(dia => {
+    const hayFaltantes = dia.conteoFaltanteDia > 0;
+    const todosSeleccionados = hayFaltantes && dia.faltantes.every(f => recTicketsSeleccionados.has(f.id));
+
+    const partes = dia.dateKey.split('-');
+    const fechaLegible = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dia.dateKey;
+
+    html += `
+      <div style="background: var(--surface2); border: 1px solid ${hayFaltantes ? '#ef4444' : 'var(--border)'}; border-radius: 8px; overflow: hidden;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            ${hayFaltantes ? `
+              <input type="checkbox" ${todosSeleccionados ? 'checked' : ''} onchange="window.toggleDiaReconciliacion('${dia.dateKey}', this.checked)" style="width: 16px; height: 16px; cursor: pointer;" title="Seleccionar/Deseleccionar día">
+            ` : `<span style="width: 16px; text-align: center; color: #10b981; font-size: 14px;">✓</span>`}
+            <div>
+              <strong style="font-size: 13px; color: var(--text);">${fechaLegible}</strong>
+              <div style="font-size: 11px; color: var(--text-dim); margin-top: 1px;">
+                Impreso: <b>${dia.sumaImpresoDia.toFixed(2)} €</b> (${dia.conteoImpresoDia}) · Ventas: <b>${dia.sumaVentasDia.toFixed(2)} €</b> (${dia.conteoVentasDia})
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="text-align: right;">
+              <span style="font-size: 12px; font-weight: 700; color: ${hayFaltantes ? '#ef4444' : '#10b981'};">
+                ${hayFaltantes ? `+${dia.sumaFaltanteDia.toFixed(2)} € (${dia.conteoFaltanteDia} faltantes)` : 'Cuadrado (0,00 €)'}
+              </span>
+            </div>
+            ${hayFaltantes ? `
+              <button type="button" class="btn btn-secondary" onclick="window.toggleDetalleDiaReconciliacion('${dia.dateKey}')" style="padding: 4px 8px; font-size: 11px;">
+                Ver Tickets ▼
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        ${hayFaltantes ? `
+          <div id="rec-detalle-${dia.dateKey}" style="display: none; border-top: 1px solid var(--border); background: var(--panel); padding: 8px 12px;">
+            <table class="app-table" style="font-size: 11.5px; width: 100%;">
+              <thead>
+                <tr>
+                  <th style="width: 28px;"></th>
+                  <th>Hora</th>
+                  <th>Mesa</th>
+                  <th>Camarero</th>
+                  <th>Detalle Artículos</th>
+                  <th style="text-align: right;">Importe</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${dia.faltantes.map(f => {
+                  const check = recTicketsSeleccionados.has(f.id) ? 'checked' : '';
+                  return `
+                    <tr>
+                      <td>
+                        <input type="checkbox" ${check} onchange="window.toggleTicketReconciliacion('${f.id}', this.checked)" style="cursor: pointer;">
+                      </td>
+                      <td style="font-family: var(--font-code);">${f.hora || '—'}</td>
+                      <td><b>${escapeHtml(f.mesa || 'TPV')}</b></td>
+                      <td>${escapeHtml(f.camarero || 'TPV')}</td>
+                      <td style="color: var(--text-dim); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(f.detalle || '')}">
+                        ${f.esReactivacion ? `<span style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-right: 4px;">REACTIVAR ANULADO</span>` : `<span style="background: rgba(96,165,250,0.15); color: #60a5fa; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-right: 4px;">NUEVO</span>`}
+                        ${escapeHtml(f.detalle || 'Consumición')}
+                      </td>
+                      <td style="text-align: right; font-weight: 700; color: #ef4444; font-family: var(--font-code);">
+                        ${f.totalNum.toFixed(2)} €
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  contenedor.innerHTML = html;
+}
+
+function toggleDetalleDiaReconciliacion(dateKey) {
+  const panel = document.getElementById(`rec-detalle-${dateKey}`);
+  if (panel) {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function toggleDiaReconciliacion(dateKey, checked) {
+  if (!recAnalisisActual) return;
+  const dia = recAnalisisActual.resultadoDias.find(d => d.dateKey === dateKey);
+  if (!dia || !dia.faltantes) return;
+
+  dia.faltantes.forEach(f => {
+    if (checked) recTicketsSeleccionados.add(f.id);
+    else recTicketsSeleccionados.delete(f.id);
+  });
+
+  renderizarDiasReconciliacion();
+  actualizarBotonUnificacion();
+}
+
+function toggleTicketReconciliacion(ticketId, checked) {
+  if (checked) recTicketsSeleccionados.add(ticketId);
+  else recTicketsSeleccionados.delete(ticketId);
+  actualizarBotonUnificacion();
+}
+
+function marcarTodosReconciliacion(marcar) {
+  if (!recAnalisisActual) return;
+  if (marcar) {
+    recTicketsSeleccionados = new Set(recAnalisisActual.todosCandidatosFaltantes.map(c => c.id));
+  } else {
+    recTicketsSeleccionados.clear();
+  }
+  renderizarDiasReconciliacion();
+  actualizarBotonUnificacion();
+}
+
+function actualizarBotonUnificacion() {
+  const btn = document.getElementById("btn-ejecutar-unificacion");
+  if (!btn || !recAnalisisActual) return;
+
+  const cantidad = recTicketsSeleccionados.size;
+  let totalImporte = 0;
+  recAnalisisActual.todosCandidatosFaltantes.forEach(c => {
+    if (recTicketsSeleccionados.has(c.id)) {
+      totalImporte += c.totalNum;
+    }
+  });
+
+  btn.disabled = (cantidad === 0);
+  btn.textContent = `⚡ Unificar e Insertar en Ventas (${cantidad} tickets · ${totalImporte.toFixed(2)} €)`;
+}
+
+async function ejecutarUnificacionVentas() {
+  if (!recAnalisisActual || recTicketsSeleccionados.size === 0) return;
+
+  const ticketsAInsertar = recAnalisisActual.todosCandidatosFaltantes.filter(c => recTicketsSeleccionados.has(c.id));
+  const totalImporte = ticketsAInsertar.reduce((acc, c) => acc + c.totalNum, 0);
+
+  const nReactivar = ticketsAInsertar.filter(t => t.esReactivacion).length;
+  const nNuevos = ticketsAInsertar.filter(t => !t.esReactivacion).length;
+
+  let msgConfirma = `¿Deseas reconciliar ${ticketsAInsertar.length} tickets (${totalImporte.toFixed(2)} €) en el Historial de Ventas?\n\n`;
+  if (nReactivar > 0) {
+    msgConfirma += `• ${nReactivar} ticket(s) anulados/vaciados serán REACTIVADOS como cobrados (no se duplicarán).\n`;
+  }
+  if (nNuevos > 0) {
+    msgConfirma += `• ${nNuevos} ticket(s) no registrados serán insertados en el historial.\n`;
+  }
+
+  const confirma = confirm(msgConfirma);
+  if (!confirma) return;
+
+  const progBox = document.getElementById("rec-progreso-box");
+  const progTxt = document.getElementById("rec-progreso-txt");
+  const progBar = document.getElementById("rec-progreso-bar");
+  const btn = document.getElementById("btn-ejecutar-unificacion");
+
+  if (progBox) progBox.style.display = 'block';
+  if (btn) btn.disabled = true;
+
+  let procesados = 0;
+  for (let i = 0; i < ticketsAInsertar.length; i++) {
+    const ev = ticketsAInsertar[i];
+
+    if (ev.ticketAnuladoId) {
+      // 1. REACTIVAR TICKET EXISTENTE ANULADO (ELIMINA EL ESTADO ANULADO SIN DUPLICAR)
+      try {
+        await update(ref(db, 'historial/' + ev.ticketAnuladoId), {
+          anulado: false,
+          desanulado: true,
+          recuperadoDeAuditoria: true,
+          auditId: ev.id,
+          pagoMetodo: 'Efectivo',
+          cobradoFinal: true,
+          desanuladoTs: Date.now(),
+          desanuladoMotivo: 'Reactivado y desanulado desde reconciliación de auditoría'
+        });
+        procesados++;
+      } catch (e) {
+        console.error(`Error al reactivar ticket anulado ${ev.ticketAnuladoId}:`, e);
+      }
+    } else {
+      // 2. INSERTAR NUEVO TICKET HISTÓRICO
+      const fechaObj = new Date(ev.ts || `${ev.dateKey}T${ev.hora || '12:00:00'}`);
+      const dd = String(fechaObj.getDate()).padStart(2, '0');
+      const mm = String(fechaObj.getMonth() + 1).padStart(2, '0');
+      const yyyy = fechaObj.getFullYear();
+      const fechaStr = `${dd}/${mm}/${yyyy}`;
+      const horaStr = ev.hora ? String(ev.hora).slice(0, 5) : `${String(fechaObj.getHours()).padStart(2, '0')}:${String(fechaObj.getMinutes()).padStart(2, '0')}`;
+
+      const ventaData = {
+        mesa: ev.mesa || 'TPV',
+        mesaNombre: ev.mesa || 'TPV',
+        mesaId: ev.mesaId || 'recuperado_' + ev.id,
+        camarero: ev.camarero || 'TPV',
+        ts: Number(ev.ts || fechaObj.getTime()),
+        fecha: fechaStr,
+        hora: horaStr,
+        total: ev.totalNum,
+        pagoMetodo: 'Efectivo',
+        lineas: parsearLineasDeDetalleAuditoria(ev.detalle, ev.lineas, ev.totalNum),
+        tipoVenta: 'recuperado_auditoria',
+        recuperadoDeAuditoria: true,
+        auditId: ev.id,
+        auditDateKey: ev.dateKey || `${yyyy}-${mm}-${dd}`,
+        impreso: true,
+        impresoTs: Number(ev.ts || fechaObj.getTime()),
+        cobradoFinal: true,
+        anulado: false
+      };
+
+      try {
+        await push(ref(db, 'historial'), ventaData);
+        procesados++;
+      } catch (e) {
+        console.error(`Error al insertar ticket ${ev.id}:`, e);
+      }
+    }
+
+    const pct = Math.round(((i + 1) / ticketsAInsertar.length) * 100);
+    if (progBar) progBar.style.width = `${pct}%`;
+    if (progTxt) progTxt.textContent = `Procesando tickets: ${i + 1} de ${ticketsAInsertar.length} (${pct}%)...`;
+  }
+
+  if (progTxt) progTxt.textContent = `✅ ¡Completado! Se han procesado ${procesados} tickets correctamente.`;
+
+  setTimeout(async () => {
+    if (progBox) progBox.style.display = 'none';
+    await ejecutarAnalisisReconciliacion();
+    aplicarFiltrosVentas();
+    alert(`Se han reconciliado ${procesados} tickets por un valor de ${totalImporte.toFixed(2)} € en el historial de ventas.`);
+  }, 1000);
 }
 
 // --- INFORME COMERCIAL PARA PROPIETARIO ---
@@ -3123,20 +3774,33 @@ function mostrarDetalleTicketHistorico(tid) {
   const ts = Number(t.createdAt || t.ts || 0);
   const fechaCompleta = ts ? new Date(ts).toLocaleString('es-ES') : `${t.fecha || ""} ${t.hora || ""}`;
 
+  let bannerAnulado = "";
+  if (t.anulado) {
+    bannerAnulado = `
+      <div style="background: rgba(239,68,68,0.12); border: 1px solid #ef4444; border-radius: 8px; padding: 10px; margin-bottom: 12px; color: #b91c1c; font-size: 13px;">
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">⚠️ TICKET ANULADO / VACIADO TRAS IMPRESIÓN</div>
+        <div><strong>Motivo:</strong> ${t.anuladoMotivo || 'No especificado'}</div>
+        <div><strong>Anulado por:</strong> ${t.anuladoPor || '—'}</div>
+        ${t.anuladoTs ? `<div><strong>Fecha anulación:</strong> ${new Date(t.anuladoTs).toLocaleString('es-ES')}</div>` : ''}
+      </div>
+    `;
+  }
+
   body.innerHTML = `
+    ${bannerAnulado}
     <div style="margin-bottom: 16px; border-bottom: 1px dashed var(--border); padding-bottom: 12px; font-size: 13px; line-height: 1.5;">
       <div><strong>Mesa:</strong> ${t.mesaNombre || t.mesa || "—"}</div>
       <div><strong>Camarero:</strong> ${t.camarero || "—"}</div>
       <div><strong>Fecha/Hora:</strong> ${fechaCompleta}</div>
-      <div><strong>Método de Pago:</strong> ${t.pagoMetodo || (t.cobro ? "Efectivo" : "—")}</div>
+      <div><strong>Método de Pago:</strong> ${t.anulado ? '<span style="color:#ef4444;font-weight:600">No cobrado (Anulado)</span>' : (t.pagoMetodo || (t.cobro ? "Efectivo" : "—"))}</div>
     </div>
     <div style="margin-bottom: 16px;">
       <h4 style="font-size: 13px; color: var(--accent); margin-bottom: 8px;">Consumo:</h4>
       ${linesHtml || '<div style="color: var(--text-dim); text-align: center;">Sin artículos registrados.</div>'}
     </div>
-    <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; border-top: 2px solid var(--accent); padding-top: 10px;">
-      <span>TOTAL COBRADO:</span>
-      <span style="color: var(--accent); font-family: var(--font-code);">${Number(t.total || 0).toFixed(2)} €</span>
+    <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; border-top: 2px solid ${t.anulado ? '#ef4444' : 'var(--accent)'}; padding-top: 10px;">
+      <span>${t.anulado ? 'TOTAL ANULADO:' : 'TOTAL COBRADO:'}</span>
+      <span style="color: ${t.anulado ? '#ef4444; text-decoration: line-through;' : 'var(--accent);'} font-family: var(--font-code);">${Number(t.total || 0).toFixed(2)} €</span>
     </div>
   `;
 
@@ -3149,15 +3813,16 @@ function cerrarModalTicketDetalle() {
 
 // --- AUDITORÍA DE ACCIONES SENSIBLES ---
 const AUDIT_LABELS = {
-  articulo_agregado:   { label: 'Artículo añadido',     color: 'var(--accent)',    sensible: false },
-  articulo_eliminado:  { label: 'Artículo ELIMINADO',   color: '#f87171',          sensible: true  },
-  cantidad_editada:    { label: 'Cantidad editada',     color: '#fbbf24',          sensible: true  },
-  descuento_aplicado:  { label: 'Descuento aplicado',   color: '#fbbf24',          sensible: true  },
-  ticket_impreso:      { label: 'Ticket impreso',       color: '#60a5fa',          sensible: false },
-  ticket_cobrado:      { label: 'Mesa cobrada',         color: 'var(--accent)',    sensible: false },
-  factura_emitida:     { label: 'Factura emitida',      color: 'var(--accent)',    sensible: false },
-  mesa_cerrada:        { label: 'Mesa cerrada',         color: 'var(--text-dim)',  sensible: false },
-  mesa_transferida:    { label: 'Mesa transferida',     color: 'var(--text-dim)',  sensible: false }
+  articulo_agregado:          { label: 'Artículo añadido',         color: 'var(--accent)',    sensible: false },
+  articulo_eliminado:         { label: 'Artículo ELIMINADO',       color: '#f87171',          sensible: true  },
+  cantidad_editada:           { label: 'Cantidad editada',         color: '#fbbf24',          sensible: true  },
+  descuento_aplicado:         { label: 'Descuento aplicado',       color: '#fbbf24',          sensible: true  },
+  ticket_impreso:             { label: 'Ticket impreso',           color: '#60a5fa',          sensible: false },
+  tpv_ticket_anulado_vaciado: { label: 'Ticket ANULADO / Vaciado', color: '#ef4444',          sensible: true  },
+  ticket_cobrado:             { label: 'Mesa cobrada',             color: 'var(--accent)',    sensible: false },
+  factura_emitida:            { label: 'Factura emitida',          color: 'var(--accent)',    sensible: false },
+  mesa_cerrada:               { label: 'Mesa cerrada',             color: 'var(--text-dim)',  sensible: false },
+  mesa_transferida:           { label: 'Mesa transferida',         color: 'var(--text-dim)',  sensible: false }
 };
 
 async function checkAuditPassword() {
