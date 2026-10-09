@@ -1929,16 +1929,48 @@
         <div class="view-pane" id="pane-camareros">
           <div class="camareros-container">
             <div class="camareros-form-pane">
-              <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 10px; color: var(--accent);">Nuevo Camarero</h3>
-              <div class="form-group" style="margin-top: 10px;">
-                <label for="usr-nombre">Nombre del Camarero</label>
-                <input type="text" class="input-text" id="usr-nombre" placeholder="Ej. Juan Pérez">
+              <div style="display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px;">
+                <button type="button" class="btn" id="btn-tab-form-auth" onclick="window.cambiarFormCamarero('auth')" style="flex:1;padding:8px;font-size:12px;background:var(--accent);color:#000;font-weight:600;">Nuevo Sistema (Auth)</button>
+                <button type="button" class="btn" id="btn-tab-form-pin" onclick="window.cambiarFormCamarero('pin')" style="flex:1;padding:8px;font-size:12px;background:var(--panel-light);color:var(--text);border:1px solid var(--border);font-weight:600;">Clásico (PIN)</button>
               </div>
-              <div class="form-group">
-                <label for="usr-pin">PIN de Acceso (4 dígitos)</label>
-                <input type="text" class="input-text" id="usr-pin" placeholder="Ej. 1234" maxlength="4" style="font-family: var(--font-code);">
+
+              <!-- Formulario: Nuevo Sistema Auth / Roles -->
+              <div id="form-camarero-auth">
+                <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 10px; color: var(--accent); font-size: 15px;">Nuevo Usuario (Auth)</h3>
+                <div class="form-group" style="margin-top: 10px;">
+                  <label for="auth-usr-nombre">Nombre</label>
+                  <input type="text" class="input-text" id="auth-usr-nombre" placeholder="Ej. Juan Pérez">
+                </div>
+                <div class="form-group">
+                  <label for="auth-usr-rol">Rol</label>
+                  <select class="input-text" id="auth-usr-rol" style="background: var(--panel-light); border: 1px solid var(--border); color: var(--text); width: 100%; height: 38px; border-radius: 6px; padding: 0 10px;">
+                    <option value="camarero" selected>Camarero (Sala / Barra)</option>
+                    <option value="encargado">Encargado</option>
+                    <option value="gerente">Gerente</option>
+                    <option value="desarrollador">Desarrollador</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="auth-usr-uid">UID de Firebase Auth (Opcional)</label>
+                  <input type="text" class="input-text" id="auth-usr-uid" placeholder="UID de Auth o autogenerar" style="font-family: var(--font-code); font-size: 12px;">
+                  <span style="font-size: 11px; color: var(--text-dim); margin-top: 3px; display: block;">Si no tienes el UID aún, déjalo vacío para autogenerar.</span>
+                </div>
+                <button class="btn" onclick="window.addAuthUsuario()" style="margin-top: 10px; width: 100%;">Añadir a Auth Usuarios</button>
               </div>
-              <button class="btn" onclick="addCamarero()" style="margin-top: 10px;">Añadir Camarero</button>
+
+              <!-- Formulario: Clásico PIN -->
+              <div id="form-camarero-pin" style="display:none;">
+                <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 10px; color: var(--accent); font-size: 15px;">Nuevo Camarero (PIN)</h3>
+                <div class="form-group" style="margin-top: 10px;">
+                  <label for="usr-nombre">Nombre del Camarero</label>
+                  <input type="text" class="input-text" id="usr-nombre" placeholder="Ej. Juan Pérez">
+                </div>
+                <div class="form-group">
+                  <label for="usr-pin">PIN de Acceso (4 dígitos)</label>
+                  <input type="text" class="input-text" id="usr-pin" placeholder="Ej. 1234" maxlength="4" style="font-family: var(--font-code);">
+                </div>
+                <button class="btn" onclick="window.addCamarero()" style="margin-top: 10px; width: 100%;">Añadir Camarero (PIN)</button>
+              </div>
             </div>
             
             <div class="camareros-list-pane">

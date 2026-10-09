@@ -60,6 +60,7 @@ let historialData = {};
 let seguridadData = {};
 let localConfig = {};
 let usuariosData = {};
+let authUsuariosData = {};
 let sesionesCamarerosData = {};
 let selectedEmojisDev = [];
 const EMOJI_LIST = ['🍔', '🍺', '🍕', '🍷', '☕', '🍰', '🍦', '🍟', '🌮', '🥗'];
@@ -150,6 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.guardarPassEncargadoDev = guardarPassEncargadoDev;
   window.guardarPassAuditDev = guardarPassAuditDev;
   window.toggleCamareroActivoDev = toggleCamareroActivoDev;
+  window.toggleCamareroAuthDev = toggleCamareroAuthDev;
   window.cerrarSesionCamareroDev = cerrarSesionCamareroDev;
   window.editarEtiquetaDispositivoDev = editarEtiquetaDispositivoDev;
   window.seleccionarEmojiDev = seleccionarEmojiDev;
@@ -163,6 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Nuevas funciones expuestas
   window.addCamarero = addCamarero;
   window.deleteCamarero = deleteCamarero;
+  window.addAuthUsuario = addAuthUsuario;
+  window.deleteAuthUsuarioDev = deleteAuthUsuarioDev;
+  window.cambiarFormCamarero = cambiarFormCamarero;
   window.guardarDatosNegocio = guardarDatosNegocio;
   window.guardarAjustesTicket = guardarAjustesTicket;
   window.guardarConfigImpresoras = guardarConfigImpresoras;
@@ -407,6 +412,9 @@ async function seleccionarLocal(id) {
   ventasDataList = [];
   ventasPaginaActual = 1;
   historialData = {};
+  usuariosData = {};
+  authUsuariosData = {};
+  sesionesCamarerosData = {};
   const hoy = new Date().toISOString().split("T")[0];
   
   const vIni = document.getElementById("ventas-fecha-ini");
@@ -574,11 +582,18 @@ function suscribirseAFirebase() {
     if (tipo) tipo.value = ['info', 'warning', 'urgent'].includes(aviso.tipo) ? aviso.tipo : 'info';
   });
 
-  // 7. Escuchar Camareros
+  // 7. Escuchar Camareros (Sistema tradicional PIN y Nuevo sistema Auth)
   onValue(ref(db, "config/usuarios"), snap => {
     usuariosData = snap.val() || {};
     renderCamareros();
-    poblarCamarerosAuditoria(usuariosData);
+    poblarCamarerosAuditoria();
+    poblarExcepcionCamareroSelectorDev();
+  });
+  onValue(ref(db, "config/authUsuarios"), snap => {
+    authUsuariosData = snap.val() || {};
+    renderCamareros();
+    poblarCamarerosAuditoria();
+    poblarExcepcionCamareroSelectorDev();
   });
   onValue(ref(db, "config/sesionesCamareros"), snap => {
     sesionesCamarerosData = snap.val() || {};
@@ -2425,12 +2440,24 @@ function poblarExcepcionCamareroSelectorDev() {
   if (!select) return;
   const currentVal = seguridadData.excepcionCamarero || "";
   select.innerHTML = '<option value="">(Ninguno)</option>';
+
+  // Usuarios del nuevo sistema (Auth)
+  Object.entries(authUsuariosData || {}).forEach(([id, u]) => {
+    const rol = u.rol ? ` (${u.rol})` : '';
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = `${u.nombre || id}${rol} [Auth]`;
+    select.appendChild(option);
+  });
+
+  // Usuarios tradicionales (PIN)
   Object.entries(usuariosData || {}).forEach(([id, u]) => {
     const option = document.createElement("option");
     option.value = id;
-    option.textContent = u.nombre;
+    option.textContent = `${u.nombre} (PIN: ${u.pin}) [PIN]`;
     select.appendChild(option);
   });
+
   select.value = currentVal;
 }
 
@@ -3459,46 +3486,173 @@ async function reimprimirRegistroVerifactuAeat(uuid, etiqueta, total) {
   }
 }
 
-// --- GESTIÓN DE CAMAREROS (CRUD) ---
+// --- GESTIÓN DE CAMAREROS (CRUD: NUEVO SISTEMA AUTH Y CLÁSICO PIN) ---
+function calcularTiempoRelativo(timestamp) {
+  if (!timestamp) return "Sin accesos registrados";
+  const difMs = Date.now() - timestamp;
+  const difSegundos = Math.floor(difMs / 1000);
+  const difMinutos = Math.floor(difSegundos / 60);
+  const difHoras = Math.floor(difMinutos / 60);
+  const difDias = Math.floor(difHoras / 24);
+
+  if (difSegundos < 60) return "Hace un momento";
+  if (difMinutos < 60) return `Hace ${difMinutos} min`;
+  if (difHoras < 24) {
+    const minsRestantes = difMinutos % 60;
+    if (minsRestantes === 0) return `Hace ${difHoras} h`;
+    return `Hace ${difHoras} h ${minsRestantes} min`;
+  }
+  return `Hace ${difDias} día${difDias > 1 ? 's' : ''}`;
+}
+
+function cambiarFormCamarero(tipo) {
+  const fAuth = document.getElementById('form-camarero-auth');
+  const fPin = document.getElementById('form-camarero-pin');
+  const bAuth = document.getElementById('btn-tab-form-auth');
+  const bPin = document.getElementById('btn-tab-form-pin');
+  if (tipo === 'pin') {
+    if (fAuth) fAuth.style.display = 'none';
+    if (fPin) fPin.style.display = 'block';
+    if (bAuth) { bAuth.style.background = 'var(--panel-light)'; bAuth.style.color = 'var(--text)'; bAuth.style.border = '1px solid var(--border)'; }
+    if (bPin) { bPin.style.background = 'var(--accent)'; bPin.style.color = '#000'; bPin.style.border = 'none'; }
+  } else {
+    if (fAuth) fAuth.style.display = 'block';
+    if (fPin) fPin.style.display = 'none';
+    if (bAuth) { bAuth.style.background = 'var(--accent)'; bAuth.style.color = '#000'; bAuth.style.border = 'none'; }
+    if (bPin) { bPin.style.background = 'var(--panel-light)'; bPin.style.color = 'var(--text)'; bPin.style.border = '1px solid var(--border)'; }
+  }
+}
+
 function renderCamareros() {
   const lista = document.getElementById("usuarios-lista");
   if (!lista) return;
 
-  const entries = Object.entries(usuariosData || {});
-  if (entries.length === 0) {
-    lista.innerHTML = `<p style="font-size:13px;color:var(--text-dim);text-align:center;padding:20px;">Sin camareros registrados. Añade uno a la izquierda.</p>`;
+  const authEntries = Object.entries(authUsuariosData || {});
+  const pinEntries = Object.entries(usuariosData || {});
+
+  if (authEntries.length === 0 && pinEntries.length === 0) {
+    lista.innerHTML = `<p style="font-size:13px;color:var(--text-dim);text-align:center;padding:25px;">Sin camareros registrados en ningún sistema. Añade uno en el panel izquierdo.</p>`;
     return;
   }
 
-  lista.innerHTML = "";
-  entries.forEach(([id, u]) => {
-    const card = document.createElement("div");
-    card.className = "camarero-card";
-    const isActive = u.activo !== false;
-    const sesion = sesionesCamarerosData[id];
-    const sesionActiva = Boolean(sesion?.sessionId);
-    const presencia = sesion?.estado === 'desconectado'
-      ? 'DESCONECTADO'
-      : (sesion?.estado === 'segundo_plano' ? 'EN SEGUNDO PLANO' : 'EN USO');
-    const ultimaActividad = sesion?.ultimaActividad ? new Date(sesion.ultimaActividad).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
-    const dispositivo = escapeHtml(sesion?.deviceLabel || 'Sin etiqueta');
-    card.innerHTML = `
-      <div class="camarero-card-info">
-        <span class="camarero-card-name">${u.nombre}</span>
-        <span class="camarero-card-pin">PIN: ${u.pin}</span>
-        <span style="font-size:11px;color:${sesionActiva ? (sesion?.estado === 'desconectado' ? '#f59e0b' : '#22c55e') : 'var(--text-dim)'};font-weight:700;">${sesionActiva ? `● ${presencia} · ${dispositivo}${ultimaActividad ? ` · ${ultimaActividad}` : ''}` : '○ SIN SESIÓN'}</span>
+  // Ordenar alfabéticamente
+  authEntries.sort(([, a], [, b]) => (a.nombre || '').localeCompare(b.nombre || '', 'es'));
+  pinEntries.sort(([, a], [, b]) => (a.nombre || '').localeCompare(b.nombre || '', 'es'));
+
+  let html = '';
+
+  // 1. SECCIÓN: NUEVO SISTEMA (AUTH / ROLES)
+  html += `
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <strong style="font-size:13px;color:var(--accent);">Nuevo Sistema (Auth / Roles)</strong>
+        <span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(59,130,246,0.15);color:#3b82f6;font-weight:700;">FIREBASE AUTH</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <label class="switch" style="transform: scale(0.85); margin: 0; display: inline-block;">
-          <input type="checkbox" ${isActive ? "checked" : ""} onchange="window.toggleCamareroActivoDev('${id}', this.checked)">
-          <span class="slider"></span>
-        </label>
-        ${sesionActiva ? `<button class="btn-icon" onclick="editarEtiquetaDispositivoDev('${id}')" title="Renombrar dispositivo">✎</button><button class="btn-icon" onclick="cerrarSesionCamareroDev('${id}')" title="Cerrar sesión remota">⏏</button>` : ''}
-        <button class="btn-icon delete" onclick="deleteCamarero('${id}')" title="Eliminar Camarero">🗑️</button>
+      <span style="font-size:11px;color:var(--text-dim);">${authEntries.length} registrados</span>
+    </div>
+  `;
+
+  if (authEntries.length === 0) {
+    html += `<div style="font-size:12px;color:var(--text-dim);padding:8px 12px;font-style:italic;background:var(--panel-light);border:1px dashed var(--border);border-radius:8px;margin-bottom:12px;">No hay camareros en el nuevo sistema de autenticación.</div>`;
+  } else {
+    html += `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">`;
+    authEntries.forEach(([id, u]) => {
+      const isActive = u.activo !== false;
+      const sesion = sesionesCamarerosData[id];
+      const sesionActiva = Boolean(sesion?.sessionId);
+      const presencia = sesion?.estado === 'desconectado'
+        ? 'DESCONECTADO'
+        : (sesion?.estado === 'segundo_plano' ? 'EN SEGUNDO PLANO' : 'EN USO');
+      const ultimaActividad = sesion?.ultimaActividad ? new Date(sesion.ultimaActividad).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
+      const dispositivo = escapeHtml(sesion?.deviceLabel || 'Sin etiqueta');
+      const tiempoRelativo = calcularTiempoRelativo(u.ultimoLogin);
+      const rolLabel = String(u.rol || 'camarero').toUpperCase();
+
+      html += `
+        <div class="camarero-card">
+          <div class="camarero-card-info" style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="camarero-card-name">${escapeHtml(u.nombre || 'Sin nombre')}</span>
+              <span style="font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;background:rgba(59,130,246,0.15);color:#3b82f6;">${escapeHtml(rolLabel)}</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span>🕒 ${tiempoRelativo}</span>
+            </div>
+            <div style="font-size:11px;color:${sesionActiva ? (sesion?.estado === 'desconectado' ? '#f59e0b' : '#22c55e') : 'var(--text-dim)'};font-weight:700;margin-top:2px;">
+              ${sesionActiva ? `● ${presencia} · ${dispositivo}${ultimaActividad ? ` · ${ultimaActividad}` : ''}` : '○ SIN SESIÓN'}
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+            <span style="font-size: 11px; color: ${isActive ? "var(--success, #22c55e)" : "var(--danger, #ef4444)"}; font-weight: 700; min-width: 55px; text-align: right;">
+              ${isActive ? "ACTIVO" : "INACTIVO"}
+            </span>
+            <label class="switch" style="transform: scale(0.85); margin: 0; display: inline-block;">
+              <input type="checkbox" ${isActive ? "checked" : ""} onchange="window.toggleCamareroAuthDev('${id}', this.checked)">
+              <span class="slider"></span>
+            </label>
+            ${sesionActiva ? `<button class="btn-icon" onclick="editarEtiquetaDispositivoDev('${id}')" title="Renombrar dispositivo">✎</button><button class="btn-icon" onclick="cerrarSesionCamareroDev('${id}')" title="Cerrar sesión remota">⏏</button>` : ''}
+            <button class="btn-icon delete" onclick="deleteAuthUsuarioDev('${id}')" title="Eliminar Usuario Auth">🗑️</button>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  // 2. SECCIÓN: SISTEMA TRADICIONAL (PIN Y QR)
+  html += `
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-top:14px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <strong style="font-size:13px;color:var(--text);">Sistema Tradicional (PIN y QR)</strong>
+        <span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(234,179,8,0.15);color:#eab308;font-weight:700;">PIN</span>
       </div>
-    `;
-    lista.appendChild(card);
-  });
+      <span style="font-size:11px;color:var(--text-dim);">${pinEntries.length} registrados</span>
+    </div>
+  `;
+
+  if (pinEntries.length === 0) {
+    html += `<div style="font-size:12px;color:var(--text-dim);padding:8px 12px;font-style:italic;background:var(--panel-light);border:1px dashed var(--border);border-radius:8px;">No hay camareros con acceso por PIN.</div>`;
+  } else {
+    html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
+    pinEntries.forEach(([id, u]) => {
+      const isActive = u.activo !== false;
+      const sesion = sesionesCamarerosData[id];
+      const sesionActiva = Boolean(sesion?.sessionId);
+      const presencia = sesion?.estado === 'desconectado'
+        ? 'DESCONECTADO'
+        : (sesion?.estado === 'segundo_plano' ? 'EN SEGUNDO PLANO' : 'EN USO');
+      const ultimaActividad = sesion?.ultimaActividad ? new Date(sesion.ultimaActividad).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
+      const dispositivo = escapeHtml(sesion?.deviceLabel || 'Sin etiqueta');
+
+      html += `
+        <div class="camarero-card">
+          <div class="camarero-card-info" style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="camarero-card-name">${escapeHtml(u.nombre || 'Sin nombre')}</span>
+              <span class="camarero-card-pin">PIN: ${escapeHtml(u.pin || '----')}</span>
+            </div>
+            <div style="font-size:11px;color:${sesionActiva ? (sesion?.estado === 'desconectado' ? '#f59e0b' : '#22c55e') : 'var(--text-dim)'};font-weight:700;margin-top:2px;">
+              ${sesionActiva ? `● ${presencia} · ${dispositivo}${ultimaActividad ? ` · ${ultimaActividad}` : ''}` : '○ SIN SESIÓN'}
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+            <span style="font-size: 11px; color: ${isActive ? "var(--success, #22c55e)" : "var(--danger, #ef4444)"}; font-weight: 700; min-width: 55px; text-align: right;">
+              ${isActive ? "ACTIVO" : "INACTIVO"}
+            </span>
+            <label class="switch" style="transform: scale(0.85); margin: 0; display: inline-block;">
+              <input type="checkbox" ${isActive ? "checked" : ""} onchange="window.toggleCamareroActivoDev('${id}', this.checked)">
+              <span class="slider"></span>
+            </label>
+            ${sesionActiva ? `<button class="btn-icon" onclick="editarEtiquetaDispositivoDev('${id}')" title="Renombrar dispositivo">✎</button><button class="btn-icon" onclick="cerrarSesionCamareroDev('${id}')" title="Cerrar sesión remota">⏏</button>` : ''}
+            <button class="btn-icon delete" onclick="deleteCamarero('${id}')" title="Eliminar Camarero">🗑️</button>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  lista.innerHTML = html;
 }
 
 async function toggleCamareroActivoDev(id, activo) {
@@ -3506,15 +3660,27 @@ async function toggleCamareroActivoDev(id, activo) {
   try {
     await update(ref(db, `config/usuarios/${id}`), { activo });
     if (!activo) await remove(ref(db, `config/sesionesCamareros/${id}`));
-    console.log(`Estado activo del camarero ${id} actualizado a:`, activo);
+    console.log(`Estado activo del camarero PIN ${id} actualizado a:`, activo);
   } catch (error) {
+    alert("Error al actualizar el estado del camarero.");
+  }
+}
+
+async function toggleCamareroAuthDev(id, activo) {
+  if (!db) return;
+  try {
+    await update(ref(db, `config/authUsuarios/${id}`), { activo });
+    if (!activo) await remove(ref(db, `config/sesionesCamareros/${id}`));
+    console.log(`Estado activo del camarero auth ${id} actualizado a:`, activo);
+  } catch (error) {
+    console.error("Error al actualizar estado auth:", error);
     alert("Error al actualizar el estado del camarero.");
   }
 }
 
 async function cerrarSesionCamareroDev(id) {
   if (!db) return;
-  const camarero = usuariosData[id]?.nombre || 'este camarero';
+  const camarero = authUsuariosData[id]?.nombre || usuariosData[id]?.nombre || 'este camarero';
   const ok = await showCustomConfirm('Cerrar sesión', `¿Cerrar remotamente la sesión de ${camarero}?`);
   if (!ok) return;
   try {
@@ -3561,11 +3727,41 @@ async function addCamarero() {
   }
 
   try {
-    await push(ref(db, "config/usuarios"), { nombre, pin });
+    await push(ref(db, "config/usuarios"), { nombre, pin, activo: true });
     document.getElementById("usr-nombre").value = "";
     document.getElementById("usr-pin").value = "";
-    alert("Camarero añadido con éxito.");
+    alert("Camarero (PIN) añadido con éxito.");
   } catch (err) {
+    alert("Error al guardar en Firebase.");
+  }
+}
+
+async function addAuthUsuario() {
+  if (!db) return;
+  const nombre = (document.getElementById("auth-usr-nombre")?.value || "").trim();
+  const rol = (document.getElementById("auth-usr-rol")?.value || "camarero").trim();
+  let uid = (document.getElementById("auth-usr-uid")?.value || "").trim();
+
+  if (!nombre) {
+    alert("Introduce el nombre del usuario.");
+    return;
+  }
+  if (!uid) {
+    uid = 'usr_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+  }
+
+  try {
+    await set(ref(db, `config/authUsuarios/${uid}`), {
+      nombre,
+      rol,
+      activo: true,
+      creadoEn: Date.now()
+    });
+    if (document.getElementById("auth-usr-nombre")) document.getElementById("auth-usr-nombre").value = "";
+    if (document.getElementById("auth-usr-uid")) document.getElementById("auth-usr-uid").value = "";
+    alert(`Usuario ${nombre} (${rol}) añadido con éxito al nuevo sistema.`);
+  } catch (err) {
+    console.error("Error al añadir usuario auth:", err);
     alert("Error al guardar en Firebase.");
   }
 }
@@ -3577,8 +3773,23 @@ async function deleteCamarero(id) {
 
   try {
     await remove(ref(db, `config/usuarios/${id}`));
+    await remove(ref(db, `config/sesionesCamareros/${id}`)).catch(() => {});
   } catch (err) {
     await showCustomAlert("Camareros", "Error al eliminar camarero.");
+  }
+}
+
+async function deleteAuthUsuarioDev(id) {
+  if (!db) return;
+  const usuario = authUsuariosData[id]?.nombre || 'este usuario';
+  const ok = await showCustomConfirm("Usuarios Auth", `¿Estás seguro de que quieres eliminar a ${usuario} del nuevo sistema?`);
+  if (!ok) return;
+
+  try {
+    await remove(ref(db, `config/authUsuarios/${id}`));
+    await remove(ref(db, `config/sesionesCamareros/${id}`)).catch(() => {});
+  } catch (err) {
+    await showCustomAlert("Usuarios Auth", "Error al eliminar usuario.");
   }
 }
 
@@ -3900,20 +4111,23 @@ function desbloquearAuditoria() {
 }
 
 function poblarCamarerosAuditoria(usuarios) {
-  auditUsuarios = usuarios || {};
+  if (usuarios) auditUsuarios = usuarios;
   const select = document.getElementById("audit-camarero");
   if (!select) return;
   
   const valActual = select.value;
-  const nombres = Object.values(auditUsuarios)
-    .map(u => u && u.nombre ? String(u.nombre) : null)
-    .filter(Boolean)
-    .sort((a,b) => a.localeCompare(b, 'es'));
+  const setNombres = new Set();
+  Object.values(usuariosData || {}).forEach(u => { if (u?.nombre) setNombres.add(String(u.nombre)); });
+  Object.values(authUsuariosData || {}).forEach(u => { if (u?.nombre) setNombres.add(String(u.nombre)); });
+  if (usuarios) {
+    Object.values(usuarios).forEach(u => { if (u?.nombre) setNombres.add(String(u.nombre)); });
+  }
+  const nombres = Array.from(setNombres).sort((a,b) => a.localeCompare(b, 'es'));
 
   select.innerHTML = `<option value="">— Todos —</option>` +
-    nombres.map(n => `<option value="${n}">${n}</option>`).join("");
+    nombres.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
   
-  if (valActual && nombres.includes(valActual)) select.value = valActual;
+  if (valActual && setNombres.has(valActual)) select.value = valActual;
 }
 
 async function leerEventosAuditoriaRango(fechaIni, fechaFin) {
