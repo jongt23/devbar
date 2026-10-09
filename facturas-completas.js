@@ -18,6 +18,21 @@ function fechaEnRango(factura, desde, hasta) {
   return (!desde || ts >= desde) && (!hasta || ts <= hasta);
 }
 
+function normalizarLineaArticulo(l) {
+  const nombre = escapeHtml(l.nombre || l.articulo || l.concepto || l.descripcion || 'Artículo');
+  const cant = Number(l.qty ?? l.qtyCuenta ?? l.cantidad ?? 1);
+  const precioUnit = Number(l.precio || l.precioUnitario || 0);
+  const totalLinea = Math.round((Number(l.total ?? (cant * precioUnit))) * 100) / 100;
+  const nota = l.nota ? `<div class="muted" style="font-size:11px">${escapeHtml(l.nota)}</div>` : '';
+  return {
+    nombre,
+    cant,
+    precioUnit,
+    totalLinea,
+    nota
+  };
+}
+
 function plantillaFactura(factura, local) {
   const destinatario = factura.destinatario || {};
   const lineasIva = Array.isArray(factura.lineasIva) ? factura.lineasIva : [];
@@ -25,6 +40,34 @@ function plantillaFactura(factura, local) {
   const qr = factura.qr
     ? `<img class="qr" src="data:image/png;base64,${escapeHtml(factura.qr)}" alt="Código QR de verificación">`
     : '';
+
+  const lineasArticulos = Array.isArray(factura.lineas) && factura.lineas.length
+    ? factura.lineas.map(normalizarLineaArticulo)
+    : null;
+
+  let filasConceptos = '';
+  if (lineasArticulos && lineasArticulos.length > 0) {
+    filasConceptos = lineasArticulos.map(l => `
+      <tr>
+        <td>${l.nombre}${l.nota}</td>
+        <td>${l.cant}</td>
+        <td>${fmtEu(l.precioUnit)}</td>
+        <td>${fmtEu(l.totalLinea)}</td>
+      </tr>`).join('');
+  } else {
+    const baseTotal = lineasIva.length
+      ? lineasIva.reduce((sum, li) => sum + Number(li.base_imponible || 0), 0)
+      : Math.round((Number(factura.total || 0) / 1.10) * 100) / 100;
+    const desc = escapeHtml(factura.descripcion || 'Servicio de hostelería / Consumición en local');
+    filasConceptos = `
+      <tr>
+        <td>${desc}</td>
+        <td>1</td>
+        <td>${fmtEu(factura.total || baseTotal)}</td>
+        <td>${fmtEu(factura.total || baseTotal)}</td>
+      </tr>`;
+  }
+
   const filasIva = lineasIva.map(linea => `
     <tr>
       <td>IVA ${escapeHtml(linea.tipo_impositivo || 0)}%</td>
@@ -35,7 +78,8 @@ function plantillaFactura(factura, local) {
   return `<main class="invoice"><header><div><div class="title">FACTURA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>${escapeHtml(empresa.direccion || '')}<br>${empresa.cif ? `CIF/NIF: ${escapeHtml(empresa.cif)}` : ''}</div></div>
     <div style="text-align:right"><strong>N.º ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}</strong><br><span class="muted">Fecha: ${escapeHtml(factura.fecha || '')}<br>Tipo: ${escapeHtml(factura.tipo || '')}</span></div></header>
     <section class="block"><div class="label">Destinatario</div><div class="recipient"><strong>${escapeHtml(destinatario.nombre || '—')}</strong><br><span class="muted">NIF/CIF: ${escapeHtml(destinatario.nif || '—')}<br>${escapeHtml(destinatario.direccion || '')}</span></div></section>
-    <section class="block"><div class="label">Desglose de impuestos</div><table><thead><tr><th>Concepto</th><th>Base imponible</th><th>Cuota IVA</th></tr></thead><tbody>${filasIva}</tbody></table><div class="total"><span>Total</span><span>${fmtEu(factura.total)}</span></div></section>
+    <section class="block"><div class="label">Detalle de conceptos</div><table><thead><tr><th>Concepto / Artículo</th><th>Cant.</th><th>Precio</th><th>Importe</th></tr></thead><tbody>${filasConceptos}</tbody></table></section>
+    <section class="block"><div class="label">Desglose de impuestos</div><table><thead><tr><th>Tipo IVA</th><th>Base imponible</th><th>Cuota IVA</th></tr></thead><tbody>${filasIva}</tbody></table><div class="total"><span>Total</span><span>${fmtEu(factura.total)}</span></div></section>
     ${qr || factura.uuid ? `<section class="verification">${qr}<div class="muted">${factura.uuid ? `<strong>Identificador de verificación:</strong> ${escapeHtml(factura.uuid)}` : ''}</div></section>` : ''}
     </main>`;
 }
@@ -212,6 +256,14 @@ export async function cargarOperacionesFiscales(db, desde, hasta) {
 
     if (factura) {
       factura.asignada = true; // Consumida: nunca se repetirá en otro ticket
+      if ((!factura.lineas || !factura.lineas.length) && Array.isArray(ticket.lineas) && ticket.lineas.length) {
+        factura.lineas = ticket.lineas.map(l => ({
+          nombre: l.nombre || l.articulo || l.concepto || 'Artículo',
+          qty: Number(l.qty ?? l.qtyCuenta ?? l.cantidad ?? 1),
+          precio: Number(l.precio || 0),
+          nota: l.nota || ''
+        }));
+      }
     }
 
     operaciones.push({
@@ -298,6 +350,78 @@ async function generarPdfGestoria({ getDb, resultado }) {
   }
 }
 
+export function vincularLineasAFacturas(facturas, ticketsRaw) {
+  if (!Array.isArray(facturas) || !ticketsRaw) return;
+  const tickets = Object.entries(ticketsRaw).map(([id, t]) => ({ id, ...t }));
+  const ticketsDisponibles = tickets.slice();
+
+  for (const f of facturas) {
+    if (Array.isArray(f.lineas) && f.lineas.length > 0) continue;
+
+    let matchedTicket = null;
+
+    // 1. Por fbKey
+    if (f.fbKey) {
+      matchedTicket = ticketsDisponibles.find(t => t.verifactu?.fbKey === f.fbKey);
+    }
+
+    // 2. Por Serie y Número exactos
+    if (!matchedTicket && f.serie && f.numero !== undefined && f.numero !== null) {
+      matchedTicket = ticketsDisponibles.find(t =>
+        t.verifactu?.serie === f.serie && String(t.verifactu?.numero) === String(f.numero)
+      );
+    }
+
+    // 3. Por UUID
+    if (!matchedTicket && f.uuid) {
+      matchedTicket = ticketsDisponibles.find(t => t.verifactu?.uuid === f.uuid);
+    }
+
+    // 4. Por mismo día e importe exacto (tolerancia 2 céntimos)
+    if (!matchedTicket) {
+      const diaF = normalizarFechaADia(f.fecha || f.ts);
+      const totalF = Math.round(Number(f.total || 0) * 100) / 100;
+      const mesaF = String(f.mesa || '').trim().toLowerCase();
+
+      if (diaF && totalF > 0) {
+        const candidatas = ticketsDisponibles.filter(t => {
+          const diaT = normalizarFechaADia(t.fecha || t.ts);
+          const totalT = Math.round(Number(t.total || 0) * 100) / 100;
+          return diaT === diaF && Math.abs(totalT - totalF) < 0.02;
+        });
+
+        if (candidatas.length === 1) {
+          matchedTicket = candidatas[0];
+        } else if (candidatas.length > 1 && mesaF) {
+          const porMesa = candidatas.filter(t => String(t.mesa || t.mesaNombre || '').trim().toLowerCase() === mesaF);
+          if (porMesa.length === 1) {
+            matchedTicket = porMesa[0];
+          } else {
+            const tsF = Number(f.ts || fechaFacturaTs(f));
+            candidatas.sort((a, b) => Math.abs((a.ts || fechaVentaTs(a)) - tsF) - Math.abs((b.ts || fechaVentaTs(b)) - tsF));
+            matchedTicket = candidatas[0];
+          }
+        } else if (candidatas.length > 1) {
+          const tsF = Number(f.ts || fechaFacturaTs(f));
+          candidatas.sort((a, b) => Math.abs((a.ts || fechaVentaTs(a)) - tsF) - Math.abs((b.ts || fechaVentaTs(b)) - tsF));
+          matchedTicket = candidatas[0];
+        }
+      }
+    }
+
+    if (matchedTicket && Array.isArray(matchedTicket.lineas) && matchedTicket.lineas.length > 0) {
+      f.lineas = matchedTicket.lineas.map(l => ({
+        nombre: l.nombre || l.articulo || l.concepto || 'Artículo',
+        qty: Number(l.qty ?? l.qtyCuenta ?? l.cantidad ?? 1),
+        precio: Number(l.precio || 0),
+        nota: l.nota || ''
+      }));
+      const idx = ticketsDisponibles.indexOf(matchedTicket);
+      if (idx !== -1) ticketsDisponibles.splice(idx, 1);
+    }
+  }
+}
+
 export function montarConsultaFacturas({ getDb, elementId }) {
   const host = document.getElementById(elementId);
   if (!host || host.dataset.facturasMontadas === '1') return;
@@ -319,19 +443,40 @@ export function montarConsultaFacturas({ getDb, elementId }) {
     if (!db) { resultado.textContent = 'Selecciona primero un local.'; return; }
     resultado.textContent = 'Cargando facturas…';
     try {
-      const [facturasSnap, localSnap] = await Promise.all([
-        get(ref(db, 'verifactu/facturas')),
-        get(ref(db, 'config/local'))
-      ]);
       const desdeInput = document.getElementById('venta-desde') || document.getElementById('ventas-fecha-ini');
       const hastaInput = document.getElementById('venta-hasta') || document.getElementById('ventas-fecha-fin');
       const desde = desdeInput?.value ? new Date(`${desdeInput.value}T00:00:00`).getTime() : 0;
       const hasta = hastaInput?.value ? new Date(`${hastaInput.value}T23:59:59.999`).getTime() : 0;
+
+      let historialSnap = null;
+      try {
+        if (desde && hasta) {
+          historialSnap = await get(query(ref(db, 'historial'), orderByChild('ts'), startAt(desde - 172800000), endAt(hasta + 172800000)));
+        } else {
+          historialSnap = await get(ref(db, 'historial'));
+        }
+      } catch (_) {
+        try {
+          historialSnap = await get(ref(db, 'historial'));
+        } catch (e) {
+          console.warn('No se pudo cargar historial para vincular líneas:', e);
+        }
+      }
+
+      const [facturasSnap, localSnap] = await Promise.all([
+        get(ref(db, 'verifactu/facturas')),
+        get(ref(db, 'config/local'))
+      ]);
+
       const local = localSnap.val() || {};
-      const facturas = Object.values(facturasSnap.val() || {})
+      const facturasDict = facturasSnap.val() || {};
+      const facturas = Object.entries(facturasDict).map(([fbKey, f]) => ({ fbKey, ...f }))
         .filter(esFacturaCompleta)
         .filter(factura => fechaEnRango(factura, desde, hasta))
         .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
+
+      const ticketsObj = historialSnap?.val?.() || {};
+      vincularLineasAFacturas(facturas, ticketsObj);
 
       if (!facturas.length) { resultado.textContent = 'No hay facturas completas en el período seleccionado.'; return; }
       resultado.innerHTML = `
