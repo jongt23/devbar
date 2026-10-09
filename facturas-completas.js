@@ -100,6 +100,7 @@ function abrirDocumento(titulo, contenido) {
       header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #182033;padding-bottom:14px}.title{font-size:25px;font-weight:800}.muted{color:#5e687b;font-size:12px;line-height:1.5}
       .block{margin-top:20px}.recipient{border:1px solid #d8dde7;padding:12px;border-radius:8px;max-width:310px}.label{font-size:11px;text-transform:uppercase;color:#5e687b;font-weight:700;letter-spacing:.04em}
       table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:10px;border-bottom:1px solid #d8dde7;text-align:left}th{background:#f3f5f8;font-size:12px}td:nth-child(n+2),th:nth-child(n+2){text-align:right}
+      table.tabla-gestoria td:nth-child(2),table.tabla-gestoria th:nth-child(2){text-align:left!important}
       .total{margin-top:18px;margin-left:auto;width:260px;display:flex;justify-content:space-between;border-top:2px solid #182033;padding:12px 0;font-size:20px;font-weight:800}.qr{width:110px;height:110px}.verification{margin-top:26px;display:flex;align-items:center;gap:16px;border-top:1px solid #d8dde7;padding-top:16px}
       @media print{body{background:#fff}.bar{display:none}.invoice{box-shadow:none;margin:0;width:auto;min-height:0;padding:0;break-after:page;page-break-after:always}.invoice:last-child{break-after:auto;page-break-after:auto}}
     </style></head><body><div class="bar"><button onclick="window.print()">Imprimir / Guardar como PDF</button></div>
@@ -302,7 +303,17 @@ export async function cargarOperacionesFiscales(db, desde, hasta) {
   };
 }
 
-function plantillaInformeGestoria({ operaciones, local, desdeTexto, hastaTexto, ventas, facturasPorClave }) {
+function formatFechaEspFC(dateStr) {
+  if (!dateStr || dateStr === 'Desconocida') return dateStr || '—';
+  const s = String(dateStr).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return s;
+}
+
+function plantillaInformeGestoria({ operaciones, local, desdeTexto, hastaTexto, ventas, facturasPorClave, unificarTickets = true }) {
   const ops = Array.isArray(operaciones) && operaciones.length
     ? operaciones
     : (Array.isArray(ventas) ? ventas.map(v => ({ ticket: v, factura: resolverFacturaVenta(v, facturasPorClave) })) : []);
@@ -310,22 +321,67 @@ function plantillaInformeGestoria({ operaciones, local, desdeTexto, hastaTexto, 
   // Asegurar orden cronológico ascendente (de más antiguo a más reciente)
   ops.sort((a, b) => (a.ts || fechaVentaTs(a.ticket)) - (b.ts || fechaVentaTs(b.ticket)));
 
-  const filas = ops.map(({ ticket, factura }) => {
-    const documento = factura
-      ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')} · ${escapeHtml(factura.destinatario?.nombre || factura.tipo || '')}`
-      : `Ticket · ${escapeHtml(ticket.mesa || ticket.mesaNombre || '—')}`;
-    const fecha = ticket.fecha || (ticket.ts ? new Date(ticket.ts).toLocaleDateString('es-ES') : '—');
-    return `<tr><td>${escapeHtml(fecha)}</td><td>${documento}</td><td>${fmtEu(ticket.total)}</td></tr>`;
-  }).join('');
+  let filas = '';
+  if (unificarTickets) {
+    const mapaDias = {};
+    ops.forEach(op => {
+      const diaKey = normalizarFechaADia(op.ticket?.fecha || op.factura?.fecha || op.ts || fechaVentaTs(op.ticket)) || 'Desconocida';
+      if (!mapaDias[diaKey]) mapaDias[diaKey] = { diaKey, tickets: [], facturas: [] };
+      if (op.factura) {
+        mapaDias[diaKey].facturas.push(op);
+      } else {
+        mapaDias[diaKey].tickets.push(op);
+      }
+    });
 
-  const total = ops.reduce((suma, op) => suma + Number(op.ticket?.total || 0), 0);
+    const diasOrdenados = Object.keys(mapaDias).sort();
+    filas = diasOrdenados.map(diaKey => {
+      const info = mapaDias[diaKey];
+      const fechaFmt = formatFechaEspFC(diaKey);
+      let htmlDia = '';
+
+      if (info.tickets.length > 0) {
+        const totalTickets = info.tickets.reduce((s, op) => s + Number(op.ticket?.total || 0), 0);
+        htmlDia += `
+          <tr style="background:#f9fafb;">
+            <td><strong>${escapeHtml(fechaFmt)}</strong></td>
+            <td>Tickets de venta (${info.tickets.length} operaciones)</td>
+            <td style="text-align:right;"><strong>${fmtEu(totalTickets)}</strong></td>
+          </tr>`;
+      }
+
+      if (info.facturas.length > 0) {
+        info.facturas.forEach(({ ticket, factura }) => {
+          const doc = `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')} · ${escapeHtml(factura.destinatario?.nombre || factura.tipo || '')}${factura.destinatario?.nif ? ` (${escapeHtml(factura.destinatario.nif)})` : ''}`;
+          htmlDia += `
+            <tr>
+              <td>${escapeHtml(fechaFmt)}</td>
+              <td><strong style="color:#2563eb;">${doc}</strong></td>
+              <td style="text-align:right; font-weight:700;">${fmtEu(ticket?.total || factura.totalNum || 0)}</td>
+            </tr>`;
+        });
+      }
+      return htmlDia;
+    }).join('');
+  } else {
+    filas = ops.map(({ ticket, factura }) => {
+      const documento = factura
+        ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')} · ${escapeHtml(factura.destinatario?.nombre || factura.tipo || '')}`
+        : `Ticket · ${escapeHtml(ticket.mesa || ticket.mesaNombre || '—')}`;
+      const fecha = ticket.fecha || (ticket.ts ? new Date(ticket.ts).toLocaleDateString('es-ES') : '—');
+      return `<tr><td>${escapeHtml(fecha)}</td><td>${documento}</td><td style="text-align:right;">${fmtEu(ticket.total)}</td></tr>`;
+    }).join('');
+  }
+
+  const total = ops.reduce((suma, op) => suma + Number(op.ticket?.total || op.factura?.totalNum || 0), 0);
   const facturadas = ops.filter(op => Boolean(op.factura));
+  const ticketsCount = ops.length - facturadas.length;
   const empresa = local?.datosNegocio || local || {};
   return `
     <main class="invoice"><header><div><div class="title">INFORME PARA GESTORÍA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>Período: ${escapeHtml(desdeTexto || 'Inicio')} — ${escapeHtml(hastaTexto || 'Fin')}</div></div>
-    <div style="text-align:right"><strong>${ops.length} operaciones</strong><br><span class="muted">${facturadas.length} facturadas · ${ops.length - facturadas.length} tickets</span></div></header>
-    <section class="block"><div class="label">Relación única de operaciones</div><div class="muted" style="margin-top:6px">Las ventas con factura se muestran por su número de factura; no se duplican como ticket.</div>
-    <table><thead><tr><th>Fecha</th><th>Documento</th><th>Total</th></tr></thead><tbody>${filas || '<tr><td colspan="3">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>`;
+    <div style="text-align:right"><strong>${ops.length} operaciones</strong><br><span class="muted">${facturadas.length} facturadas · ${ticketsCount} tickets ${unificarTickets ? '(unificados por día)' : ''}</span></div></header>
+    <section class="block"><div class="label">Relación única de operaciones ${unificarTickets ? '(Tickets agrupados por día)' : ''}</div><div class="muted" style="margin-top:6px">${unificarTickets ? 'Tickets de venta ordinarios agrupados en asiento resumen por día. Las facturas completas se detallan individualmente con su destinatario.' : 'Las ventas con factura se muestran por su número de factura; no se duplican como ticket.'}</div>
+    <table class="tabla-gestoria"><thead><tr><th>Fecha</th><th class="col-doc">Documento</th><th style="text-align:right;">Total</th></tr></thead><tbody>${filas || '<tr><td colspan="3">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>`;
 }
 
 async function generarPdfGestoria({ getDb, resultado }) {
@@ -341,7 +397,27 @@ async function generarPdfGestoria({ getDb, resultado }) {
       cargarOperacionesFiscales(db, desde, hasta), get(ref(db, 'config/local'))
     ]);
     if (!operaciones.length) { resultado.textContent = 'No hay ventas en el período seleccionado.'; return; }
-    const contenido = plantillaInformeGestoria({ operaciones, facturasPorClave, local: localSnap.val() || {}, desdeTexto: desdeInput?.value, hastaTexto: hastaInput?.value });
+
+    let unificarTickets = true;
+    if (typeof window.showCustomConfirm === 'function') {
+      unificarTickets = await window.showCustomConfirm(
+        '📄 PDF Gestoría Consolidado',
+        '¿Cómo deseas mostrar los tickets en el informe?\n\n• Aceptar: UNIFICAR tickets por día (Recomendado: 1 fila por día con la suma de tickets + facturas nominativas desglosadas)\n• Cancelar: DETALLAR cada ticket individualmente (como hasta ahora)'
+      );
+    } else if (typeof window.confirm === 'function') {
+      unificarTickets = window.confirm(
+        '¿Deseas unificar los tickets por día en el informe para la gestoría?\n\nAceptar: Sí, agrupar tickets por día (resumen diario + facturas)\nCancelar: No, detallar cada ticket individualmente'
+      );
+    }
+
+    const contenido = plantillaInformeGestoria({
+      operaciones,
+      facturasPorClave,
+      local: localSnap.val() || {},
+      desdeTexto: desdeInput?.value,
+      hastaTexto: hastaInput?.value,
+      unificarTickets: unificarTickets === true
+    });
     abrirDocumento(`Gestoría ${desdeInput?.value || ''} ${hastaInput?.value || ''}`, contenido);
     resultado.textContent = 'PDF consolidado abierto en una nueva pestaña.';
   } catch (error) {

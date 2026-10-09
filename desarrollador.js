@@ -2421,7 +2421,7 @@ function actualizarAjustesSeguridad() {
       const basePath = window.location.pathname;
       const lastSlash = basePath.lastIndexOf('/');
       const dir = lastSlash >= 0 ? basePath.substring(0, lastSlash + 1) : '/';
-      const camareroUrl = window.location.origin + dir + 'camarero.html';
+      const camareroUrl = window.location.origin + dir + 'comandero.html';
       const pairUrl = `${camareroUrl}?pair=${encodeURIComponent(tokenVal)}`;
       // Se genera en el propio navegador: no depende de un servicio QR externo.
       const qr = qrcode(0, 'M');
@@ -5494,6 +5494,25 @@ function formatFechaEsp(dateStr) {
   return s;
 }
 
+function extraerDiaKeyFiscal(op) {
+  const t = op?.ticket || {};
+  const f = op?.factura || {};
+  let fecha = t.fecha || f.fecha;
+  if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) return fecha;
+  if (fecha && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(fecha)) {
+    const [d, m, y] = fecha.split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  const ts = Number(op?.ts || t.ts || t.createdAt || f.ts || 0);
+  if (ts) {
+    const dt = new Date(ts);
+    if (!isNaN(dt.getTime())) {
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    }
+  }
+  return 'Desconocida';
+}
+
 async function exportarPDFGestoria() {
   if (!gestoriaTicketsList.length) {
     showCustomAlert("Exportar PDF", "No hay ventas en el período consultado para exportar.");
@@ -5510,10 +5529,18 @@ async function exportarPDFGestoria() {
     "¿Deseas incluir la relación de documentos fiscales?\n\n• Aceptar: añade el listado de tickets y facturas vinculadas\n• Cancelar: informe resumido (recomendado)"
   );
 
-  await generarDocumentoPDFGestoria(incluirArticulos === true, incluirDocumentos === true);
+  let unificarTickets = true;
+  if (incluirDocumentos === true) {
+    unificarTickets = await showCustomConfirm(
+      "Agrupación de Tickets",
+      "¿Cómo deseas incluir los tickets en la relación fiscal?\n\n• Aceptar: UNIFICAR tickets por día (Recomendado: 1 fila por día con la suma de tickets + facturas desglosadas)\n• Cancelar: DETALLAR cada ticket individualmente (como hasta ahora)"
+    );
+  }
+
+  await generarDocumentoPDFGestoria(incluirArticulos === true, incluirDocumentos === true, unificarTickets === true);
 }
 
-async function generarDocumentoPDFGestoria(incluirArticulos = false, incluirDocumentos = false) {
+async function generarDocumentoPDFGestoria(incluirArticulos = false, incluirDocumentos = false, unificarTickets = true) {
   const desdeStr = document.getElementById("gestoria-desde").value;
   const hastaStr = document.getElementById("gestoria-hasta").value;
   const desdeFmt = formatFechaEsp(desdeStr);
@@ -5546,17 +5573,89 @@ async function generarDocumentoPDFGestoria(incluirArticulos = false, incluirDocu
     } catch (error) {
       console.warn('No se pudieron cargar las facturas vinculadas:', error);
     }
+
+    let filasDocumentos = '';
+    let totalTicketsDoc = 0;
+    let totalFacturasDoc = 0;
+    let totalImporteDoc = 0;
+
+    if (unificarTickets) {
+      const mapaDiasFiscal = {};
+      operacionesConDocumento.forEach(op => {
+        const diaKey = extraerDiaKeyFiscal(op);
+        if (!mapaDiasFiscal[diaKey]) {
+          mapaDiasFiscal[diaKey] = { diaKey, tickets: [], facturas: [] };
+        }
+        if (op.factura) {
+          mapaDiasFiscal[diaKey].facturas.push(op);
+          totalFacturasDoc++;
+        } else {
+          mapaDiasFiscal[diaKey].tickets.push(op);
+          totalTicketsDoc++;
+        }
+        totalImporteDoc += Number(op.ticket?.total || op.factura?.totalNum || 0);
+      });
+
+      const diasOrdenados = Object.keys(mapaDiasFiscal).sort();
+      filasDocumentos = diasOrdenados.map(diaKey => {
+        const info = mapaDiasFiscal[diaKey];
+        const fechaFmt = formatFechaEsp(diaKey);
+        let htmlDia = '';
+
+        if (info.tickets.length > 0) {
+          const totT = info.tickets.reduce((sum, op) => sum + Number(op.ticket?.total || 0), 0);
+          htmlDia += `
+            <tr style="background:#f9fafb;">
+              <td><strong>${escapeHtml(fechaFmt)}</strong></td>
+              <td>Tickets del día (${info.tickets.length} operaciones)</td>
+              <td style="color:#6b7280; font-size:11px;">Resumen ventas simplificadas</td>
+              <td class="text-right mono"><strong>${totT.toFixed(2)} €</strong></td>
+            </tr>`;
+        }
+
+        if (info.facturas.length > 0) {
+          info.facturas.forEach(({ ticket, factura }) => {
+            const numDoc = `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}`;
+            const destNombre = escapeHtml(factura.destinatario?.nombre || factura.tipo || '—');
+            const destNif = factura.destinatario?.nif ? ` · <span style="font-family:monospace;font-size:11px;color:#4b5563;">${escapeHtml(factura.destinatario.nif)}</span>` : '';
+            const imp = Number(ticket?.total || factura?.totalNum || 0);
+            htmlDia += `
+              <tr>
+                <td>${escapeHtml(fechaFmt)}</td>
+                <td><strong style="color:#2563eb;">${numDoc}</strong></td>
+                <td>${destNombre}${destNif}</td>
+                <td class="text-right mono" style="font-weight:700;">${imp.toFixed(2)} €</td>
+              </tr>`;
+          });
+        }
+
+        return htmlDia;
+      }).join('');
+    } else {
+      totalFacturasDoc = operacionesConDocumento.filter(op => Boolean(op.factura)).length;
+      totalTicketsDoc = operacionesConDocumento.length - totalFacturasDoc;
+      totalImporteDoc = operacionesConDocumento.reduce((s, op) => s + Number(op.ticket?.total || op.factura?.totalNum || 0), 0);
+
+      filasDocumentos = operacionesConDocumento.map(({ ticket, factura }) => {
+        const fecha = ticket.fecha || (ticket.ts ? new Date(ticket.ts).toLocaleDateString('es-ES') : '—');
+        const documento = factura ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}` : 'Ticket';
+        const referencia = factura ? escapeHtml(factura.destinatario?.nombre || factura.tipo || '—') : escapeHtml(ticket.mesa || ticket.mesaNombre || '—');
+        return `<tr><td>${escapeHtml(fecha)}</td><td>${documento}</td><td>${referencia}</td><td class="text-right mono">${Number(ticket.total || factura?.totalNum || 0).toFixed(2)} €</td></tr>`;
+      }).join('');
+    }
+
     relacionDocumentosHTML = `
-      <h3 style="margin-top:20px;">${incluirArticulos ? '3. ' : '2. '}Relación de documentos fiscales</h3>
-      <div style="font-size:11px;color:#4b5563;margin:-4px 0 10px">Las operaciones facturadas se muestran por su factura vinculada; no se duplican como ticket.</div>
+      <h3 style="margin-top:20px;">${incluirArticulos ? '3. ' : '2. '}Relación de documentos fiscales ${unificarTickets ? '(Tickets unificados por día)' : '(Detalle individual)'}</h3>
+      <div style="font-size:11px;color:#4b5563;margin:-4px 0 10px">${unificarTickets ? 'Tickets ordinarios agrupados en asiento resumen diario. Las facturas nominales se detallan individualmente con su destinatario.' : 'Las operaciones facturadas se muestran por su factura vinculada; no se duplican como ticket.'}</div>
       <table>
         <thead><tr><th>Fecha</th><th>Documento</th><th>Destinatario / Mesa</th><th class="text-right">Importe</th></tr></thead>
-        <tbody>${operacionesConDocumento.map(({ ticket, factura }) => {
-          const fecha = ticket.fecha || (ticket.ts ? new Date(ticket.ts).toLocaleDateString('es-ES') : '—');
-          const documento = factura ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')}` : 'Ticket';
-          const referencia = factura ? escapeHtml(factura.destinatario?.nombre || factura.tipo || '—') : escapeHtml(ticket.mesa || ticket.mesaNombre || '—');
-          return `<tr><td>${escapeHtml(fecha)}</td><td>${documento}</td><td>${referencia}</td><td class="text-right mono">${Number(ticket.total || 0).toFixed(2)} €</td></tr>`;
-        }).join('')}</tbody>
+        <tbody>${filasDocumentos || '<tr><td colspan="4">No hay documentos en el período.</td></tr>'}</tbody>
+        <tfoot>
+          <tr class="t-foot">
+            <td colspan="3">TOTAL DOCUMENTOS (${totalTicketsDoc} tickets ${unificarTickets ? 'agrupados por día' : ''} · ${totalFacturasDoc} facturas)</td>
+            <td class="text-right mono">${totalImporteDoc.toFixed(2)} €</td>
+          </tr>
+        </tfoot>
       </table>`;
   }
 
