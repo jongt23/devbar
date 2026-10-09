@@ -71,85 +71,207 @@ function abrirFacturasLote(facturas, local) {
   abrirDocumento(`Facturas ${facturas.length} seleccionadas`, facturas.map(factura => plantillaFactura(factura, local)).join(''));
 }
 
+function normalizarFechaADia(fechaOts) {
+  if (!fechaOts) return '';
+  if (typeof fechaOts === 'number') {
+    const d = new Date(fechaOts);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  const s = String(fechaOts).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (m) {
+    return `${m[3]}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+  }
+  return '';
+}
+
+function parseFechaGenericaTs(fecha, hora = '12:00', tsFallback = 0) {
+  const tsNum = Number(tsFallback);
+  if (Number.isFinite(tsNum) && tsNum > 0) return tsNum;
+  if (!fecha) return 0;
+  const str = String(fecha).trim();
+  const horaTxt = String(hora || '12:00').slice(0, 5);
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    return new Date(`${str.slice(0, 10)}T${horaTxt}:00`).getTime() || 0;
+  }
+  const m = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  if (m) {
+    const [, dia, mes, anyo] = m;
+    return new Date(`${anyo}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}T${horaTxt}:00`).getTime() || 0;
+  }
+  return 0;
+}
+
 function fechaVentaTs(venta) {
-  const ts = Number(venta?.ts || venta?.createdAt || 0);
-  if (ts) return ts;
-  const match = String(venta?.fecha || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (!match) return 0;
-  const [, dia, mes, anyo] = match;
-  return new Date(`${anyo}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}T${venta?.hora || '00:00'}:00`).getTime();
+  return parseFechaGenericaTs(venta?.fecha, venta?.hora || '00:00', venta?.ts || venta?.createdAt);
 }
 
 function fechaFacturaTs(factura) {
-  const ts = Number(factura?.ts || 0);
-  if (ts) return ts;
-  const match = String(factura?.fecha || '').match(/(\d{1,2})-(\d{1,2})-(\d{4})/);
-  if (!match) return 0;
-  const [, dia, mes, anyo] = match;
-  return new Date(`${anyo}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}T12:00:00`).getTime();
+  return parseFechaGenericaTs(factura?.fecha, factura?.hora || '12:00', factura?.ts);
 }
 
-// Las ventas nuevas llevan fbKey. Para facturas antiguas cuyo cierre sobrescribió
-// esa referencia, se recupera de forma conservadora por fecha, mesa y total.
+// Resuelve de forma estricta si una venta tiene factura vinculada, garantizando que coincidan en fecha
 export function resolverFacturaVenta(venta, facturasPorClave = {}) {
   const fbKey = venta?.verifactu?.fbKey;
   if (fbKey && facturasPorClave[fbKey]) return facturasPorClave[fbKey];
+  const serie = venta?.verifactu?.serie;
+  const numero = venta?.verifactu?.numero;
+  if (serie && numero !== undefined && numero !== null) {
+    const porSerieNum = Object.values(facturasPorClave).find(f => f.serie === serie && String(f.numero) === String(numero));
+    if (porSerieNum) return porSerieNum;
+  }
   const tsVenta = fechaVentaTs(venta);
-  const diaVenta = tsVenta ? new Date(tsVenta).toISOString().slice(0, 10) : '';
-  const mesa = String(venta?.mesa || venta?.mesaNombre || '').trim();
-  const total = Number(venta?.total || 0);
+  const diaVenta = normalizarFechaADia(venta?.fecha || tsVenta);
+  if (!diaVenta) return null;
+  const total = Math.round(Number(venta?.total || 0) * 100) / 100;
+  const mesa = String(venta?.mesa || venta?.mesaNombre || '').trim().toLowerCase();
+
   const porFechaYTotal = Object.values(facturasPorClave).filter(factura => {
-    const tsFactura = fechaFacturaTs(factura);
-    const diaFactura = tsFactura ? new Date(tsFactura).toISOString().slice(0, 10) : '';
-    return Number(factura?.total || 0) === total
-      && diaFactura && diaFactura === diaVenta;
+    const diaFactura = normalizarFechaADia(factura?.fecha || factura?.ts);
+    return diaFactura === diaVenta && Math.abs(Math.round(Number(factura?.total || 0) * 100) / 100 - total) < 0.02;
   });
-  const candidatasMesa = porFechaYTotal.filter(factura => String(factura?.mesa || '').trim() === mesa);
-  if (candidatasMesa.length === 1) return candidatasMesa[0];
-  // Facturas estándar antiguas pueden no guardar la mesa. Solo se relaja el
-  // criterio cuando fecha e importe identifican una única factura.
+
   if (porFechaYTotal.length === 1) return porFechaYTotal[0];
-  // Último respaldo para historiales migrados cuyo formato de fecha difiere:
-  // se acepta solo si ese importe identifica una única factura en todo el local.
-  const porImporte = Object.values(facturasPorClave)
-    .filter(factura => Number(factura?.total || 0) === total);
-  return porImporte.length === 1 ? porImporte[0] : null;
+  if (porFechaYTotal.length > 1 && mesa) {
+    const porMesa = porFechaYTotal.filter(f => String(f.mesa || '').trim().toLowerCase() === mesa);
+    if (porMesa.length === 1) return porMesa[0];
+  }
+  return null;
 }
 
-// Fuente única para cualquier informe: vuelve a leer el historial y las
-// facturas del período en el momento de exportar, evitando resúmenes en memoria
-// desactualizados o con campos transformados por otra pantalla.
+// Fuente única para cualquier informe: lee el historial y las facturas del período,
+// empareja 1 a 1 sin duplicados y devuelve las operaciones estrictamente ordenadas cronológicamente.
 export async function cargarOperacionesFiscales(db, desde, hasta) {
   const ventasQuery = query(ref(db, 'historial'), orderByChild('ts'), startAt(desde), endAt(hasta));
   const [ventasSnap, facturasSnap] = await Promise.all([
     get(ventasQuery), get(ref(db, 'verifactu/facturas'))
   ]);
   const facturasPorClave = facturasSnap.val() || {};
-  const ventas = Object.values(ventasSnap.val() || {})
-    .filter(venta => {
-      const ts = fechaVentaTs(venta);
+
+  // 1. Obtener todas las ventas del rango ordenadas cronológicamente
+  const ventas = Object.entries(ventasSnap.val() || {})
+    .map(([id, t]) => ({ id, ...t }))
+    .filter(v => {
+      if (v.anulado) return false;
+      const ts = fechaVentaTs(v);
       return ts >= desde && ts <= hasta;
+    })
+    .sort((a, b) => fechaVentaTs(a) - fechaVentaTs(b));
+
+  // 2. Facturas disponibles (con su clave para seguimiento)
+  const facturasList = Object.entries(facturasPorClave).map(([fbKey, f]) => ({
+    fbKey,
+    ...f,
+    ts: fechaFacturaTs(f),
+    diaKey: normalizarFechaADia(f.fecha || f.ts),
+    totalNum: Math.round(Number(f.total || 0) * 100) / 100,
+    asignada: false
+  }));
+
+  const operaciones = [];
+
+  // 3. Emparejamiento estricto 1 a 1 de ventas con facturas
+  for (const ticket of ventas) {
+    const tsV = fechaVentaTs(ticket);
+    const diaV = normalizarFechaADia(ticket.fecha || tsV);
+    const totalV = Math.round(Number(ticket.total || 0) * 100) / 100;
+    const mesaV = String(ticket.mesa || ticket.mesaNombre || '').trim().toLowerCase();
+    const fbKeyV = ticket?.verifactu?.fbKey;
+    const serieV = ticket?.verifactu?.serie;
+    const numeroV = ticket?.verifactu?.numero;
+
+    let factura = null;
+
+    // A. Vínculo directo por fbKey
+    if (fbKeyV) {
+      factura = facturasList.find(f => !f.asignada && f.fbKey === fbKeyV);
+    }
+
+    // B. Vínculo por Serie y Número exactos
+    if (!factura && serieV && numeroV !== undefined && numeroV !== null) {
+      factura = facturasList.find(f => !f.asignada && f.serie === serieV && String(f.numero) === String(numeroV));
+    }
+
+    // C. Vínculo estricto: MISMO DÍA y MISMO IMPORTE (tolerancia 2 céntimos)
+    // ¡Nunca se vincula si el día es diferente!
+    if (!factura && diaV && totalV > 0) {
+      const candidatas = facturasList.filter(f => !f.asignada && f.diaKey === diaV && Math.abs(f.totalNum - totalV) < 0.02);
+      if (candidatas.length === 1) {
+        factura = candidatas[0];
+      } else if (candidatas.length > 1 && mesaV) {
+        const porMesa = candidatas.filter(f => String(f.mesa || '').trim().toLowerCase() === mesaV);
+        if (porMesa.length === 1) {
+          factura = porMesa[0];
+        } else {
+          candidatas.sort((a, b) => Math.abs(a.ts - tsV) - Math.abs(b.ts - tsV));
+          factura = candidatas[0];
+        }
+      }
+    }
+
+    if (factura) {
+      factura.asignada = true; // Consumida: nunca se repetirá en otro ticket
+    }
+
+    operaciones.push({
+      ticket,
+      factura: factura || null,
+      ts: tsV
     });
+  }
+
+  // 4. Si hay facturas emitidas en el período que no tenían ticket en historial, las añadimos
+  const facturasNoAsignadasEnRango = facturasList.filter(f => 
+    !f.asignada && 
+    f.ts >= desde && 
+    f.ts <= hasta
+  );
+
+  for (const f of facturasNoAsignadasEnRango) {
+    operaciones.push({
+      ticket: {
+        ts: f.ts,
+        fecha: f.fecha || (f.ts ? new Date(f.ts).toLocaleDateString('es-ES') : '—'),
+        total: f.totalNum,
+        mesa: f.mesa || 'Factura directa'
+      },
+      factura: f,
+      ts: f.ts
+    });
+  }
+
+  // 5. Ordenar todas las operaciones de forma estrictamente cronológica ascendente
+  operaciones.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+
   return {
     facturasPorClave,
-    operaciones: ventas.map(ticket => ({ ticket, factura: resolverFacturaVenta(ticket, facturasPorClave) }))
+    operaciones
   };
 }
 
-function plantillaInformeGestoria({ ventas, facturasPorClave, local, desdeTexto, hastaTexto }) {
-  const filas = ventas.map(venta => {
-    const factura = resolverFacturaVenta(venta, facturasPorClave);
+function plantillaInformeGestoria({ operaciones, local, desdeTexto, hastaTexto, ventas, facturasPorClave }) {
+  const ops = Array.isArray(operaciones) && operaciones.length
+    ? operaciones
+    : (Array.isArray(ventas) ? ventas.map(v => ({ ticket: v, factura: resolverFacturaVenta(v, facturasPorClave) })) : []);
+
+  // Asegurar orden cronológico ascendente (de más antiguo a más reciente)
+  ops.sort((a, b) => (a.ts || fechaVentaTs(a.ticket)) - (b.ts || fechaVentaTs(b.ticket)));
+
+  const filas = ops.map(({ ticket, factura }) => {
     const documento = factura
       ? `Factura ${escapeHtml(factura.serie || '')}-${escapeHtml(factura.numero || '')} · ${escapeHtml(factura.destinatario?.nombre || factura.tipo || '')}`
-      : `Ticket · ${escapeHtml(venta.mesa || venta.mesaNombre || '—')}`;
-    return `<tr><td>${escapeHtml(venta.fecha || new Date(fechaVentaTs(venta)).toLocaleDateString('es-ES'))}</td><td>${documento}</td><td>${fmtEu(venta.total)}</td></tr>`;
+      : `Ticket · ${escapeHtml(ticket.mesa || ticket.mesaNombre || '—')}`;
+    const fecha = ticket.fecha || (ticket.ts ? new Date(ticket.ts).toLocaleDateString('es-ES') : '—');
+    return `<tr><td>${escapeHtml(fecha)}</td><td>${documento}</td><td>${fmtEu(ticket.total)}</td></tr>`;
   }).join('');
-  const total = ventas.reduce((suma, venta) => suma + Number(venta.total || 0), 0);
-  const facturadas = ventas.filter(venta => resolverFacturaVenta(venta, facturasPorClave));
+
+  const total = ops.reduce((suma, op) => suma + Number(op.ticket?.total || 0), 0);
+  const facturadas = ops.filter(op => Boolean(op.factura));
   const empresa = local?.datosNegocio || local || {};
   return `
     <main class="invoice"><header><div><div class="title">INFORME PARA GESTORÍA</div><div class="muted">${escapeHtml(empresa.nombre || '')}<br>Período: ${escapeHtml(desdeTexto || 'Inicio')} — ${escapeHtml(hastaTexto || 'Fin')}</div></div>
-    <div style="text-align:right"><strong>${ventas.length} operaciones</strong><br><span class="muted">${facturadas.length} facturadas · ${ventas.length - facturadas.length} tickets</span></div></header>
+    <div style="text-align:right"><strong>${ops.length} operaciones</strong><br><span class="muted">${facturadas.length} facturadas · ${ops.length - facturadas.length} tickets</span></div></header>
     <section class="block"><div class="label">Relación única de operaciones</div><div class="muted" style="margin-top:6px">Las ventas con factura se muestran por su número de factura; no se duplican como ticket.</div>
     <table><thead><tr><th>Fecha</th><th>Documento</th><th>Total</th></tr></thead><tbody>${filas || '<tr><td colspan="3">No hay ventas en el período.</td></tr>'}</tbody></table><div class="total"><span>Total período</span><span>${fmtEu(total)}</span></div></section></main>`;
 }
@@ -166,9 +288,8 @@ async function generarPdfGestoria({ getDb, resultado }) {
     const [{ operaciones, facturasPorClave }, localSnap] = await Promise.all([
       cargarOperacionesFiscales(db, desde, hasta), get(ref(db, 'config/local'))
     ]);
-    const ventas = operaciones.map(item => item.ticket).sort((a, b) => fechaVentaTs(a) - fechaVentaTs(b));
-    if (!ventas.length) { resultado.textContent = 'No hay ventas en el período seleccionado.'; return; }
-    const contenido = plantillaInformeGestoria({ ventas, facturasPorClave, local: localSnap.val() || {}, desdeTexto: desdeInput?.value, hastaTexto: hastaInput?.value });
+    if (!operaciones.length) { resultado.textContent = 'No hay ventas en el período seleccionado.'; return; }
+    const contenido = plantillaInformeGestoria({ operaciones, facturasPorClave, local: localSnap.val() || {}, desdeTexto: desdeInput?.value, hastaTexto: hastaInput?.value });
     abrirDocumento(`Gestoría ${desdeInput?.value || ''} ${hastaInput?.value || ''}`, contenido);
     resultado.textContent = 'PDF consolidado abierto en una nueva pestaña.';
   } catch (error) {
