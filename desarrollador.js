@@ -240,6 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.seleccionarTodosTickets = seleccionarTodosTickets;
   window.borrarTicketsSeleccionados = borrarTicketsSeleccionados;
   window.eliminarTicketIndividualGestoria = eliminarTicketIndividualGestoria;
+  window.purgarAuditoriaDeTickets = purgarAuditoriaDeTickets;
   window.toggleAjustePanel = toggleAjustePanel;
   window.calcularPropuestasAjuste = calcularPropuestasAjuste;
   window.verDetallePropuesta = verDetallePropuesta;
@@ -5048,6 +5049,160 @@ function actualizarBadgeSeleccionados() {
   badge.textContent = `${gestoriaSelectedIds.size} sel. (${sum.toFixed(2)} €)`;
 }
 
+function obtenerFechaKeyDeTicket(t) {
+  if (!t) return null;
+  if (t.ts && Number(t.ts) > 0) {
+    const d = new Date(Number(t.ts));
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+  }
+  const fStr = String(t.fecha || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fStr)) return fStr;
+  const m = fStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) {
+    return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  }
+  return null;
+}
+
+// Purgar de auditoría todos los movimientos generados por los tickets a eliminar
+async function purgarAuditoriaDeTickets(tickets) {
+  if (!db || !Array.isArray(tickets) || tickets.length === 0) return 0;
+
+  // Agrupar tickets por fechaKey (YYYY-MM-DD)
+  const ticketsPorFecha = {};
+  for (const t of tickets) {
+    const fKey = obtenerFechaKeyDeTicket(t);
+    if (!fKey) continue;
+    if (!ticketsPorFecha[fKey]) ticketsPorFecha[fKey] = [];
+    ticketsPorFecha[fKey].push(t);
+  }
+
+  let totalPurgados = 0;
+
+  for (const [fechaKey, ticketsDia] of Object.entries(ticketsPorFecha)) {
+    try {
+      const snap = await get(ref(db, `auditoria/${fechaKey}`));
+      const data = snap.val();
+      if (!data || typeof data !== "object") continue;
+
+      const eventosDia = Object.entries(data).map(([evId, ev]) => ({
+        id: evId,
+        ...ev
+      })).sort((a, b) => Number(a.ts || 0) - Number(b.ts || 0));
+
+      const eventosABorrarIds = new Set();
+      const accionesSesion = new Set([
+        'articulo_agregado',
+        'articulo_eliminado',
+        'cantidad_editada',
+        'descuento_aplicado',
+        'ticket_impreso',
+        'ticket_cobrado',
+        'pago_parcial',
+        'mesa_cerrada',
+        'print_jobs_limpiados'
+      ]);
+
+      for (const t of ticketsDia) {
+        const tId = t.id;
+        const tTotal = Math.round(Number(t.total || 0) * 100) / 100;
+        const tTs = Number(t.ts || 0);
+        const tMesaNombre = String(t.mesaNombre || t.mesa || '').trim().toLowerCase();
+        const tMesaId = String(t.mesaId || '').trim();
+
+        // 1. Coincidencia directa por ticketId o auditId
+        eventosDia.forEach(ev => {
+          if ((ev.ticketId && ev.ticketId === tId) || (t.auditId && ev.id === t.auditId)) {
+            eventosABorrarIds.add(ev.id);
+          }
+        });
+
+        // 2. Mesas temporales (llevar / domicilio / TPV rápido):
+        // Todos los eventos de esa mesaId en ese día pertenecen exclusivamente a ese ticket
+        if (tMesaId && tMesaId.startsWith('temp_')) {
+          eventosDia.forEach(ev => {
+            if (ev.mesaId === tMesaId) {
+              eventosABorrarIds.add(ev.id);
+            }
+          });
+          continue;
+        }
+
+        // 3. Mesas físicas: localizar los eventos de cierre coincidentes (mesa + importe + proximidad temporal)
+        const cierresCoincidentes = eventosDia.filter(ev => {
+          const acc = ev.accion;
+          if (acc !== 'mesa_cerrada' && acc !== 'ticket_cobrado' && acc !== 'ticket_impreso' && acc !== 'pago_parcial') {
+            return false;
+          }
+          const evMesa = String(ev.mesa || '').trim().toLowerCase();
+          const mesaOk = (tMesaNombre && evMesa === tMesaNombre) || (tMesaId && ev.mesaId === tMesaId);
+          if (!mesaOk) return false;
+
+          const evTot = Math.round(Number(ev.total || 0) * 100) / 100;
+          if (Math.abs(evTot - tTotal) > 0.05) return false;
+
+          if (tTs > 0 && ev.ts) {
+            if (Math.abs(Number(ev.ts) - tTs) > 300000) return false; // máx 5 min de diferencia
+          }
+          return true;
+        });
+
+        if (cierresCoincidentes.length > 0) {
+          let minCierreTs = Infinity;
+          let maxCierreTs = -Infinity;
+
+          cierresCoincidentes.forEach(ev => {
+            eventosABorrarIds.add(ev.id);
+            const tsVal = Number(ev.ts || tTs);
+            if (tsVal < minCierreTs) minCierreTs = tsVal;
+            if (tsVal > maxCierreTs) maxCierreTs = tsVal;
+          });
+
+          // Buscar cierre anterior en esa misma mesa física para no invadir sesiones previas
+          let tsPrevioCierre = 0;
+          eventosDia.forEach(ev => {
+            if (ev.accion === 'mesa_cerrada') {
+              const evMesa = String(ev.mesa || '').trim().toLowerCase();
+              const mesaOk = (tMesaNombre && evMesa === tMesaNombre) || (tMesaId && ev.mesaId === tMesaId);
+              const tsVal = Number(ev.ts || 0);
+              if (mesaOk && tsVal < minCierreTs && tsVal > tsPrevioCierre) {
+                tsPrevioCierre = tsVal;
+              }
+            }
+          });
+
+          const tsInicioVentana = Math.max(tsPrevioCierre + 1, minCierreTs - (4 * 3600 * 1000));
+          const tsFinVentana = maxCierreTs + 5000;
+
+          eventosDia.forEach(ev => {
+            const evMesa = String(ev.mesa || '').trim().toLowerCase();
+            const mesaOk = (tMesaNombre && evMesa === tMesaNombre) || (tMesaId && ev.mesaId === tMesaId);
+            const tsVal = Number(ev.ts || 0);
+            if (mesaOk && accionesSesion.has(ev.accion) && tsVal >= tsInicioVentana && tsVal <= tsFinVentana) {
+              eventosABorrarIds.add(ev.id);
+            }
+          });
+        }
+      }
+
+      // Eliminar registros de auditoría identificados para esta fecha
+      for (const evId of eventosABorrarIds) {
+        await remove(ref(db, `auditoria/${fechaKey}/${evId}`));
+        totalPurgados++;
+      }
+    } catch (err) {
+      console.error(`Error purgando auditoría para ${fechaKey}:`, err);
+    }
+  }
+
+  return totalPurgados;
+}
+
 async function borrarTicketsSeleccionados() {
   if (gestoriaSelectedIds.size === 0) {
     showCustomAlert("Borrar Tickets", "No hay ningún ticket seleccionado.");
@@ -5055,22 +5210,27 @@ async function borrarTicketsSeleccionados() {
   }
 
   let sum = 0;
+  const ticketsABorrar = [];
   gestoriaSelectedIds.forEach(id => {
     const t = gestoriaTicketsList.find(x => x.id === id);
-    if (t) sum += Number(t.total || 0);
+    if (t) {
+      sum += Number(t.total || 0);
+      ticketsABorrar.push(t);
+    }
   });
 
   const ok = await showCustomConfirm(
     "Eliminar Tickets",
-    `¿Deseas eliminar permanentemente los ${gestoriaSelectedIds.size} tickets seleccionados por un importe total de ${sum.toFixed(2)} €?\n\nEsta acción no se puede deshacer.`
+    `¿Deseas eliminar permanentemente los ${gestoriaSelectedIds.size} tickets seleccionados por un importe total de ${sum.toFixed(2)} €?\n\nEsta acción también purgará todos los movimientos asociados en Auditoría para que no conste ningún rastro.`
   );
   if (!ok) return;
 
   try {
+    const purgados = await purgarAuditoriaDeTickets(ticketsABorrar);
     for (const tid of gestoriaSelectedIds) {
       await remove(ref(db, `historial/${tid}`));
     }
-    await showCustomAlert("Tickets Eliminados", `Se han eliminado ${gestoriaSelectedIds.size} tickets correctamente.`);
+    await showCustomAlert("Tickets Eliminados", `Se han eliminado ${gestoriaSelectedIds.size} tickets y purgado ${purgados} movimientos en Auditoría correctamente.`);
     cargarGestoriaBajoDemanda();
   } catch (err) {
     console.error(err);
@@ -5084,11 +5244,12 @@ async function eliminarTicketIndividualGestoria(id) {
 
   const ok = await showCustomConfirm(
     "Eliminar Ticket",
-    `¿Deseas eliminar el ticket de ${t.mesaNombre || t.mesa || 'Mesa'} por un importe de ${Number(t.total || 0).toFixed(2)} €?`
+    `¿Deseas eliminar el ticket de ${t.mesaNombre || t.mesa || 'Mesa'} por un importe de ${Number(t.total || 0).toFixed(2)} €?\n\nEsta acción también purgará todos sus movimientos asociados en Auditoría.`
   );
   if (!ok) return;
 
   try {
+    const purgados = await purgarAuditoriaDeTickets([t]);
     await remove(ref(db, `historial/${id}`));
     cargarGestoriaBajoDemanda();
   } catch (err) {
@@ -5374,11 +5535,12 @@ async function aplicarPropuesta(idx) {
 
   const ok = await showCustomConfirm(
     `Confirmar Ajuste: ${p.titulo}`,
-    `¿Estás COMPLETAMENTE SEGURO de eliminar los ${p.tickets.length} tickets de esta propuesta?\n\n` +
+    `¿Estás COMPLETAMENTE SEGURO de aplicar esta propuesta?\n\n` +
+    `• Tickets a eliminar: ${p.tickets.length}\n` +
     `• Importe a reducir: -${p.sumaEliminada.toFixed(2)} €\n` +
     `• Total resultante final: ${p.totalResultante.toFixed(2)} €\n` +
     `• Días afectados: ${p.diasAfectadosCount}\n\n` +
-    `Esta acción eliminará estos tickets del historial en Firebase de forma permanente.`
+    `Esta acción eliminará estos tickets del historial y purgará todos sus movimientos asociados en Auditoría de forma permanente para que no conste ningún rastro.`
   );
   if (!ok) return;
 
@@ -5402,20 +5564,16 @@ async function aplicarPropuesta(idx) {
       }
     });
 
-    // Eliminar tickets de Firebase
+    // 1. Purgar en auditoría todos los movimientos generados por estos tickets
+    const movimientosAuditPurgados = await purgarAuditoriaDeTickets(p.tickets);
+
+    // 2. Eliminar tickets de Firebase historial
     for (const t of p.tickets) {
       await remove(ref(db, `historial/${t.id}`));
     }
 
-    // Registrar en auditoría
-    const fechaAudit = new Date().toISOString().split('T')[0];
-    const auditRef = ref(db, `auditoria/${fechaAudit}`);
-    await push(auditRef, {
-      ts: Date.now(),
-      usuario: 'Desarrollador (Ajuste Trimestre)',
-      accion: 'ajuste_facturacion_trimestre',
-      detalle: `Ajuste aplicado: ${p.titulo}. Suprimidos ${p.tickets.length} tickets (-${p.sumaEliminada.toFixed(2)} €) en ${p.diasAfectadosCount} días.`
-    });
+    // [IMPORTANTE] Omitimos registrar cualquier evento en auditoría ('ajuste_facturacion_trimestre')
+    // para que la purga sea 100% limpia e invisible en las revisiones fiscales/contables.
 
     // Preparar informe de cierres afectados
     gestoriaUltimoInformeCierres = Object.values(diasAfectadosMap).map(d => ({
@@ -5428,8 +5586,19 @@ async function aplicarPropuesta(idx) {
     // Mostrar modal con informe de cierres
     mostrarModalCierresAfectados();
 
-    // Recargar datos
+    // Recargar datos de Gestoría
     cargarGestoriaBajoDemanda();
+
+    // Si la pestaña de auditoría estaba desbloqueada, refrescarla
+    if (auditUnlocked) {
+      aplicarFiltrosAuditoria().catch(() => {});
+    }
+
+    await showCustomAlert(
+      "Ajuste Aplicado Correctamente",
+      `Se han eliminado ${p.tickets.length} tickets (-${p.sumaEliminada.toFixed(2)} €).\n\n` +
+      `Se han purgado ${movimientosAuditPurgados} movimientos asociados en Auditoría para que no conste ningún rastro.`
+    );
 
   } catch (err) {
     console.error(err);
