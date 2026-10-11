@@ -443,9 +443,11 @@ async function seleccionarLocal(id) {
       </tr>
     `;
   }
-  document.getElementById("venta-total-recaudado").textContent = "0,00 €";
-  document.getElementById("venta-total-tickets").textContent = "0";
-  document.getElementById("venta-ticket-medio").textContent = "0,00 €";
+  if (document.getElementById("venta-total-facturado")) document.getElementById("venta-total-facturado").textContent = "0,00 €";
+  if (document.getElementById("venta-total-facturado-sub")) document.getElementById("venta-total-facturado-sub").textContent = "0 tickets (Cobrado + Anulado)";
+  if (document.getElementById("venta-total-recaudado")) document.getElementById("venta-total-recaudado").textContent = "0,00 €";
+  if (document.getElementById("venta-total-tickets")) document.getElementById("venta-total-tickets").textContent = "0";
+  if (document.getElementById("venta-ticket-medio")) document.getElementById("venta-ticket-medio").textContent = "0,00 €";
   document.getElementById("ventas-paginacion-info").textContent = "Página 1 de 1";
   document.getElementById("btn-ventas-prev").disabled = true;
   document.getElementById("btn-ventas-next").disabled = true;
@@ -1345,19 +1347,44 @@ async function aplicarFiltrosVentas() {
 
   const discrepancia = Math.max(0, Math.round((totalImpreso - recaudadoCobrado) * 100) / 100);
 
+  const totalFacturado = recaudadoCobrado + totalAnulado;
+  const totalConteoTickets = conteoCobrados + conteoAnulados;
+  const ticketMedio = conteoCobrados ? (recaudadoCobrado / conteoCobrados).toFixed(2) : "0,00";
+
   // Actualizar indicadores numéricos
-  document.getElementById("venta-total-recaudado").textContent = `${recaudadoCobrado.toFixed(2)} €`;
-  document.getElementById("venta-total-tickets").textContent = conteoCobrados;
-  document.getElementById("venta-ticket-medio").textContent = conteoCobrados ? `${(recaudadoCobrado / conteoCobrados).toFixed(2)} €` : "0,00 €";
+  const elFacturado = document.getElementById("venta-total-facturado");
+  if (elFacturado) elFacturado.textContent = `${totalFacturado.toFixed(2)} €`;
+
+  const elFacturadoSub = document.getElementById("venta-total-facturado-sub");
+  if (elFacturadoSub) elFacturadoSub.textContent = `${totalConteoTickets} tickets (Cobrado + Anulado)`;
+
+  const elCobrado = document.getElementById("venta-total-recaudado");
+  if (elCobrado) elCobrado.textContent = `${recaudadoCobrado.toFixed(2)} €`;
+
+  const elCobradoSub = document.getElementById("venta-total-cobrado-sub");
+  if (elCobradoSub) {
+    elCobradoSub.innerHTML = `<span id="venta-total-tickets">${conteoCobrados}</span> tickets · Medio: <span id="venta-ticket-medio">${ticketMedio} €</span>`;
+  } else {
+    if (document.getElementById("venta-total-tickets")) document.getElementById("venta-total-tickets").textContent = conteoCobrados;
+    if (document.getElementById("venta-ticket-medio")) document.getElementById("venta-ticket-medio").textContent = `${ticketMedio} €`;
+  }
 
   const elImpreso = document.getElementById("venta-total-impreso");
   if (elImpreso) {
     elImpreso.textContent = `${totalImpreso.toFixed(2)} € (${conteoImpresos})`;
   }
+  const elImpresoSub = document.getElementById("venta-total-impreso-sub");
+  if (elImpresoSub) {
+    elImpresoSub.textContent = `${conteoImpresos} tickets en papel`;
+  }
 
   const elAnulado = document.getElementById("venta-total-anulado");
   if (elAnulado) {
     elAnulado.textContent = `${totalAnulado.toFixed(2)} € (${conteoAnulados})`;
+  }
+  const elAnuladoSub = document.getElementById("venta-total-anulado-sub");
+  if (elAnuladoSub) {
+    elAnuladoSub.textContent = `${conteoAnulados} anulados / vaciados`;
   }
 
   const elDiscrepancia = document.getElementById("venta-total-discrepancia");
@@ -1370,6 +1397,10 @@ async function aplicarFiltrosVentas() {
       elDiscrepancia.style.color = "var(--accent)";
       elDiscrepancia.title = "Todo coincide correctamente";
     }
+  }
+  const elDiscrepanciaSub = document.getElementById("venta-total-discrepancia-sub");
+  if (elDiscrepanciaSub) {
+    elDiscrepanciaSub.textContent = discrepancia > 0.01 ? "Impresos vs Cobrados" : "Sin discrepancia";
   }
 
   const alertaCont = document.getElementById("ventas-alerta-discrepancia-container");
@@ -1474,15 +1505,31 @@ function resetFiltrosVentas() {
       </td>
     </tr>
   `;
-  document.getElementById("venta-total-recaudado").textContent = "0,00 €";
-  document.getElementById("venta-total-tickets").textContent = "0";
-  document.getElementById("venta-ticket-medio").textContent = "0,00 €";
+  const elFacturado = document.getElementById("venta-total-facturado");
+  if (elFacturado) elFacturado.textContent = "0,00 €";
+  const elFacturadoSub = document.getElementById("venta-total-facturado-sub");
+  if (elFacturadoSub) elFacturadoSub.textContent = "0 tickets (Cobrado + Anulado)";
+
+  if (document.getElementById("venta-total-recaudado")) document.getElementById("venta-total-recaudado").textContent = "0,00 €";
+  const elCobradoSub = document.getElementById("venta-total-cobrado-sub");
+  if (elCobradoSub) {
+    elCobradoSub.innerHTML = `<span id="venta-total-tickets">0</span> tickets · Medio: <span id="venta-ticket-medio">0,00 €</span>`;
+  } else {
+    if (document.getElementById("venta-total-tickets")) document.getElementById("venta-total-tickets").textContent = "0";
+    if (document.getElementById("venta-ticket-medio")) document.getElementById("venta-ticket-medio").textContent = "0,00 €";
+  }
+
   if (document.getElementById("venta-total-impreso")) document.getElementById("venta-total-impreso").textContent = "0,00 €";
+  if (document.getElementById("venta-total-impreso-sub")) document.getElementById("venta-total-impreso-sub").textContent = "Tickets en papel";
+
   if (document.getElementById("venta-total-anulado")) document.getElementById("venta-total-anulado").textContent = "0,00 €";
+  if (document.getElementById("venta-total-anulado-sub")) document.getElementById("venta-total-anulado-sub").textContent = "0 anulados";
+
   if (document.getElementById("venta-total-discrepancia")) {
     document.getElementById("venta-total-discrepancia").textContent = "0,00 €";
     document.getElementById("venta-total-discrepancia").style.color = "var(--text)";
   }
+  if (document.getElementById("venta-total-discrepancia-sub")) document.getElementById("venta-total-discrepancia-sub").textContent = "Impresos vs Cobrados";
   const alertaCont = document.getElementById("ventas-alerta-discrepancia-container");
   if (alertaCont) alertaCont.style.display = 'none';
   

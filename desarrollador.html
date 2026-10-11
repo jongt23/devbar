@@ -630,6 +630,14 @@
       font-family: var(--font-code);
     }
 
+    .total-card-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 500;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
     /* VISTA: GESTORÍA Y AJUSTE INTELIGENTE */
     .gestoria-container {
       background-color: var(--panel);
@@ -1498,21 +1506,82 @@
       }
 
       /* Ventas mobile */
+      #pane-ventas {
+        height: auto !important;
+        min-height: 100% !important;
+      }
+
+      #pane-ventas .ventas-container {
+        height: auto !important;
+        min-height: 100% !important;
+        padding: 12px 10px !important;
+        overflow: visible !important;
+      }
+
+      #pane-ventas .auditoria-filter-bar {
+        margin-bottom: 12px !important;
+      }
+
+      #pane-ventas .auditoria-filter-bar > div:last-child {
+        grid-column: 1 / -1 !important;
+        display: flex !important;
+        width: 100% !important;
+        gap: 6px !important;
+      }
+
+      #pane-ventas .auditoria-filter-bar > div:last-child button {
+        flex: 1 !important;
+      }
+
+      #pane-ventas .auditoria-filter-bar > div:last-child button[title="Limpiar Filtros"] {
+        flex: 0 0 38px !important;
+      }
+
       .ventas-totals-bar {
-        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: 8px !important;
+        margin-bottom: 12px !important;
       }
 
       .ventas-totals-bar .total-card {
-        padding: 6px 4px !important;
+        padding: 8px 10px !important;
+      }
+
+      .ventas-totals-bar .total-card.total-card-facturado {
+        grid-column: 1 / -1 !important;
       }
 
       .ventas-totals-bar .total-card-label {
-        font-size: 8px !important;
+        font-size: 9px !important;
+        letter-spacing: 0.3px !important;
       }
 
       .ventas-totals-bar .total-card-val {
-        font-size: 14px !important;
+        font-size: 17px !important;
+      }
+
+      .ventas-totals-bar .total-card-sub {
+        font-size: 10.5px !important;
+        line-height: 1.25 !important;
+      }
+
+      #ventas-alerta-discrepancia-container {
+        padding: 10px 12px !important;
+        margin-bottom: 12px !important;
+      }
+
+      #ventas-alerta-discrepancia-container button {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+
+      /* Contenedor de la tabla en móvil: flujo natural para ver items filtrados */
+      #pane-ventas .ventas-table-container {
+        flex: none !important;
+        overflow-y: visible !important;
+        overflow-x: auto !important;
+        width: 100% !important;
+        min-height: 100px !important;
       }
 
       /* Formatear tabla de Ventas a 2 líneas por ticket */
@@ -1524,12 +1593,21 @@
       }
       #pane-ventas tr {
         position: relative !important;
-        padding: 10px 90px 10px 0 !important;
+        padding: 10px 95px 10px 0 !important;
         border-bottom: 1px solid var(--border) !important;
+      }
+      #pane-ventas tr:has(td[colspan]) {
+        padding: 24px 0 !important;
+        text-align: center !important;
       }
       #pane-ventas td {
         padding: 0 !important;
         border: none !important;
+      }
+      #pane-ventas td[colspan] {
+        display: block !important;
+        text-align: center !important;
+        width: 100% !important;
       }
       /* Línea 2: Fecha */
       #pane-ventas td:nth-child(1) {
@@ -1580,6 +1658,12 @@
         font-weight: 700 !important;
         color: var(--accent) !important;
         text-align: right !important;
+      }
+
+      #pane-ventas .paginacion-container {
+        margin-top: 14px !important;
+        padding-top: 10px !important;
+        padding-bottom: 20px !important;
       }
 
       /* Camareros mobile */
@@ -1845,29 +1929,32 @@
             </div>
 
             <div class="ventas-totals-bar">
-              <div class="total-card">
+              <div class="total-card total-card-facturado">
+                <div class="total-card-label">TOTAL FACTURADO</div>
+                <div class="total-card-val" id="venta-total-facturado" style="color: var(--accent);">0,00 €</div>
+                <div class="total-card-sub" id="venta-total-facturado-sub">0 tickets (Cobrado + Anulado)</div>
+              </div>
+              <div class="total-card total-card-cobrado">
                 <div class="total-card-label">TOTAL COBRADO (REAL)</div>
                 <div class="total-card-val" id="venta-total-recaudado">0,00 €</div>
-              </div>
-              <div class="total-card">
-                <div class="total-card-label">TICKETS COBRADOS</div>
-                <div class="total-card-val" id="venta-total-tickets">0</div>
-              </div>
-              <div class="total-card">
-                <div class="total-card-label">TICKET MEDIO</div>
-                <div class="total-card-val" id="venta-ticket-medio">0,00 €</div>
-              </div>
-              <div class="total-card">
-                <div class="total-card-label">TICKETS IMPRESOS (REAL)</div>
-                <div class="total-card-val" id="venta-total-impreso" style="color: #60a5fa;">0,00 €</div>
+                <div class="total-card-sub" id="venta-total-cobrado-sub">
+                  <span id="venta-total-tickets">0</span> tickets · Medio: <span id="venta-ticket-medio">0,00 €</span>
+                </div>
               </div>
               <div class="total-card">
                 <div class="total-card-label">ANULADOS / VACIADOS</div>
                 <div class="total-card-val" id="venta-total-anulado" style="color: #f87171;">0,00 €</div>
+                <div class="total-card-sub" id="venta-total-anulado-sub">0 anulados</div>
+              </div>
+              <div class="total-card">
+                <div class="total-card-label">TICKETS IMPRESOS (REAL)</div>
+                <div class="total-card-val" id="venta-total-impreso" style="color: #60a5fa;">0,00 €</div>
+                <div class="total-card-sub" id="venta-total-impreso-sub">Tickets en papel</div>
               </div>
               <div class="total-card">
                 <div class="total-card-label">DISCREPANCIA / POSIBLE FUGA</div>
                 <div class="total-card-val" id="venta-total-discrepancia">0,00 €</div>
+                <div class="total-card-sub" id="venta-total-discrepancia-sub">Impresos vs Cobrados</div>
               </div>
             </div>
 
@@ -1895,7 +1982,7 @@
               <button type="button" class="btn btn-secondary" id="btn-filtro-ventas-anulados" onclick="filtrarEstadoVentas('anulados')" style="padding: 6px 12px; font-size: 12px; color: #f87171;">⚠️ Anulados / Vaciados</button>
             </div>
             
-            <div style="flex: 1; overflow-y: auto;">
+            <div class="ventas-table-container" style="flex: 1; overflow-y: auto;">
               <table class="app-table">
                 <thead>
                   <tr style="cursor: pointer;">
