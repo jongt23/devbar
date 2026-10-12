@@ -180,6 +180,35 @@ document.addEventListener("DOMContentLoaded", () => {
   window.exportarAuditoriaCSV = exportarAuditoriaCSV;
   window.changeAuditPwd = changeAuditPwd;
   window.seleccionarZonaPlano = seleccionarZonaPlano;
+
+  // Funciones del Editor y Creador del Plano del Local
+  window.renderEditorPlano = renderEditorPlano;
+  window.seleccionarMesaPlanoDev = seleccionarMesaPlanoDev;
+  window.deseleccionarMesaPlanoDev = deseleccionarMesaPlanoDev;
+  window.ubicarMesaPlanoDev = ubicarMesaPlanoDev;
+  window.moverMesaPlanoDev = moverMesaPlanoDev;
+  window.cambiarDimensionPlanoDev = cambiarDimensionPlanoDev;
+  window.rotarMesaPlanoDev = rotarMesaPlanoDev;
+  window.hacerCuadradaPlanoDev = hacerCuadradaPlanoDev;
+  window.cambiarFormaPlanoDev = cambiarFormaPlanoDev;
+  window.quitarMesaPlanoDev = quitarMesaPlanoDev;
+  window.guardarPlanoGridDev = guardarPlanoGridDev;
+  window.setGridColsDev = setGridColsDev;
+  window.setGridRowsDev = setGridRowsDev;
+  window.aplicarPresetGridDev = aplicarPresetGridDev;
+  window.cambiarZonaPlanoDev = cambiarZonaPlanoDev;
+  window.toggleModoPlanoDev = toggleModoPlanoDev;
+  window.setPlanoVistaMovil = setPlanoVistaMovil;
+  window.cambiarSidebarTabPlanoDev = cambiarSidebarTabPlanoDev;
+  window.filtrarMesasPlanoDev = filtrarMesasPlanoDev;
+  window.abrirModalNuevaMesaPlanoDev = abrirModalNuevaMesaPlanoDev;
+  window.cerrarModalNuevaMesaPlanoDev = cerrarModalNuevaMesaPlanoDev;
+  window.guardarMesaDesdeModalPlanoDev = guardarMesaDesdeModalPlanoDev;
+  window.crearDecoradorRapidoDev = crearDecoradorRapidoDev;
+  window.crearDecoradorPersonalizadoDev = crearDecoradorPersonalizadoDev;
+  window.editarMesaDatosDev = editarMesaDatosDev;
+  window.eliminarMesaDev = eliminarMesaDev;
+
   window.cerrarModalTicketDetalle = cerrarModalTicketDetalle;
   window.mostrarDetalleTicketHistorico = mostrarDetalleTicketHistorico;
   window.guardarLimiteCuota = guardarLimiteCuota;
@@ -523,6 +552,7 @@ function suscribirseAFirebase() {
   onValue(ref(db, "mesas"), snap => {
     mesasData = snap.val() || {};
     renderPlanoMesas();
+    if (typeof renderEditorPlano === "function") renderEditorPlano();
   });
   
   // 2. Escuchar Pedidos activos
@@ -616,6 +646,7 @@ function suscribirseAFirebase() {
       planoCfg = { cols: Number(d.cols) || 16, rows: Number(d.rows) || 12 };
     }
     renderPlanoMesas();
+    if (typeof renderEditorPlano === "function") renderEditorPlano();
   });
 
   // 10. Escuchar Cuota de Firebase
@@ -3315,6 +3346,14 @@ function cambiarPestana(paneId) {
     if (desde && !desde.value) desde.value = hoy;
     if (hasta && !hasta.value) hasta.value = hoy;
     renderVerifactuAeat();
+  }
+
+  if (paneId === "plano") {
+    const inpCols = document.getElementById("plano-cols-dev");
+    const inpRows = document.getElementById("plano-rows-dev");
+    if (inpCols && planoCfg) inpCols.value = planoCfg.cols || 16;
+    if (inpRows && planoCfg) inpRows.value = planoCfg.rows || 12;
+    if (typeof renderEditorPlano === "function") renderEditorPlano();
   }
 }
 
@@ -6082,3 +6121,925 @@ function exportarCSVGestoria() {
   link.click();
   document.body.removeChild(link);
 }
+
+// ============================================================================
+// --- EDITOR Y CREADOR VISUAL DEL PLANO DEL LOCAL ---
+// ============================================================================
+let planoDevMesaSel = null;
+let planoDevZonaActiva = 'TODAS';
+let planoDevModo = 'editor'; // 'editor' | 'preview'
+let planoDevSidebarTab = 'mesas'; // 'mesas' | 'decoradores'
+let planoDevFiltroMesa = '';
+let planoDevDragId = null;
+let planoDevVistaMovil = 'plano'; // 'plano' | 'mesas'
+
+function setPlanoVistaMovil(vista) {
+  planoDevVistaMovil = vista;
+  const btnPlano = document.getElementById('pmob-tab-plano');
+  const btnMesas = document.getElementById('pmob-tab-mesas');
+  const bodyEl = document.querySelector('.plano-editor-body');
+
+  if (btnPlano) btnPlano.classList.toggle('active', vista === 'plano');
+  if (btnMesas) btnMesas.classList.toggle('active', vista === 'mesas');
+
+  if (bodyEl) {
+    bodyEl.classList.toggle('mobile-view-mesas', vista === 'mesas');
+    bodyEl.classList.toggle('mobile-view-plano', vista === 'plano');
+  }
+}
+
+function toastPlano(msg, icono = '✅') {
+  const el = document.getElementById('plano-dev-toast');
+  if (!el) return;
+  const ic = document.getElementById('plano-toast-icon');
+  const tx = document.getElementById('plano-toast-text');
+  if (ic) ic.textContent = icono;
+  if (tx) tx.textContent = msg;
+  el.style.display = 'flex';
+  el.style.opacity = '1';
+  clearTimeout(window._planoToastTimer);
+  window._planoToastTimer = setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => { el.style.display = 'none'; }, 200);
+  }, 2200);
+}
+
+function cambiarSidebarTabPlanoDev(tab) {
+  planoDevSidebarTab = tab;
+  const btnMesas = document.getElementById('tab-sidebar-mesas');
+  const btnDeco = document.getElementById('tab-sidebar-decoradores');
+  const panelMesas = document.getElementById('panel-sidebar-mesas');
+  const panelDeco = document.getElementById('panel-sidebar-decoradores');
+  
+  if (btnMesas) btnMesas.classList.toggle('active', tab === 'mesas');
+  if (btnDeco) btnDeco.classList.toggle('active', tab === 'decoradores');
+  if (panelMesas) panelMesas.style.display = tab === 'mesas' ? 'flex' : 'none';
+  if (panelDeco) panelDeco.style.display = tab === 'decoradores' ? 'flex' : 'none';
+}
+
+function toggleModoPlanoDev(modo) {
+  planoDevModo = modo;
+  const btnEdit = document.getElementById('btn-plano-mode-edit');
+  const btnPrev = document.getElementById('btn-plano-mode-prev');
+  if (btnEdit) btnEdit.classList.toggle('active', modo === 'editor');
+  if (btnPrev) btnPrev.classList.toggle('active', modo === 'preview');
+  renderEditorPlano();
+}
+
+function filtrarMesasPlanoDev(texto) {
+  planoDevFiltroMesa = (texto || '').trim().toLowerCase();
+  renderSidebarMesasPlanoDev();
+}
+
+function cambiarZonaPlanoDev(zona) {
+  planoDevZonaActiva = zona;
+  planoDevMesaSel = null;
+  renderEditorPlano();
+}
+
+function renderEditorPlano() {
+  const gridEl = document.getElementById('plano-admin-grid-dev');
+  if (!gridEl) return;
+
+  if (!db || !localActivo) {
+    gridEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dim)">Selecciona primero un local en el panel de la izquierda.</div>';
+    return;
+  }
+
+  const cols = planoCfg.cols || 16;
+  const rows = planoCfg.rows || 12;
+
+  // Sincronizar inputs de cuadrícula
+  const inpCols = document.getElementById('plano-cols-dev');
+  const inpRows = document.getElementById('plano-rows-dev');
+  if (inpCols && document.activeElement !== inpCols) inpCols.value = cols;
+  if (inpRows && document.activeElement !== inpRows) inpRows.value = rows;
+
+  // Obtener mesas
+  const allEntries = Object.entries(mesasData)
+    .filter(([id]) => !id.startsWith('temp_'))
+    .sort(([, a], [, b]) => (a.orden ?? 999) - (b.orden ?? 999) || a.nombre.localeCompare(b.nombre, 'es', { numeric: true }));
+
+  // Zonas disponibles
+  const zonasSet = new Set();
+  allEntries.forEach(([, m]) => {
+    const z = (m.zona || '').trim();
+    if (z) zonasSet.add(z);
+  });
+  const zonas = Array.from(zonasSet);
+
+  // Renderizar Tabs de Zonas
+  const zonasEl = document.getElementById('plano-dev-zonas');
+  if (zonasEl) {
+    let htmlZonas = `<button type="button" class="plano-dev-zona-btn${planoDevZonaActiva === 'TODAS' ? ' active' : ''}" onclick="cambiarZonaPlanoDev('TODAS')">Todas las zonas (${allEntries.length})</button>`;
+    zonas.forEach(z => {
+      const count = allEntries.filter(([, m]) => (m.zona || '').trim() === z).length;
+      htmlZonas += `<button type="button" class="plano-dev-zona-btn${planoDevZonaActiva === z ? ' active' : ''}" onclick="cambiarZonaPlanoDev('${z.replace(/'/g, "\\'")}')">${z} (${count})</button>`;
+    });
+    zonasEl.innerHTML = htmlZonas;
+  }
+
+  // Filtrar mesas por zona seleccionada
+  const entriesFiltradas = planoDevZonaActiva === 'TODAS'
+    ? allEntries
+    : allEntries.filter(([, m]) => (m.zona || '').trim() === planoDevZonaActiva);
+
+  // Estadísticas
+  const ubicadasTotal = allEntries.filter(([, m]) => !!m.plano).length;
+  const sinUbicarTotal = allEntries.length - ubicadasTotal;
+  const statTotal = document.getElementById('plano-stat-total');
+  const statUbicadas = document.getElementById('plano-stat-ubicadas');
+  const statSinUbicar = document.getElementById('plano-stat-sinubicar');
+  if (statTotal) statTotal.innerHTML = `Total: <strong>${allEntries.length}</strong>`;
+  if (statUbicadas) statUbicadas.innerHTML = `Ubicadas: <strong>${ubicadasTotal}</strong>`;
+  if (statSinUbicar) statSinUbicar.innerHTML = `Sin ubicar: <strong>${sinUbicarTotal}</strong>`;
+  const mobBadge = document.getElementById('pmob-badge-count');
+  if (mobBadge) mobBadge.textContent = allEntries.length;
+
+  // Renderizar Sidebar
+  renderSidebarMesasPlanoDev(entriesFiltradas);
+
+  // Configurar Rejilla CSS Grid
+  gridEl.style.setProperty('--plano-cols', cols);
+  gridEl.style.setProperty('--plano-rows', rows);
+  gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  gridEl.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  gridEl.style.aspectRatio = `${cols} / ${rows}`;
+  gridEl.innerHTML = '';
+
+  // Mapa de ocupación para detectar solapamientos
+  const mapaCeldas = {};
+  const mesasUbicadas = entriesFiltradas.filter(([, m]) => !!m.plano);
+  mesasUbicadas.forEach(([id, m]) => {
+    const p = m.plano;
+    const w = Math.max(1, p.w || 2);
+    const h = Math.max(1, p.h || 2);
+    for (let r = p.y; r < p.y + h && r <= rows; r++) {
+      for (let c = p.x; c < p.x + w && c <= cols; c++) {
+        const key = `${c},${r}`;
+        mapaCeldas[key] = (mapaCeldas[key] || 0) + 1;
+      }
+    }
+  });
+
+  if (planoDevModo === 'editor') {
+    // 1. Celdas de fondo explícitas
+    for (let r = 1; r <= rows; r++) {
+      for (let c = 1; c <= cols; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'plano-cell-dev';
+        cell.dataset.col = c;
+        cell.dataset.row = r;
+        cell.style.gridColumn = c;
+        cell.style.gridRow = r;
+        cell.title = `Columna ${c}, Fila ${r}`;
+        cell.textContent = `${c},${r}`;
+
+        // Clic en celda
+        cell.onclick = () => {
+          if (planoDevMesaSel && mesasData[planoDevMesaSel]) {
+            const m = mesasData[planoDevMesaSel];
+            const prevP = m.plano;
+            const w = prevP?.w || 2;
+            const h = prevP?.h || 2;
+            const shape = prevP?.shape || (m.nombre.includes('Redonda') || m.nombre.includes('Círculo') ? 'circle' : 'rect');
+            ubicarMesaPlanoDev(planoDevMesaSel, c, r, w, h, shape);
+          }
+        };
+
+        // Drag & Drop sobre celdas
+        cell.ondragover = e => {
+          e.preventDefault();
+          cell.classList.add('drag-target');
+        };
+        cell.ondragleave = () => {
+          cell.classList.remove('drag-target');
+        };
+        cell.ondrop = e => {
+          e.preventDefault();
+          cell.classList.remove('drag-target');
+          const mid = planoDevDragId || e.dataTransfer?.getData('text/plain');
+          if (mid && mesasData[mid]) {
+            const m = mesasData[mid];
+            const prevP = m.plano;
+            const w = prevP?.w || 2;
+            const h = prevP?.h || 2;
+            const shape = prevP?.shape || 'rect';
+            ubicarMesaPlanoDev(mid, c, r, w, h, shape);
+          }
+        };
+
+        gridEl.appendChild(cell);
+      }
+    }
+
+    // 2. Mesas ubicadas (encima de las celdas)
+    mesasUbicadas.forEach(([id, m]) => {
+      const p = m.plano;
+      const w = Math.max(1, p.w || 2);
+      const h = Math.max(1, p.h || 2);
+      const isDeco = m.nombre.startsWith('#');
+      const isSelected = planoDevMesaSel === id;
+      const isCircle = p.shape === 'circle';
+
+      // Comprobar solapamiento
+      let tieneSolape = false;
+      for (let r = p.y; r < p.y + h && r <= rows; r++) {
+        for (let c = p.x; c < p.x + w && c <= cols; c++) {
+          if (mapaCeldas[`${c},${r}`] > 1) {
+            tieneSolape = true;
+            break;
+          }
+        }
+        if (tieneSolape) break;
+      }
+
+      const div = document.createElement('div');
+      div.className = 'plano-mesa-dev' +
+        (isCircle ? ' circle' : '') +
+        (isDeco ? ' decorador' : '') +
+        (isSelected ? ' selected' : '') +
+        (tieneSolape ? ' solapada' : '');
+
+      div.style.gridColumn = `${p.x} / span ${w}`;
+      div.style.gridRow = `${p.y} / span ${h}`;
+      div.dataset.id = id;
+      div.title = `${m.nombre} [Col ${p.x}, Fila ${p.y} - ${w}×${h}]${tieneSolape ? ' (¡Solapada!)' : ''}`;
+
+      const displayName = isDeco ? m.nombre.slice(1) : m.nombre;
+      div.innerHTML = `
+        <span style="font-weight:700;line-height:1.2;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${displayName}</span>
+        <span style="font-size:9.5px;opacity:0.75;font-weight:400;margin-top:2px">${w}×${h}${isCircle ? ' ⚪' : ''}${tieneSolape ? ' ⚠️' : ''}</span>
+      `;
+
+      // Clic para seleccionar
+      div.onclick = e => {
+        e.stopPropagation();
+        seleccionarMesaPlanoDev(id);
+      };
+
+      // Arrastrar la mesa directamente desde la cuadrícula
+      div.draggable = true;
+      div.ondragstart = e => {
+        planoDevDragId = id;
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'move';
+        div.style.opacity = '0.5';
+      };
+      div.ondragend = () => {
+        planoDevDragId = null;
+        div.style.opacity = '1';
+      };
+
+      gridEl.appendChild(div);
+    });
+
+  } else {
+    // Modo Preview (Aspecto Camarero en vivo)
+    mesasUbicadas.forEach(([id, m]) => {
+      const p = m.plano;
+      const w = Math.max(1, p.w || 2);
+      const h = Math.max(1, p.h || 2);
+      const isDeco = m.nombre.startsWith('#');
+      const isCircle = p.shape === 'circle';
+
+      const tienePedido = pedidosData[id] && Object.keys(pedidosData[id]).length > 0;
+      let claseAlerta = tienePedido ? 'ocupada' : 'libre';
+
+      const card = document.createElement('div');
+      card.className = `plano-mesa-grid ${claseAlerta}${isCircle ? ' circle' : ''}${isDeco ? ' decorador' : ''}`;
+      card.style.gridColumn = `${p.x} / span ${w}`;
+      card.style.gridRow = `${p.y} / span ${h}`;
+
+      if (isDeco) {
+        card.innerHTML = `<span class="plano-mesa-nombre">${m.nombre.slice(1)}</span>`;
+      } else {
+        let totalQty = 0;
+        let subtotal = 0;
+        if (tienePedido) {
+          Object.values(pedidosData[id]).forEach(env => {
+            const ls = env.lineas || { _: env };
+            Object.values(ls).forEach(l => {
+              if (l && l.nombre && l.estado !== 'cancelado') {
+                const qty = Number(l.qty || 1);
+                const price = Number(l.precio || cartaData[l.artId]?.precio || 0);
+                totalQty += qty;
+                subtotal += (price * qty);
+              }
+            });
+          });
+        }
+        card.innerHTML = `
+          <span class="plano-mesa-nombre">${m.nombre}</span>
+          ${tienePedido ? `<span class="plano-mesa-sub">${totalQty} art. | ${subtotal.toFixed(2)}€</span>` : '<span class="plano-mesa-sub">Libre</span>'}
+        `;
+      }
+
+      card.onclick = () => seleccionarMesaPlanoDev(id);
+      gridEl.appendChild(card);
+    });
+  }
+
+  // Renderizar controles de propiedades de la mesa
+  renderPropiedadesMesaPlanoDev();
+}
+
+function renderSidebarMesasPlanoDev(mesasFiltradas) {
+  const listaEl = document.getElementById('plano-sidebar-mesas-lista');
+  if (!listaEl) return;
+
+  const entries = (mesasFiltradas || Object.entries(mesasData).filter(([id]) => !id.startsWith('temp_')))
+    .filter(([, m]) => {
+      if (!planoDevFiltroMesa) return true;
+      return m.nombre.toLowerCase().includes(planoDevFiltroMesa) || (m.zona || '').toLowerCase().includes(planoDevFiltroMesa);
+    });
+
+  if (!entries.length) {
+    listaEl.innerHTML = '<div style="color:var(--text-dim);font-size:12px;text-align:center;padding:16px">No hay mesas que coincidan.</div>';
+    return;
+  }
+
+  listaEl.innerHTML = '';
+  entries.forEach(([id, m]) => {
+    const isPlaced = !!m.plano;
+    const isSelected = planoDevMesaSel === id;
+    const isDeco = m.nombre.startsWith('#');
+
+    const card = document.createElement('div');
+    card.className = 'plano-mesa-card-dev' + (isPlaced ? ' placed' : '') + (isSelected ? ' selected' : '');
+    card.draggable = true;
+
+    let coordTxt = 'Sin ubicar';
+    if (isPlaced) {
+      coordTxt = `C${m.plano.x} F${m.plano.y} (${m.plano.w}×${m.plano.h})${m.plano.shape === 'circle' ? ' ⚪' : ''}`;
+    }
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;overflow:hidden">
+        <span style="font-size:13px">${isDeco ? '🧱' : (m.plano?.shape === 'circle' ? '⚪' : '🪑')}</span>
+        <span style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.nombre}</span>
+      </div>
+      <span class="plano-status-coord">${coordTxt}</span>
+    `;
+
+    card.onclick = () => {
+      seleccionarMesaPlanoDev(isSelected ? null : id, true);
+    };
+
+    // Drag and drop desde el sidebar
+    card.ondragstart = e => {
+      planoDevDragId = id;
+      e.dataTransfer.setData('text/plain', id);
+      e.dataTransfer.effectAllowed = 'copyMove';
+      card.style.opacity = '0.5';
+    };
+    card.ondragend = () => {
+      planoDevDragId = null;
+      card.style.opacity = '1';
+    };
+
+    listaEl.appendChild(card);
+  });
+}
+
+function seleccionarMesaPlanoDev(id, desdeSidebar = false) {
+  planoDevMesaSel = id;
+  if (id && (desdeSidebar || window.innerWidth <= 850)) {
+    setPlanoVistaMovil('plano');
+    if (mesasData[id]) {
+      toastPlano(`"${mesasData[id].nombre}" lista. Toca la casilla del plano para colocarla`, '📍');
+    }
+  }
+  renderEditorPlano();
+}
+
+function deseleccionarMesaPlanoDev() {
+  planoDevMesaSel = null;
+  renderEditorPlano();
+}
+
+function renderPropiedadesMesaPlanoDev() {
+  const barEl = document.getElementById('plano-mesa-props-bar');
+  if (!barEl) return;
+
+  if (!planoDevMesaSel || !mesasData[planoDevMesaSel]) {
+    barEl.style.display = 'none';
+    return;
+  }
+
+  const id = planoDevMesaSel;
+  const m = mesasData[id];
+  const p = m.plano;
+  const isDeco = m.nombre.startsWith('#');
+  const cols = planoCfg.cols || 16;
+  const rows = planoCfg.rows || 12;
+
+  barEl.style.display = 'flex';
+
+  let ubicacionHTML = '';
+  if (p) {
+    ubicacionHTML = `
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <!-- Posición y D-Pad -->
+        <div style="display:flex;align-items:center;gap:6px;background:var(--panel);padding:4px 8px;border-radius:8px;border:1px solid var(--border)">
+          <div style="font-size:11px;font-family:var(--font-code);color:var(--text-dim);display:flex;flex-direction:column;line-height:1.2">
+            <span>Col: <strong style="color:var(--text)">${p.x}</strong></span>
+            <span>Fil: <strong style="color:var(--text)">${p.y}</strong></span>
+          </div>
+          <div class="plano-prop-dpad">
+            <div></div>
+            <button type="button" onclick="moverMesaPlanoDev(0, -1)" title="Mover arriba">▲</button>
+            <div></div>
+            <button type="button" onclick="moverMesaPlanoDev(-1, 0)" title="Mover izquierda">◀</button>
+            <button type="button" onclick="moverMesaPlanoDev(0, 1)" title="Mover abajo">▼</button>
+            <button type="button" onclick="moverMesaPlanoDev(1, 0)" title="Mover derecha">▶</button>
+          </div>
+        </div>
+
+        <!-- Ancho y Alto -->
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:4px">
+            Ancho
+            <div class="plano-num-stepper">
+              <button type="button" onclick="cambiarDimensionPlanoDev(-1, 0)">−</button>
+              <input type="number" id="pdev-w" min="1" max="${cols}" value="${p.w || 2}" onchange="guardarDimensionInputPlanoDev()">
+              <button type="button" onclick="cambiarDimensionPlanoDev(1, 0)">+</button>
+            </div>
+          </label>
+
+          <label style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:4px">
+            Alto
+            <div class="plano-num-stepper">
+              <button type="button" onclick="cambiarDimensionPlanoDev(0, -1)">−</button>
+              <input type="number" id="pdev-h" min="1" max="${rows}" value="${p.h || 2}" onchange="guardarDimensionInputPlanoDev()">
+              <button type="button" onclick="cambiarDimensionPlanoDev(0, 1)">+</button>
+            </div>
+          </label>
+        </div>
+
+        <!-- Acciones rápidas de forma -->
+        <div style="display:flex;align-items:center;gap:6px">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="rotarMesaPlanoDev()" title="Intercambiar ancho y alto" style="padding:5px 8px;font-size:11px">🔄 Rotar</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="hacerCuadradaPlanoDev()" title="Hacer cuadrada" style="padding:5px 8px;font-size:11px">⏹️ Cuadrada</button>
+
+          <div class="plano-shape-toggle">
+            <button type="button" class="plano-shape-btn${p.shape !== 'circle' ? ' active' : ''}" onclick="cambiarFormaPlanoDev('rect')" title="Mesa Rectangular/Cuadrada">⬛ Rect</button>
+            <button type="button" class="plano-shape-btn${p.shape === 'circle' ? ' active' : ''}" onclick="cambiarFormaPlanoDev('circle')" title="Mesa Redonda / Círculo">⚪ Círculo</button>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary btn-sm" onclick="quitarMesaPlanoDev('${id}')" style="color:var(--warn);border-color:rgba(251,191,36,0.3);font-size:11px" title="Quitar posición en el plano">📍 Desubicar</button>
+      </div>
+    `;
+  } else {
+    ubicacionHTML = `
+      <div style="font-size:11.5px;color:var(--text-dim);display:flex;align-items:center;gap:6px">
+        <span>📍 Sin ubicar: Haz clic en cualquier celda de la cuadrícula o arrastra para colocarla.</span>
+      </div>
+    `;
+  }
+
+  barEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:15px">${isDeco ? '🧱' : (p?.shape === 'circle' ? '⚪' : '🪑')}</span>
+        <div>
+          <strong style="font-size:13px;color:var(--text);font-family:var(--font-code)">${m.nombre}</strong>
+          <span style="font-size:11px;color:var(--text-dim);margin-left:4px">(${m.zona || 'Sin zona'})</span>
+        </div>
+      </div>
+      <button type="button" class="btn-icon" onclick="editarMesaDatosDev('${id}')" title="Editar nombre o zona" style="font-size:13px">✏️</button>
+      <button type="button" class="btn-icon" onclick="eliminarMesaDev('${id}')" title="Eliminar mesa de la base de datos" style="color:var(--danger);font-size:13px">🗑️</button>
+    </div>
+
+    ${ubicacionHTML}
+
+    <div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="deseleccionarMesaPlanoDev()" title="Cerrar barra de propiedades" style="font-size:11px">✕ Deseleccionar</button>
+    </div>
+  `;
+}
+
+// Ubicar mesa en el plano
+async function ubicarMesaPlanoDev(id, col, row, w = 2, h = 2, shape = 'rect') {
+  if (!db || !id || !mesasData[id]) return;
+  const cols = planoCfg.cols || 16;
+  const rows = planoCfg.rows || 12;
+
+  const validW = Math.max(1, Math.min(w, cols));
+  const validH = Math.max(1, Math.min(h, rows));
+  const validCol = Math.max(1, Math.min(col, cols - validW + 1));
+  const validRow = Math.max(1, Math.min(row, rows - validH + 1));
+
+  const planoObj = {
+    x: validCol,
+    y: validRow,
+    w: validW,
+    h: validH,
+    shape: shape === 'circle' ? 'circle' : 'rect'
+  };
+
+  // Optimista local
+  mesasData[id].plano = planoObj;
+  planoDevMesaSel = id;
+  renderEditorPlano();
+
+  try {
+    await set(ref(db, `mesas/${id}/plano`), planoObj);
+    toastPlano(`${mesasData[id].nombre} ubicada en Col ${validCol}, Fila ${validRow}`);
+  } catch (err) {
+    console.error('Error al guardar plano de mesa:', err);
+    toastPlano('Error al guardar posición', '❌');
+  }
+}
+
+// Mover mesa con flechas o D-pad
+async function moverMesaPlanoDev(dx, dy) {
+  if (!planoDevMesaSel || !mesasData[planoDevMesaSel]?.plano) return;
+  const id = planoDevMesaSel;
+  const p = mesasData[id].plano;
+  const cols = planoCfg.cols || 16;
+  const rows = planoCfg.rows || 12;
+
+  const newX = Math.max(1, Math.min(p.x + dx, cols - p.w + 1));
+  const newY = Math.max(1, Math.min(p.y + dy, rows - p.h + 1));
+
+  if (newX === p.x && newY === p.y) return;
+
+  p.x = newX;
+  p.y = newY;
+  renderEditorPlano();
+
+  try {
+    await set(ref(db, `mesas/${id}/plano`), p);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Cambiar dimensiones
+async function cambiarDimensionPlanoDev(dw, dh) {
+  if (!planoDevMesaSel || !mesasData[planoDevMesaSel]?.plano) return;
+  const id = planoDevMesaSel;
+  const p = mesasData[id].plano;
+  const cols = planoCfg.cols || 16;
+  const rows = planoCfg.rows || 12;
+
+  let newW = Math.max(1, Math.min((p.w || 2) + dw, cols));
+  let newH = Math.max(1, Math.min((p.h || 2) + dh, rows));
+
+  // Ajustar si se sale del margen derecho o inferior
+  if (p.x + newW - 1 > cols) p.x = Math.max(1, cols - newW + 1);
+  if (p.y + newH - 1 > rows) p.y = Math.max(1, rows - newH + 1);
+
+  p.w = newW;
+  p.h = newH;
+  renderEditorPlano();
+
+  try {
+    await set(ref(db, `mesas/${id}/plano`), p);
+    toastPlano(`Dimensiones: ${newW}×${newH}`);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+window.guardarDimensionInputPlanoDev = async () => {
+  if (!planoDevMesaSel || !mesasData[planoDevMesaSel]?.plano) return;
+  const id = planoDevMesaSel;
+  const p = mesasData[id].plano;
+  const cols = planoCfg.cols || 16;
+  const rows = planoCfg.rows || 12;
+
+  const inpW = document.getElementById('pdev-w');
+  const inpH = document.getElementById('pdev-h');
+  const w = Math.max(1, Math.min(parseInt(inpW?.value) || 2, cols));
+  const h = Math.max(1, Math.min(parseInt(inpH?.value) || 2, rows));
+
+  if (p.x + w - 1 > cols) p.x = Math.max(1, cols - w + 1);
+  if (p.y + h - 1 > rows) p.y = Math.max(1, rows - h + 1);
+
+  p.w = w;
+  p.h = h;
+  renderEditorPlano();
+  await set(ref(db, `mesas/${id}/plano`), p);
+  toastPlano(`Dimensiones: ${w}×${h}`);
+};
+
+// Rotar dimensiones (intercambiar W y H)
+async function rotarMesaPlanoDev() {
+  if (!planoDevMesaSel || !mesasData[planoDevMesaSel]?.plano) return;
+  const id = planoDevMesaSel;
+  const p = mesasData[id].plano;
+  const cols = planoCfg.cols || 16;
+  const rows = planoCfg.rows || 12;
+
+  const oldW = p.w || 2;
+  const oldH = p.h || 2;
+  const newW = oldH;
+  const newH = oldW;
+
+  if (p.x + newW - 1 > cols) p.x = Math.max(1, cols - newW + 1);
+  if (p.y + newH - 1 > rows) p.y = Math.max(1, rows - newH + 1);
+
+  p.w = newW;
+  p.h = newH;
+  renderEditorPlano();
+
+  try {
+    await set(ref(db, `mesas/${id}/plano`), p);
+    toastPlano(`Rotada a ${newW}×${newH}`, '🔄');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Hacer cuadrada
+async function hacerCuadradaPlanoDev() {
+  if (!planoDevMesaSel || !mesasData[planoDevMesaSel]?.plano) return;
+  const id = planoDevMesaSel;
+  const p = mesasData[id].plano;
+  const cols = planoCfg.cols || 16;
+  const rows = planoCfg.rows || 12;
+
+  const maxSide = Math.max(p.w || 2, p.h || 2);
+  const side = Math.min(maxSide, Math.min(cols, rows));
+
+  if (p.x + side - 1 > cols) p.x = Math.max(1, cols - side + 1);
+  if (p.y + side - 1 > rows) p.y = Math.max(1, rows - side + 1);
+
+  p.w = side;
+  p.h = side;
+  renderEditorPlano();
+
+  try {
+    await set(ref(db, `mesas/${id}/plano`), p);
+    toastPlano(`Forma cuadrada: ${side}×${side}`, '⏹️');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Cambiar forma Rect / Círculo
+async function cambiarFormaPlanoDev(shape) {
+  if (!planoDevMesaSel || !mesasData[planoDevMesaSel]?.plano) return;
+  const id = planoDevMesaSel;
+  const p = mesasData[id].plano;
+  p.shape = shape;
+  renderEditorPlano();
+
+  try {
+    await set(ref(db, `mesas/${id}/plano`), p);
+    toastPlano(shape === 'circle' ? 'Forma: Círculo ⚪' : 'Forma: Rectangular ⬛');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Desubicar / quitar del plano
+async function quitarMesaPlanoDev(id) {
+  if (!id || !mesasData[id]) return;
+  delete mesasData[id].plano;
+  renderEditorPlano();
+
+  try {
+    await remove(ref(db, `mesas/${id}/plano`));
+    toastPlano('Mesa quitada del plano', '📍');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Guardar rejilla en Firebase
+async function guardarPlanoGridDev() {
+  if (!db) return;
+  const inpCols = document.getElementById('plano-cols-dev');
+  const inpRows = document.getElementById('plano-rows-dev');
+  const cols = Math.max(4, Math.min(30, parseInt(inpCols?.value) || 16));
+  const rows = Math.max(4, Math.min(20, parseInt(inpRows?.value) || 12));
+
+  planoCfg.cols = cols;
+  planoCfg.rows = rows;
+  renderEditorPlano();
+
+  try {
+    await set(ref(db, 'config/plano'), { cols, rows });
+    toastPlano(`Cuadrícula guardada: ${cols} cols × ${rows} filas`, '💾');
+  } catch (err) {
+    console.error(err);
+    toastPlano('Error al guardar tamaño de cuadrícula', '❌');
+  }
+}
+
+function setGridColsDev(delta) {
+  const inp = document.getElementById('plano-cols-dev');
+  if (!inp) return;
+  const val = Math.max(4, Math.min(30, (parseInt(inp.value) || 16) + delta));
+  inp.value = val;
+  guardarPlanoGridDev();
+}
+
+function setGridRowsDev(delta) {
+  const inp = document.getElementById('plano-rows-dev');
+  if (!inp) return;
+  const val = Math.max(4, Math.min(20, (parseInt(inp.value) || 12) + delta));
+  inp.value = val;
+  guardarPlanoGridDev();
+}
+
+function aplicarPresetGridDev(cols, rows) {
+  const inpCols = document.getElementById('plano-cols-dev');
+  const inpRows = document.getElementById('plano-rows-dev');
+  if (inpCols) inpCols.value = cols;
+  if (inpRows) inpRows.value = rows;
+  guardarPlanoGridDev();
+}
+
+// Crear elemento decorador rápido (#...)
+async function crearDecoradorRapidoDev(nombre, w = 3, h = 1, shape = 'rect') {
+  if (!db) return;
+  const zona = planoDevZonaActiva !== 'TODAS' ? planoDevZonaActiva : 'Salón';
+  try {
+    const res = await push(ref(db, 'mesas'), {
+      nombre,
+      estado: 'libre',
+      zona,
+      orden: 999
+    });
+    const newId = res.key;
+    toastPlano(`Decorador ${nombre} creado. Pulsa en la cuadrícula para ubicarlo.`, '🧱');
+    planoDevMesaSel = newId;
+    if (mesasData[newId]) {
+      mesasData[newId].plano = { x: 1, y: 1, w, h, shape };
+    }
+    cambiarSidebarTabPlanoDev('mesas');
+    if (window.innerWidth <= 850) {
+      setPlanoVistaMovil('plano');
+    }
+    renderEditorPlano();
+  } catch (err) {
+    console.error(err);
+    toastPlano('Error al crear elemento decorador', '❌');
+  }
+}
+
+async function crearDecoradorPersonalizadoDev() {
+  const inp = document.getElementById('plano-nuevo-deco-nombre');
+  let nombre = (inp?.value || '').trim();
+  if (!nombre) return;
+  if (!nombre.startsWith('#')) nombre = '#' + nombre;
+
+  await crearDecoradorRapidoDev(nombre, 2, 2, 'rect');
+  if (inp) inp.value = '';
+}
+
+// Modal de Crear / Editar Mesa
+function abrirModalNuevaMesaPlanoDev(id = null) {
+  const modal = document.getElementById('modal-nueva-mesa-plano');
+  if (!modal) return;
+
+  const idInp = document.getElementById('modal-mesa-id');
+  const nomInp = document.getElementById('modal-mesa-nombre');
+  const zonaInp = document.getElementById('modal-mesa-zona');
+  const wInp = document.getElementById('modal-mesa-w');
+  const hInp = document.getElementById('modal-mesa-h');
+  const shapeInp = document.getElementById('modal-mesa-shape');
+  const title = document.getElementById('modal-mesa-title');
+
+  // Poblar sugerencias de zona
+  const dl = document.getElementById('lista-zonas-sugeridas');
+  if (dl) {
+    const zonas = [...new Set(Object.values(mesasData).map(m => (m.zona || '').trim()).filter(Boolean))];
+    dl.innerHTML = zonas.map(z => `<option value="${z}"></option>`).join('');
+  }
+
+  if (id && mesasData[id]) {
+    const m = mesasData[id];
+    idInp.value = id;
+    nomInp.value = m.nombre;
+    zonaInp.value = m.zona || '';
+    wInp.value = m.plano?.w || 2;
+    hInp.value = m.plano?.h || 2;
+    shapeInp.value = m.plano?.shape || 'rect';
+    title.textContent = '✏️ Editar Mesa';
+  } else {
+    idInp.value = '';
+    nomInp.value = '';
+    zonaInp.value = planoDevZonaActiva !== 'TODAS' ? planoDevZonaActiva : '';
+    wInp.value = 2;
+    hInp.value = 2;
+    shapeInp.value = 'rect';
+    title.textContent = '🪑 Nueva Mesa';
+  }
+
+  modal.style.display = 'flex';
+  nomInp.focus();
+}
+
+function cerrarModalNuevaMesaPlanoDev() {
+  const modal = document.getElementById('modal-nueva-mesa-plano');
+  if (modal) modal.style.display = 'none';
+}
+
+async function guardarMesaDesdeModalPlanoDev() {
+  if (!db) return;
+  const id = document.getElementById('modal-mesa-id')?.value;
+  const nombre = document.getElementById('modal-mesa-nombre')?.value.trim();
+  const zona = document.getElementById('modal-mesa-zona')?.value.trim();
+  const w = Math.max(1, parseInt(document.getElementById('modal-mesa-w')?.value) || 2);
+  const h = Math.max(1, parseInt(document.getElementById('modal-mesa-h')?.value) || 2);
+  const shape = document.getElementById('modal-mesa-shape')?.value || 'rect';
+
+  if (!nombre) {
+    showCustomAlert('Nueva Mesa', 'Por favor, escribe un nombre para la mesa.');
+    return;
+  }
+
+  try {
+    if (id && mesasData[id]) {
+      // Edición
+      const updates = { nombre, zona };
+      if (mesasData[id].plano) {
+        updates['plano/w'] = w;
+        updates['plano/h'] = h;
+        updates['plano/shape'] = shape;
+      }
+      await update(ref(db, `mesas/${id}`), updates);
+      toastPlano('Mesa actualizada');
+    } else {
+      // Creación
+      const res = await push(ref(db, 'mesas'), {
+        nombre,
+        zona,
+        estado: 'libre',
+        orden: Object.keys(mesasData).length + 1
+      });
+      planoDevMesaSel = res.key;
+      toastPlano('Mesa creada. Pulsa en la cuadrícula para colocarla.');
+    }
+    cerrarModalNuevaMesaPlanoDev();
+    if (window.innerWidth <= 850) {
+      setPlanoVistaMovil('plano');
+    }
+    renderEditorPlano();
+  } catch (err) {
+    console.error(err);
+    showCustomAlert('Error', 'No se pudo guardar la mesa.');
+  }
+}
+
+function editarMesaDatosDev(id) {
+  abrirModalNuevaMesaPlanoDev(id);
+}
+
+async function eliminarMesaDev(id) {
+  if (!id || !mesasData[id]) return;
+  const m = mesasData[id];
+  const conf = await showCustomConfirm('Eliminar Mesa', `¿Estás seguro de eliminar "${m.nombre}" definitivamente del sistema?`);
+  if (!conf) return;
+
+  try {
+    await remove(ref(db, `mesas/${id}`));
+    if (planoDevMesaSel === id) planoDevMesaSel = null;
+    toastPlano(`Mesa ${m.nombre} eliminada`, '🗑️');
+    renderEditorPlano();
+  } catch (err) {
+    console.error(err);
+    showCustomAlert('Error', 'No se pudo eliminar la mesa.');
+  }
+}
+
+// Atajos de teclado en el editor de plano
+window.addEventListener('keydown', e => {
+  const panePlano = document.getElementById('pane-plano');
+  if (!panePlano || !panePlano.classList.contains('active')) return;
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+  if (planoDevMesaSel && mesasData[planoDevMesaSel]) {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      moverMesaPlanoDev(0, -1);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      moverMesaPlanoDev(0, 1);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      moverMesaPlanoDev(-1, 0);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      moverMesaPlanoDev(1, 0);
+    } else if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      rotarMesaPlanoDev();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      deseleccionarMesaPlanoDev();
+    } else if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (mesasData[planoDevMesaSel].plano) {
+        e.preventDefault();
+        quitarMesaPlanoDev(planoDevMesaSel);
+      }
+    }
+  }
+});
+

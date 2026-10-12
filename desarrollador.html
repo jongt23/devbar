@@ -1121,6 +1121,547 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
+    /* --- EDITOR VISUAL DEL PLANO DEL LOCAL --- */
+    .plano-editor-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .plano-editor-toolbar {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .plano-editor-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .plano-stat-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--panel-light);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-code);
+    }
+    .plano-stat-badge strong {
+      color: var(--accent);
+    }
+
+    .plano-num-stepper {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .plano-num-stepper input {
+      width: 42px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: var(--font-code);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 0;
+      outline: none;
+    }
+    .plano-num-stepper button {
+      background: var(--panel-light);
+      border: none;
+      color: var(--text);
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background 0.12s;
+    }
+    .plano-num-stepper button:hover {
+      background: var(--border);
+      color: var(--accent);
+    }
+
+    .plano-preset-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--panel-light);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 11px;
+      font-family: var(--font-code);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .plano-preset-btn:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    .plano-mode-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel-light);
+      color: var(--text-dim);
+      transition: all 0.15s;
+    }
+    .plano-mode-btn.active {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .plano-dev-zonas {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .plano-dev-zona-btn {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--panel-light);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .plano-dev-zona-btn:hover {
+      color: var(--text);
+      border-color: rgba(84, 231, 193, 0.4);
+    }
+    .plano-dev-zona-btn.active {
+      background: var(--panel);
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 600;
+      box-shadow: 0 0 8px rgba(84, 231, 193, 0.2);
+    }
+
+    .plano-mobile-tabs {
+      display: none;
+    }
+
+    .plano-editor-body {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    @media (max-width: 850px) {
+      .plano-mobile-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+        width: 100%;
+      }
+      .plano-mobile-tab-btn {
+        flex: 1;
+        padding: 9px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--panel-light);
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.15s;
+      }
+      .plano-mobile-tab-btn.active {
+        background: var(--accent);
+        color: var(--bg);
+        border-color: var(--accent);
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(84, 231, 193, 0.3);
+      }
+
+      .plano-editor-body {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+      }
+
+      /* Control de visibilidad en móvil: muestra plano O sidebar */
+      .plano-editor-body.mobile-view-mesas .plano-editor-sidebar {
+        display: flex !important;
+        flex: 1 !important;
+        height: 100% !important;
+        min-height: 0 !important;
+      }
+      .plano-editor-body.mobile-view-mesas .plano-canvas-area {
+        display: none !important;
+      }
+
+      .plano-editor-body.mobile-view-plano .plano-editor-sidebar {
+        display: none !important;
+      }
+      .plano-editor-body.mobile-view-plano .plano-canvas-area {
+        display: flex !important;
+        flex: 1 !important;
+        height: 100% !important;
+        min-height: 0 !important;
+      }
+
+      /* Barra de herramientas compacta en móvil */
+      .plano-editor-toolbar {
+        padding: 8px 10px !important;
+        gap: 6px !important;
+      }
+      .plano-editor-toolbar-group {
+        gap: 6px !important;
+      }
+      .plano-stat-badge {
+        font-size: 10px !important;
+        padding: 2px 7px !important;
+      }
+
+      /* Cuadrícula optimizada para dedo y scroll fluido en móvil */
+      .plano-grid-scroll-wrap {
+        padding: 8px !important;
+        min-height: 0 !important;
+        flex: 1 !important;
+        display: block !important;
+        overflow: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+      .plano-admin-grid-dev {
+        min-width: calc(var(--plano-cols, 16) * 38px) !important;
+        min-height: calc(var(--plano-rows, 12) * 38px) !important;
+        margin: auto;
+      }
+      .plano-cell-dev {
+        min-width: 34px !important;
+        min-height: 34px !important;
+        font-size: 8px !important;
+        color: rgba(255, 255, 255, 0.2) !important;
+      }
+      .plano-mesa-dev {
+        font-size: 10px !important;
+        padding: 2px !important;
+      }
+
+      /* Barra de propiedades en móvil anclada compacta */
+      .plano-properties-bar {
+        padding: 8px 10px !important;
+        gap: 8px !important;
+        max-height: 48vh !important;
+        overflow-y: auto !important;
+      }
+    }
+
+    .plano-editor-sidebar {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .plano-sidebar-subnav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel-light);
+    }
+    .plano-sidebar-subtab {
+      flex: 1;
+      padding: 9px;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .plano-sidebar-subtab.active {
+      color: var(--accent);
+      background: var(--panel);
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .plano-sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .plano-mesa-card-dev {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--panel-light);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.12s;
+    }
+    .plano-mesa-card-dev:hover {
+      border-color: rgba(84, 231, 193, 0.4);
+      background: rgba(84, 231, 193, 0.05);
+      transform: translateX(2px);
+    }
+    .plano-mesa-card-dev.selected {
+      border-color: var(--accent) !important;
+      background: rgba(84, 231, 193, 0.14) !important;
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .plano-mesa-card-dev.placed {
+      opacity: 0.9;
+    }
+    .plano-status-coord {
+      font-size: 10px;
+      font-family: var(--font-code);
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .plano-mesa-card-dev.placed .plano-status-coord {
+      color: var(--accent);
+      background: rgba(84, 231, 193, 0.12);
+      border: 1px solid rgba(84, 231, 193, 0.25);
+    }
+
+    .plano-deco-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .plano-deco-btn {
+      padding: 8px 6px;
+      border-radius: 6px;
+      background: var(--panel-light);
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+      color: var(--text);
+      font-size: 11px;
+      font-family: var(--font-code);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .plano-deco-btn:hover {
+      border-color: var(--accent);
+      background: rgba(84, 231, 193, 0.08);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .plano-canvas-area {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .plano-grid-scroll-wrap {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #080c13;
+      border-radius: 10px;
+      border: 1px dashed var(--border);
+      padding: 12px;
+      min-height: 260px;
+      position: relative;
+    }
+
+    .plano-admin-grid-dev {
+      display: grid;
+      grid-template-columns: repeat(var(--plano-cols, 16), 1fr);
+      grid-template-rows: repeat(var(--plano-rows, 12), 1fr);
+      gap: 3px;
+      background: rgba(255, 255, 255, 0.015);
+      border-radius: 10px;
+      padding: 6px;
+      border: 1px solid var(--border);
+      aspect-ratio: var(--plano-cols, 16) / var(--plano-rows, 12);
+      width: 100%;
+      max-height: 100%;
+      min-width: 480px;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    .plano-cell-dev {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: crosshair;
+      transition: all 0.08s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      color: transparent;
+      user-select: none;
+    }
+    .plano-cell-dev:hover {
+      background: rgba(84, 231, 193, 0.12);
+      border-color: rgba(84, 231, 193, 0.35);
+      color: rgba(84, 231, 193, 0.7);
+    }
+    .plano-cell-dev.drag-target {
+      background: rgba(84, 231, 193, 0.25) !important;
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 10px rgba(84, 231, 193, 0.3);
+    }
+
+    .plano-mesa-dev {
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      font-family: var(--font-code);
+      font-size: 11px;
+      font-weight: 600;
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      background: rgba(28, 35, 51, 0.95);
+      z-index: 2;
+      text-align: center;
+      padding: 3px 5px;
+      overflow: hidden;
+      user-select: none;
+      transition: filter 0.12s, transform 0.12s, box-shadow 0.12s;
+      color: var(--text);
+    }
+    .plano-mesa-dev:hover {
+      filter: brightness(1.2);
+      transform: scale(1.02);
+      z-index: 5;
+    }
+    .plano-mesa-dev.selected {
+      border-color: var(--accent) !important;
+      background: rgba(84, 231, 193, 0.22) !important;
+      box-shadow: 0 0 0 2px var(--accent), 0 0 15px rgba(84, 231, 193, 0.4);
+      z-index: 10;
+    }
+    .plano-mesa-dev.circle {
+      border-radius: 50% !important;
+    }
+    .plano-mesa-dev.decorador {
+      border-style: dashed !important;
+      background: rgba(255, 255, 255, 0.04) !important;
+      color: var(--text-dim) !important;
+      border-color: rgba(255, 255, 255, 0.25) !important;
+    }
+    .plano-mesa-dev.solapada {
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 0 2px var(--danger);
+    }
+
+    .plano-properties-bar {
+      background: var(--panel-light);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      animation: fadeInProp 0.15s ease-out;
+    }
+    @keyframes fadeInProp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .plano-prop-dpad {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 26px);
+      grid-template-rows: repeat(2, 24px);
+      gap: 2px;
+    }
+    .plano-prop-dpad button {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+    }
+    .plano-prop-dpad button:hover {
+      background: var(--accent);
+      color: var(--panel);
+    }
+
+    .plano-shape-toggle {
+      display: inline-flex;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .plano-shape-btn {
+      padding: 5px 9px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .plano-shape-btn.active {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
     /* --- CAMAREROS PANE --- */
     .camareros-container {
       display: grid;
@@ -1826,6 +2367,7 @@
         </div>
         <div class="navbar">
           <button class="nav-tab active" onclick="cambiarPestana('salon')">Salón (Mesas)</button>
+          <button class="nav-tab" onclick="cambiarPestana('plano')">Plano del Local</button>
           <button class="nav-tab" onclick="cambiarPestana('carta')">Carta</button>
           <button class="nav-tab" onclick="cambiarPestana('ventas')">Ventas</button>
           <button class="nav-tab" onclick="cambiarPestana('gestoria')">Gestoría / Trimestres</button>
@@ -1861,6 +2403,146 @@
                 <div class="total-row">
                   <span>TOTAL:</span>
                   <span id="drawer-ticket-total">0,00 €</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISTA: EDITOR / CREADOR VISUAL DE PLANO DEL LOCAL -->
+        <div class="view-pane" id="pane-plano">
+          <div class="plano-editor-container">
+            <!-- Barra superior de herramientas y configuración de cuadrícula -->
+            <div class="plano-editor-toolbar">
+              <div class="plano-editor-toolbar-group">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:0.02em">📐 PLANO DEL LOCAL</span>
+                  <div class="plano-editor-toolbar-group" style="gap:4px">
+                    <button type="button" class="btn btn-secondary plano-mode-btn active" id="btn-plano-mode-edit" onclick="toggleModoPlanoDev('editor')">🛠️ Modo Edición</button>
+                    <button type="button" class="btn btn-secondary plano-mode-btn" id="btn-plano-mode-prev" onclick="toggleModoPlanoDev('preview')">👁️ Vista Camarero</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Estadísticas rápidas -->
+              <div class="plano-editor-toolbar-group" id="plano-dev-stats-container">
+                <span class="plano-stat-badge" id="plano-stat-total">Total: <strong>0</strong></span>
+                <span class="plano-stat-badge" id="plano-stat-ubicadas">Ubicadas: <strong>0</strong></span>
+                <span class="plano-stat-badge" id="plano-stat-sinubicar">Sin ubicar: <strong>0</strong></span>
+              </div>
+
+              <!-- Configuración de Cuadrícula (Columnas y Filas) -->
+              <div class="plano-editor-toolbar-group" style="background:var(--panel-light);padding:5px 10px;border-radius:8px;border:1px solid var(--border)">
+                <span style="font-size:11px;color:var(--text-dim);font-weight:600">CUADRÍCULA:</span>
+                <label style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:4px">Cols
+                  <div class="plano-num-stepper">
+                    <button type="button" onclick="setGridColsDev(-1)">−</button>
+                    <input type="number" id="plano-cols-dev" min="4" max="30" value="16" onchange="guardarPlanoGridDev()">
+                    <button type="button" onclick="setGridColsDev(1)">+</button>
+                  </div>
+                </label>
+                <label style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:4px">Filas
+                  <div class="plano-num-stepper">
+                    <button type="button" onclick="setGridRowsDev(-1)">−</button>
+                    <input type="number" id="plano-rows-dev" min="4" max="20" value="12" onchange="guardarPlanoGridDev()">
+                    <button type="button" onclick="setGridRowsDev(1)">+</button>
+                  </div>
+                </label>
+                <div style="display:flex;gap:4px" title="Presets rápidos de rejilla">
+                  <button type="button" class="plano-preset-btn" onclick="aplicarPresetGridDev(12,8)">12×8</button>
+                  <button type="button" class="plano-preset-btn" onclick="aplicarPresetGridDev(16,12)">16×12</button>
+                  <button type="button" class="plano-preset-btn" onclick="aplicarPresetGridDev(20,14)">20×14</button>
+                  <button type="button" class="plano-preset-btn" onclick="aplicarPresetGridDev(24,16)">24×16</button>
+                </div>
+                <button type="button" class="btn btn-sm" onclick="guardarPlanoGridDev()" style="font-size:11px;padding:4px 9px">💾 Guardar</button>
+              </div>
+            </div>
+
+            <!-- Selector de Zonas -->
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <div id="plano-dev-zonas" class="plano-dev-zonas">
+                <!-- Se generan dinámicamente: Todas, Salón, Terraza, etc. -->
+              </div>
+              <div style="font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:6px">
+                <span>💡 Arrastra o selecciona una mesa y pulsa en una celda para ubicarla. Usa flechas para mover y R para rotar.</span>
+              </div>
+            </div>
+
+            <!-- Selector de vista en móvil / pantalla estrecha -->
+            <div class="plano-mobile-tabs" id="plano-mobile-tabs">
+              <button type="button" class="plano-mobile-tab-btn active" id="pmob-tab-plano" onclick="setPlanoVistaMovil('plano')">
+                📐 Ver Plano / Cuadrícula
+              </button>
+              <button type="button" class="plano-mobile-tab-btn" id="pmob-tab-mesas" onclick="setPlanoVistaMovil('mesas')">
+                🪑 Mesas y Decoradores (<span id="pmob-badge-count">0</span>)
+              </button>
+            </div>
+
+            <!-- Cuerpo del Editor: Sidebar + Lienzo -->
+            <div class="plano-editor-body mobile-view-plano">
+              <!-- Sidebar izquierdo -->
+              <div class="plano-editor-sidebar">
+                <div class="plano-sidebar-subnav">
+                  <button type="button" class="plano-sidebar-subtab active" id="tab-sidebar-mesas" onclick="cambiarSidebarTabPlanoDev('mesas')">
+                    🪑 Mesas
+                  </button>
+                  <button type="button" class="plano-sidebar-subtab" id="tab-sidebar-decoradores" onclick="cambiarSidebarTabPlanoDev('decoradores')">
+                    🧱 Decoradores (#)
+                  </button>
+                </div>
+
+                <!-- Sub-panel Mesas -->
+                <div class="plano-sidebar-content" id="panel-sidebar-mesas">
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <input type="text" class="input-text" id="plano-filtro-mesas" placeholder="🔍 Buscar mesa..." oninput="filtrarMesasPlanoDev(this.value)" style="flex:1;padding:6px 10px;font-size:12px">
+                    <button type="button" class="btn btn-sm" onclick="abrirModalNuevaMesaPlanoDev()" title="Crear nueva mesa" style="padding:6px 10px;font-size:12px;font-weight:700">+</button>
+                  </div>
+                  <div id="plano-sidebar-mesas-lista" style="display:flex;flex-direction:column;gap:6px;overflow-y:auto;flex:1">
+                    <!-- Lista de mesas -->
+                  </div>
+                </div>
+
+                <!-- Sub-panel Decoradores y Elementos Arquitectónicos -->
+                <div class="plano-sidebar-content" id="panel-sidebar-decoradores" style="display:none">
+                  <div style="font-size:11.5px;color:var(--text-dim);line-height:1.4">
+                    Los elementos con <strong>#</strong> son decoradores arquitectónicos (barras, baños, accesos) que orientan a los camareros.
+                  </div>
+                  <div style="font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;margin-top:4px">
+                    Añadir de 1-Clic:
+                  </div>
+                  <div class="plano-deco-grid">
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Barra', 4, 2, 'rect')">🍸 #Barra (4×2)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Entrada', 2, 1, 'rect')">🚪 #Entrada (2×1)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Baños', 2, 2, 'rect')">🚻 #Baños (2×2)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Cocina', 3, 2, 'rect')">🍳 #Cocina (3×2)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Columna', 1, 1, 'circle')">🏛️ #Columna (1×1)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Pared', 3, 1, 'rect')">🧱 #Pared (3×1)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Ventana', 2, 1, 'rect')">🪟 #Ventana (2×1)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Escalera', 2, 2, 'rect')">🪜 #Escalera (2×2)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Caja', 2, 1, 'rect')">💳 #Caja (2×1)</button>
+                    <button type="button" class="plano-deco-btn" onclick="crearDecoradorRapidoDev('#Terraza', 3, 2, 'rect')">🌿 #Terraza (3×2)</button>
+                  </div>
+                  <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+                    <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">Decorador Personalizado:</div>
+                    <div style="display:flex;gap:6px">
+                      <input type="text" id="plano-nuevo-deco-nombre" class="input-text" placeholder="#Ejemplo" style="flex:1;padding:6px 10px;font-size:12px">
+                      <button type="button" class="btn btn-sm" onclick="crearDecoradorPersonalizadoDev()" style="font-size:11px;padding:6px 10px">+ Crear</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Lienzo Central del Plano -->
+              <div class="plano-canvas-area">
+                <div class="plano-grid-scroll-wrap" id="plano-canvas-scroll">
+                  <div class="plano-admin-grid-dev" id="plano-admin-grid-dev">
+                    <!-- Cuadrícula interactiva y mesas -->
+                  </div>
+                </div>
+
+                <!-- Barra de Propiedades de la Mesa Seleccionada -->
+                <div class="plano-properties-bar" id="plano-mesa-props-bar" style="display:none">
+                  <!-- Se genera dinámicamente cuando hay una mesa seleccionada -->
                 </div>
               </div>
             </div>
@@ -3236,6 +3918,56 @@
       <button type="button" class="btn btn-secondary" id="custom-modal-btn-cancel" style="padding: 8px 16px; font-size: 12px; height: 36px;">Cancelar</button>
       <button type="button" class="btn" id="custom-modal-btn-ok" style="padding: 8px 16px; font-size: 12px; height: 36px; background: var(--accent); color: var(--panel);">Aceptar</button>
     </div>
+  </div>
+
+  <!-- MODAL: NUEVA MESA PARA EL PLANO -->
+  <div class="modal-overlay" id="modal-nueva-mesa-plano" style="display: none;">
+    <div class="modal" style="max-width: 420px; width: 90%;">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-mesa-title">🪑 Nueva Mesa</div>
+        <button type="button" class="btn-icon" onclick="cerrarModalNuevaMesaPlanoDev()">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px; padding: 16px;">
+        <input type="hidden" id="modal-mesa-id" value="">
+        <div class="form-group" style="margin: 0;">
+          <label style="font-size: 11px; font-weight: 600;">Nombre de la Mesa o Elemento</label>
+          <input type="text" id="modal-mesa-nombre" class="input-text" placeholder="Ej: Mesa 12 o #Barra Terraza">
+          <span style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">Usa # al inicio si es un elemento decorativo/arquitectónico.</span>
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label style="font-size: 11px; font-weight: 600;">Zona</label>
+          <input type="text" id="modal-mesa-zona" class="input-text" list="lista-zonas-sugeridas" placeholder="Ej: Salón, Terraza, Barra...">
+          <datalist id="lista-zonas-sugeridas"></datalist>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group" style="margin: 0;">
+            <label style="font-size: 11px; font-weight: 600;">Ancho (Cols)</label>
+            <input type="number" id="modal-mesa-w" class="input-text" min="1" max="10" value="2">
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label style="font-size: 11px; font-weight: 600;">Alto (Filas)</label>
+            <input type="number" id="modal-mesa-h" class="input-text" min="1" max="10" value="2">
+          </div>
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label style="font-size: 11px; font-weight: 600;">Forma de la mesa</label>
+          <select id="modal-mesa-shape" class="input-text">
+            <option value="rect">Rectangular / Cuadrada</option>
+            <option value="circle">Redonda / Círculo</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn btn-secondary" onclick="cerrarModalNuevaMesaPlanoDev()">Cancelar</button>
+        <button type="button" class="btn" onclick="guardarMesaDesdeModalPlanoDev()" style="background: var(--accent); color: var(--bg); font-weight: 700;">Guardar Mesa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notificaciones Flotantes del Plano -->
+  <div id="plano-dev-toast" style="position: fixed; bottom: 24px; right: 24px; background: rgba(18, 24, 36, 0.95); border: 1px solid var(--accent); color: var(--text); padding: 10px 16px; border-radius: 10px; font-size: 12.5px; display: none; align-items: center; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10000; font-family: var(--font-code); pointer-events: none; transition: opacity 0.2s;">
+    <span id="plano-toast-icon">✅</span>
+    <span id="plano-toast-text">Mensaje</span>
   </div>
 
   <script type="module" src="./desarrollador.js"></script>
